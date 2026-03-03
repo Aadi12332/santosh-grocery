@@ -1,7 +1,19 @@
-import React from 'react'
+import HeroSection from '../components/landingpage/HeroSection'
+import Header from '../layout/Header'
+import Footer from '../layout/Footer'
+import WhyHubnepa from '../components/landingpage/WhyHubnepa'
+import CTASection from '../components/landingpage/CTASection'
+import ExploreSection from '../components/landingpage/ExploreSection'
 
 export const Landing = () => {
   return (
-    <div>Landing</div>
+    <>
+      <Header />
+      <HeroSection />
+      <ExploreSection />
+      <WhyHubnepa />
+      <CTASection />
+      <Footer />
+    </>
   )
 }
