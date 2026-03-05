@@ -1,6 +1,6 @@
+import { NavLink } from "react-router-dom"
 import { Instagram, Twitter, Facebook, Linkedin, Heart } from "lucide-react"
 import Logo from "../assets/images/logo-light.svg"
-
 
 export default function Footer() {
   return (
@@ -34,37 +34,93 @@ export default function Footer() {
             </div>
           </div>
 
-          <div className="col-span-3 flex justify-between gap-5">
-            <div>
-            <h3 className="text-white font-semibold font-playfair mb-6">Platform</h3>
-            <ul className="space-y-4">
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Marketplace</a></li>
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">How it Works</a></li>
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Partner Access</a></li>
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Pricing</a></li>
-            </ul>
-          </div>
 
-          <div>
-            <h3 className="text-white font-semibold font-playfair mb-6">Company</h3>
-            <ul className="space-y-4">
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">About Us</a></li>
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Careers</a></li>
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Press</a></li>
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Contact</a></li>
-            </ul>
-          </div>
+<div className="col-span-3 flex justify-between gap-5">
 
-          <div>
-            <h3 className="text-white font-semibold font-playfair mb-6">Legal</h3>
-            <ul className="space-y-4">
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Cookie Policy</a></li>
-              <li><a href="#" className="hover:text-white text-[#90A1B9] text-sm transition">Dispute Resolution</a></li>
-            </ul>
-          </div>
-          </div>
+  <div>
+    <h3 className="text-white font-semibold font-playfair mb-6">Platform</h3>
+    <ul className="space-y-4">
+      <li>
+        <NavLink to="/restaurants" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Restaurants
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/marketplace" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Marketplace
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/how-it-work" className="hover:text-white text-[#90A1B9] text-sm transition">
+          How it Works
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/partner-access" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Partner Access
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/pricing" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Pricing
+        </NavLink>
+      </li>
+    </ul>
+  </div>
+
+  <div>
+    <h3 className="text-white font-semibold font-playfair mb-6">Company</h3>
+    <ul className="space-y-4">
+      <li>
+        <NavLink to="/about" className="hover:text-white text-[#90A1B9] text-sm transition">
+          About Us
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/careers" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Careers
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/press" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Press
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/contact" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Contact
+        </NavLink>
+      </li>
+    </ul>
+  </div>
+
+  <div>
+    <h3 className="text-white font-semibold font-playfair mb-6">Legal</h3>
+    <ul className="space-y-4">
+      <li>
+        <NavLink to="/terms" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Terms of Service
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/privacy" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Privacy Policy
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/cookie-policy" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Cookie Policy
+        </NavLink>
+      </li>
+      <li>
+        <NavLink to="/dispute-resolution" className="hover:text-white text-[#90A1B9] text-sm transition">
+          Dispute Resolution
+        </NavLink>
+      </li>
+    </ul>
+  </div>
+
+</div>
         </div>
 
         <div className="border-t border-[#1D293D] mt-16 pt-6 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-[#62748E]">
