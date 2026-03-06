@@ -1,14 +1,16 @@
 import { UtensilsCrossed, ShoppingBag } from "lucide-react"
 import eatsImg from "../../assets/images/meal.jpg"
 import martImg from "../../assets/images/fresh.jpg"
+import { useNavigate } from "react-router-dom"
 
 export default function ExploreSection() {
+  const navigate = useNavigate();
   return (
     <section className="bg-[#020618] py-20">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 grid lg:grid-cols-2 gap-8">
+      <div className="max-w-[1265px] mx-auto px-4 lg:px-6 grid lg:grid-cols-2 gap-8">
         
-        <div
-          className="relative h-[500px] rounded-[24px] overflow-hidden group"
+        <div onClick={()=>navigate("/orderplace")}
+          className="relative h-[500px] rounded-[24px] overflow-hidden group cursor-pointer"
           style={{
             backgroundImage: `url(${eatsImg})`,
             backgroundSize: "cover",
@@ -42,8 +44,8 @@ export default function ExploreSection() {
           </div>
         </div>
 
-        <div
-          className="relative h-[500px] rounded-[24px] overflow-hidden group"
+        <div onClick={()=>navigate("/marketplace")}
+          className="relative h-[500px] rounded-[24px] overflow-hidden group cursor-pointer"
           style={{
             backgroundImage: `url(${martImg})`,
             backgroundSize: "cover",

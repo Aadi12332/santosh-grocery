@@ -1,3 +1,4 @@
+import "leaflet/dist/leaflet.css"
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Landing } from "./pages/Landing";
 import { SignUp } from "./pages/SignUp";
@@ -9,7 +10,13 @@ import { Restaurant } from "./pages/Restaurant";
 import { Pricing } from "./pages/Pricing";
 import { ContactPage } from "./pages/ContactPage";
 import { PressPage } from "./pages/PressPage";
-import "leaflet/dist/leaflet.css"
+import { CareerPage } from "./pages/CareerPage";
+import { AboutPage } from "./pages/AboutPage";
+import { TermsPage } from "./pages/TermsPage";
+import { PolicyPage } from "./pages/PolicyPage";
+import { CookiesPage } from "./pages/CookiesPage";
+import { DisputePage } from "./pages/DisputePage";
+// import { OrderPlace } from "./pages/OrderPlace";
 
 function App() {
   return (
@@ -21,10 +28,18 @@ function App() {
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/how-it-work" element={<HowItWork />} />
         <Route path="/marketplace" element={<MarketPlace />} />
+        {/* <Route path="/orderplace" element={<OrderPlace />} /> */}
         <Route path="/restaurants" element={<Restaurant />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/press" element={<PressPage />} />
+        <Route path="/careers" element={<CareerPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy-policy" element={<PolicyPage />} />
+        <Route path="/cookies-policy" element={<CookiesPage />} />
+        <Route path="/dispute-resolution" element={<DisputePage />} />
+        
       </Routes>
     </BrowserRouter>
   );

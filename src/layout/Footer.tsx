@@ -56,7 +56,7 @@ export default function Footer() {
         </NavLink>
       </li>
       <li>
-        <NavLink to="/partner-access" className="hover:text-white text-[#90A1B9] text-sm transition">
+        <NavLink to="/sign-in" className="hover:text-white text-[#90A1B9] text-sm transition">
           Partner Access
         </NavLink>
       </li>
@@ -103,12 +103,12 @@ export default function Footer() {
         </NavLink>
       </li>
       <li>
-        <NavLink to="/privacy" className="hover:text-white text-[#90A1B9] text-sm transition">
+        <NavLink to="/privacy-policy" className="hover:text-white text-[#90A1B9] text-sm transition">
           Privacy Policy
         </NavLink>
       </li>
       <li>
-        <NavLink to="/cookie-policy" className="hover:text-white text-[#90A1B9] text-sm transition">
+        <NavLink to="/cookies-policy" className="hover:text-white text-[#90A1B9] text-sm transition">
           Cookie Policy
         </NavLink>
       </li>
