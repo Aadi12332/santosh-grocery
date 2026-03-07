@@ -3,9 +3,11 @@ import { User, Mail, Lock, Eye, Sparkles, Check } from "lucide-react";
 import authImg from "../../assets/images/signupbg.svg";
 import GoogleIcon from "../../assets/images/googleicon.svg";
 import RestIcon from "../../assets/images/restIcon.svg";
+import { useNavigate } from "react-router-dom";
 
 export default function AuthSection() {
   const [checked, setChecked] = useState(false);
+  const navigate = useNavigate();
   return (
     <section className="min-h-[851px] bg-[#020618] ">
       <div className="max-w-[1265px] mx-auto lg:px-6 px-3 flex">
@@ -43,7 +45,7 @@ export default function AuthSection() {
                 <span className="text-xs text-[#90A1B9]">
                   Already a member?
                 </span>
-                <button className="text-[#64748B] text-xs bg-[#1E2939] border border-[#1D293D] px-3 py-1 rounded-full font-medium hover:text-white transition">
+                <button onClick={()=>navigate("/sign-in")} className="text-[#64748B] text-xs bg-[#1E2939] border border-[#1D293D] px-3 py-1 rounded-full font-medium hover:text-white transition">
                   SIGN IN
                 </button>
               </div>

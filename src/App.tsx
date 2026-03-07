@@ -16,7 +16,9 @@ import { TermsPage } from "./pages/TermsPage";
 import { PolicyPage } from "./pages/PolicyPage";
 import { CookiesPage } from "./pages/CookiesPage";
 import { DisputePage } from "./pages/DisputePage";
-// import { OrderPlace } from "./pages/OrderPlace";
+import { OrderPlace } from "./pages/OrderPlace";
+import { RoleWiseSignIn } from "./pages/RoleWiseSignIn";
+import { CompleteOrderPage } from "./pages/CompleteOrderPage";
 
 function App() {
   return (
@@ -25,10 +27,12 @@ function App() {
         <Route index element={<Landing />} />
         <Route path="/admin" element={<AdminLogin />} />
         <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/role-wise-sign-in" element={<RoleWiseSignIn />} />
         <Route path="/sign-up" element={<SignUp />} />
         <Route path="/how-it-work" element={<HowItWork />} />
         <Route path="/marketplace" element={<MarketPlace />} />
-        {/* <Route path="/orderplace" element={<OrderPlace />} /> */}
+        <Route path="/orderplace" element={<OrderPlace />} />
+        <Route path="/complete-order" element={<CompleteOrderPage />} />
         <Route path="/restaurants" element={<Restaurant />} />
         <Route path="/pricing" element={<Pricing />} />
         <Route path="/contact" element={<ContactPage />} />

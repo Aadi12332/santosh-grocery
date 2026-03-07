@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom"
+
 export default function CTASection() {
+  const navigate = useNavigate()
   return (
     <section className="bg-[linear-gradient(135deg,#82181A_0%,#8B0836_50%,#0F172B_100%)] py-24">
       <div className="max-w-[1265px] mx-auto px-3 lg:px-6 text-center">
@@ -11,7 +14,7 @@ export default function CTASection() {
         </p>
 
         <div className="mt-10">
-          <button className="bg-[#00A63E] text-white px-10 py-4 rounded-full text-lg font-semibold shadow-[0px_25px_50px_-12px_#0D542B80] hover:opacity-90 transition">
+          <button onClick={()=>navigate("/sign-in")} className="bg-[#00A63E] text-white px-10 py-4 rounded-full text-lg font-semibold shadow-[0px_25px_50px_-12px_#0D542B80] hover:opacity-90 transition">
             Start Ordering Food
           </button>
         </div>

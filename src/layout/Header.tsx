@@ -25,7 +25,7 @@ export default function Header() {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `relative pb-2 transition ${
+                `relative transition ${
                   isActive
                     ? "text-[#E17100] after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-full after:bg-[#E17100]"
                     : "text-[#64748B] hover:text-black"
