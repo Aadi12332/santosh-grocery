@@ -19,6 +19,7 @@ import { DisputePage } from "./pages/DisputePage";
 import { OrderPlace } from "./pages/OrderPlace";
 import { RoleWiseSignIn } from "./pages/RoleWiseSignIn";
 import { CompleteOrderPage } from "./pages/CompleteOrderPage";
+import CustomerLayout from "./layout/CustomerDashboard/CustomerLayout";
 
 function App() {
   return (
@@ -43,6 +44,11 @@ function App() {
         <Route path="/privacy-policy" element={<PolicyPage />} />
         <Route path="/cookies-policy" element={<CookiesPage />} />
         <Route path="/dispute-resolution" element={<DisputePage />} />
+
+          <Route path="/customer/dashboard" element={<CustomerLayout />} />
+  {/* <Route path="/retailer/dashboard" element={<RetailerLayout />} />
+  <Route path="/supplier/dashboard" element={<SupplierLayout />} />
+  <Route path="/restaurant/dashboard" element={<RestaurantLayout />} /> */}
         
       </Routes>
     </BrowserRouter>

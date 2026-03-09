@@ -1,0 +1,93 @@
+import {
+  Home,
+  Clock,
+  Wallet,
+  Heart,
+  Settings,
+  HelpCircle,
+  ShoppingBag,
+  LogOut
+} from "lucide-react"
+import Logo from "../../assets/images/logo.svg"
+import { useNavigate } from "react-router-dom"
+
+const menu = [
+  { id: "overview", label: "Overview", icon: Home },
+  { id: "orders", label: "My Orders", icon: Clock },
+  { id: "wallet", label: "Wallet & Payments", icon: Wallet },
+  { id: "saved", label: "Saved Items", icon: Heart },
+  { id: "profile", label: "Profile & Settings", icon: Settings },
+  { id: "support", label: "Help & Support", icon: HelpCircle }
+]
+
+export default function CustomerSidebar({
+  activeTab,
+  setActiveTab
+}: {
+  activeTab: string
+  setActiveTab: (tab: string) => void
+}) {
+  const navigate = useNavigate()
+  return (
+    <div className="w-[288px] border-r border-[#E5E7EB] bg-white flex flex-col">
+
+      <div className="px-6 py-6">
+        <img src={Logo} alt="" />
+      </div>
+
+      <div className="px-4">
+        <div className="flex items-center gap-3 bg-[#F9FAFB] rounded-xl p-4 border border-[#F1F5F9]">
+          <img
+            src="https://randomuser.me/api/portraits/women/44.jpg"
+            className="w-12 h-12 rounded-full"
+          />
+          <div>
+            <div className="font-semibold text-[#111827]">Sarah Chen</div>
+            <div className="text-[#009966] text-sm">Platinum Member</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 mt-6 px-4 space-y-1">
+
+        {menu.map((item) => {
+          const Icon = item.icon
+          const active = activeTab === item.id
+
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm transition ${
+                active
+                  ? "bg-[#ECFDF5] text-[#009966] font-medium"
+                  : "text-[#6A7282] hover:bg-gray-50"
+              }`}
+            >
+              <Icon size={20} />
+              {item.label}
+            </button>
+          )
+        })}
+
+        <div className="border-t border-[#E5E7EB] my-4"></div>
+
+        <div className="px-4 text-xs font-semibold text-[#9CA3AF] tracking-wider !mt-5">
+          SHOP
+        </div>
+
+        <button onClick={()=>navigate("/marketplace")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-[#6A7282] hover:bg-gray-50">
+          <ShoppingBag size={20} />
+          Marketplace
+        </button>
+
+        <button onClick={()=>navigate("/role-wise-sign-in?role=customer")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
+          <LogOut size={20} />
+          Sign Out
+        </button>
+
+      </div>
+
+    </div>
+  )
+}

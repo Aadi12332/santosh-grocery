@@ -117,6 +117,25 @@ export default function RoleSignInSection() {
     const config = roleConfig[role as RoleType];
     const Icon = config.icon;
 
+
+const handleLogin = () => {
+  if (role === "customer") {
+    navigate("/customer/dashboard")
+  }
+
+  if (role === "retailer") {
+    navigate("/retailer/dashboard")
+  }
+
+  if (role === "supplier") {
+    navigate("/supplier/dashboard")
+  }
+
+  if (role === "restaurant") {
+    navigate("/restaurant/dashboard")
+  }
+}
+
     return (
         <section className="bg-[#020618] text-white">
             <div className="min-h-[calc(100vh-80px)] max-w-[1265px] lg:px-6 px-3 mx-auto flex">
@@ -210,7 +229,7 @@ export default function RoleSignInSection() {
                             </p>
                         </div>
 
-                        <button
+                        <button onClick={handleLogin}
                             className={`w-full py-3 mt-6 rounded-lg font-medium flex items-center justify-center gap-2 ${config.btnColor}`}
                         >
                             Sign In
