@@ -1,9 +1,9 @@
 import { ShoppingBag, X, Minus, Plus, Trash2, ArrowRight } from "lucide-react"
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function CartModal({ open, onClose, selectedProduct }: { open: boolean; onClose: () => void; selectedProduct?: string }) {
-
-  if (!open) return null
+const navigate = useNavigate();
 
   const [qty, setQty] = useState(1)
 
@@ -17,6 +17,7 @@ export default function CartModal({ open, onClose, selectedProduct }: { open: bo
   const delivery = 5.99
   const tax = 3.6
   const total = subtotal + delivery + tax
+  if (!open) return null
 
   return (
     <div
@@ -151,7 +152,7 @@ export default function CartModal({ open, onClose, selectedProduct }: { open: bo
 
             </div>
 
-            <button className="mt-6 w-full bg-[#009966] py-4 rounded-lg text-white font-medium flex items-center justify-center gap-2">
+            <button onClick={()=>navigate("/customer/dashboard/checkout")} className="mt-6 w-full bg-[#009966] py-4 rounded-lg text-white font-medium flex items-center justify-center gap-2">
 
               Checkout
 
