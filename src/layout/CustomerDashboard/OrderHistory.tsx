@@ -69,11 +69,11 @@ const [status,setStatus] = useState("all")
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
                 <div>
-                    <h1 className="text-[34px] font-playfair font-medium text-[#0F172A]">
+                    <h1 className="lg:text-[34px] text-[24px] font-playfair font-medium text-[#0F172A]">
                         Order History
                     </h1>
 
-                    <p className="text-[#6A7282] mt-1 text-lg">
+                    <p className="text-[#6A7282] mt-1 lg:text-lg text-base">
                         Track current orders and view past receipts.
                     </p>
                 </div>
@@ -100,7 +100,7 @@ const [status,setStatus] = useState("all")
 
             <div className="flex gap-3">
 
-                <div className="flex items-center gap-2 flex-1 border border-[#E5E7EB] rounded-xl px-4 py-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+                <div className="flex items-center gap-2 flex-1 border border-[#E5E7EB] rounded-lg lg:rounded-xl px-4 py-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
 
                     <Search size={18} className="text-[#64748B]" />
 
@@ -111,7 +111,7 @@ const [status,setStatus] = useState("all")
 
                 </div>
 
-                <button onClick={()=>setShowFilter(!showFilter)} className="flex items-center gap-2 border border-[#E5E7EB] rounded-xl px-4 bg-[#009966] text-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+                <button onClick={()=>setShowFilter(!showFilter)} className="flex items-center gap-2 border border-[#E5E7EB] rounded-lg lg:rounded-xl px-4 bg-[#009966] text-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
                     <Filter size={18} />
                     Filter
                 </button>
@@ -119,19 +119,19 @@ const [status,setStatus] = useState("all")
             </div>
 
             {showFilter && (
-  <div className="mt-4 border border-[#E5E7EB] rounded-xl p-6 bg-[#fff] shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+  <div className="mt-4 border border-[#E5E7EB] lg:rounded-xl rounded-lg lg:p-6 p-3 bg-[#fff] shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
 
     <p className="text-sm font-semibold text-[#64748B] mb-4">
       ORDER STATUS
     </p>
 
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap lg:gap-3 gap-1">
 
       {["all","active","delivered","cancelled"].map((s)=>(
         <button
           key={s}
           onClick={()=>setStatus(s)}
-          className={`px-4 py-2 rounded-lg border text-sm capitalize transition
+          className={`lg:px-4 px-3 py-2 rounded-lg border text-sm capitalize transition
           ${
             status===s
             ? "bg-[#ECFDF5] text-[#009966] border-[#009966]"
@@ -154,7 +154,7 @@ const [status,setStatus] = useState("all")
                         <div
                             key={i}
                             onClick={() => setSelectedOrder(o)}
-                            className={`flex justify-between border border-[#E5E7EB] rounded-xl p-4 bg-white cursor-pointer transition
+                            className={`flex justify-between border border-[#E5E7EB] lg:rounded-xl rounded-lg lg:p-4 p-2 bg-white cursor-pointer transition
                             shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]
                             ${selectedOrder?.name === o.name ? "ring-2 ring-[#009966]" : ""}
                             `}
@@ -165,7 +165,7 @@ const [status,setStatus] = useState("all")
 
   <img
     src={o.img}
-    className="w-20 h-20 rounded-lg object-cover"
+    className="w-20 h-20 min-w-20 rounded-lg object-cover"
   />
 
   <div className="absolute top-1 left-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">
@@ -216,7 +216,7 @@ const [status,setStatus] = useState("all")
 
                 </div>
 
-                <div className="border border-[#E5E7EB] rounded-xl p-4 bg-[#F9FAFB]">
+                <div className="border border-[#E5E7EB] rounded-lg lg:rounded-xl lg:p-4 p-2 bg-[#F9FAFB]">
 
                     {!selectedOrder ? (
 

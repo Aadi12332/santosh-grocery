@@ -10,7 +10,7 @@ export function ConfirmStep() {
   }
 
   return (
-    <div className="border border-[#1D293D] rounded-2xl p-6 bg-[#0F172B80]">
+    <div className="border border-[#1D293D] rounded-lg lg:rounded-2xl lg:p-6 p-3 bg-[#0F172B80]">
 
       <h2 className="font-playfair text-2xl mb-6 text-white">
         Review Order

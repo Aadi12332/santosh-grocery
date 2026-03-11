@@ -164,7 +164,7 @@ export default function RestaurantGrid() {
                 </div>
               </div>
 
-              <div className="p-5">
+              <div className="lg:p-5 p-2">
                 <div className="flex justify-between items-center mb-2">
                   <div>
                     <h3 className="font-playfair text-[22px]">

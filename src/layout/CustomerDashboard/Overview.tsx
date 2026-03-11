@@ -49,32 +49,32 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
                 <div>
-                    <h1 className="text-[34px] font-playfair font-medium text-[#0F172A]">
+                    <h1 className="lg:text-[34px] text-[24px] font-playfair font-medium text-[#0F172A]">
                         Good Evening, Sarah
                     </h1>
-                    <p className="text-[#6A7282] mt-1 text-lg">
+                    <p className="text-[#6A7282] mt-1 lg:text-lg text-base">
                         Welcome back to your personal dashboard.
                     </p>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap sm:gap-3 gap-1">
 
-                    <button onClick={() => setActiveTab("invite")} className="px-4 py-2 text-white rounded-lg bg-[#9810FA] shadow-sm">
+                    <button onClick={() => setActiveTab("invite")} className="md:px-4 px-2 py-2 text-sm lg:text-base text-white rounded-lg bg-[#9810FA] shadow-sm">
                         Invite
                     </button>
 
-                    <button onClick={()=>navigate("/restaurants")} className="px-4 py-2 text-white rounded-lg bg-[#009966] shadow-sm">
+                    <button onClick={()=>navigate("/restaurants")} className="md:px-4 px-2 py-2 text-sm lg:text-base text-white rounded-lg bg-[#009966] shadow-sm">
                         Order Food
                     </button>
 
-                    <button onClick={()=>navigate("/marketplace")} className="px-4 py-2 border rounded-lg border-[#E5E7EB] bg-white shadow-sm">
+                    <button onClick={()=>navigate("/marketplace")} className="md:px-4 px-2 py-2 text-sm lg:text-base border rounded-lg border-[#E5E7EB] bg-white shadow-sm">
                         Buy Groceries
                     </button>
 
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 lg:gap-6 gap-3">
                 {stats.map((card, i) => {
                     const Icon = card.icon
                     const ExtraIcon = card.extraIcon
@@ -83,7 +83,7 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
                         <div
   key={i}
   onClick={card.path ? () => setActiveTab(card.path) : undefined}
-  className={`p-6 rounded-xl border border-[#E5E7EB] bg-gradient-to-br ${card.gradient} shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] space-y-4 ${
+  className={`lg:p-6 p-3 rounded-lg lg:rounded-xl border border-[#E5E7EB] bg-gradient-to-br ${card.gradient} shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] space-y-4 ${
     card.path ? "cursor-pointer hover:shadow-md" : ""
   }`}
 >
@@ -106,20 +106,20 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
                             </div>
 
                             <div>
-                                <p className="text-base mt-6 text-[#6A7282]">{card.title}</p>
-                                <h2 className="text-[34px] text-[#101828] mt-1 mb-7 font-semibold font-playfair">
+                                <p className="lg:text-base text-sm mt-6 text-[#6A7282]">{card.title}</p>
+                                <h2 className="lg:text-[34px] text-[24px] text-[#101828] mt-1 mb-7 font-semibold font-playfair">
                                     {card.value}
                                 </h2>
                             </div>
 
-                            <div className="flex justify-between text-base items-center">
+                            <div className="flex justify-between lg:text-base text-sm items-center">
                                 {ExtraIcon ? (
                                     <div className="flex items-center gap-1 text-[#1447E6]">
                                         <ExtraIcon size={14} />
                                         {card.subtitle}
                                     </div>
                                 ) : (
-                                    <span className={`text-[16px] ${card.action ? "text-[#6A7282] font-medium" : "text-[#CA3500] font-bold"}`}>{card.subtitle}</span>
+                                    <span className={`lg:text-[16px] text-sm ${card.action ? "text-[#6A7282] font-medium" : "text-[#CA3500] font-bold"}`}>{card.subtitle}</span>
                                 )}
 
                                 {card.action && (
@@ -142,13 +142,14 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
                         <button className="text-[#009966] text-[16px]">View All</button>
                     </div>
 
-                    <div onClick={() => setActiveTab("orders")} className="cursor-pointer p-4 border border-[#E5E7EB] rounded-xl shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex items-center gap-4">
+                    <div onClick={() => setActiveTab("orders")} className="cursor-pointer lg:p-4 p-2 border border-[#E5E7EB] rounded-lg lg:rounded-xl shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex items-center lg:gap-4 gap-2">
                         <img
                             src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd"
                             className="w-16 h-16 rounded-lg object-cover"
                         />
 
-                        <div className="flex-1">
+                        <div className="flex md:flex-row flex-col md:items-center gap-4">
+                            <div className="flex-1">
                             <h3 className="font-bold text-lg font-playfair">The Slate Room</h3>
                             <p className="text-sm text-[#6A7282]">
                                 Wagyu Beef Burger, Truffle Fries, Coke Zero
@@ -159,18 +160,20 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
                             </p>
                         </div>
 
-                        <span className="text-xs bg-blue-100 text-[#1447E6] px-3 py-1 rounded-full">
+                        <span className="text-xs bg-blue-100 text-[#1447E6] px-3 py-1 rounded-full w-fit">
                             On the way
                         </span>
+                        </div>
                     </div>
 
-                    <div onClick={() => setActiveTab("orders")} className="cursor-pointer p-4 border border-[#E5E7EB] rounded-xl shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex items-center gap-4">
+                    <div onClick={() => setActiveTab("orders")} className="cursor-pointer lg:p-4 p-2 border border-[#E5E7EB] rounded-lg lg:rounded-xl shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex items-center lg:gap-4 gap-2">
                         <img
                             src="https://images.unsplash.com/photo-1542838132-92c53300491e"
                             className="w-16 h-16 rounded-lg object-cover"
                         />
 
-                        <div className="flex-1">
+                        <div className="flex md:flex-row flex-col md:items-center gap-4">
+                            <div className="flex-1">
                             <h3 className="font-bold text-lg font-playfair">Green Valley Market</h3>
                             <p className="text-sm text-[#6A7282]">
                                 Organic Avocados, Sourdough Bread, Free-range
@@ -181,9 +184,10 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
                             </p>
                         </div>
 
-                        <span className="text-xs bg-green-100 text-green-600 px-3 py-1 rounded-full">
+                        <span className="text-xs bg-green-100 text-green-600 px-3 py-1 rounded-full w-fit">
                             Delivered
                         </span>
+                        </div>
                     </div>
 
                 </div>
@@ -195,7 +199,7 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
                         <button className="text-[#E17100] text-[16px]">View Deals</button>
                     </div>
 
-                    <div className="p-6 border border-[#E5E7EB] rounded-xl shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] bg-[#F9FAFB]">
+                    <div className="lg:p-6 p-3 border border-[#E5E7EB] lg:rounded-xl rounded-lg shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] bg-[#F9FAFB]">
                         <span className="text-xs bg-green-600 text-white px-3 py-1 rounded-full">
                             New Arrival
                         </span>
@@ -213,7 +217,7 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
                         </button>
                     </div>
 
-                    <div className="p-6 border border-[#E5E7EB] rounded-xl shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] bg-white flex items-start gap-3">
+                    <div className="lg:p-6 p-3 border border-[#E5E7EB] lg:rounded-xl rounded-lg shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] bg-white flex items-start gap-3">
                         <AlertCircle size={20} className="text-[#99A1AF] min-w-5 mt-1" />
                         <div>
                             <h3 className="font-bold font-playfair flex items-center gap-3">

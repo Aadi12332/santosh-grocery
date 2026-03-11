@@ -22,7 +22,7 @@ export default function AddressStep() {
   ]
 
   return (
-    <div className="border border-[#1D293D] rounded-2xl p-6 bg-[#0F172B80]">
+    <div className="border border-[#1D293D] rounded-lg lg:rounded-2xl lg:p-6 p-3 bg-[#0F172B80]">
 
       <h2 className="font-playfair text-2xl mb-6 text-white">
         Delivery Address
@@ -38,7 +38,7 @@ export default function AddressStep() {
             <div
               key={item.id}
               onClick={() => setSelected(item.id)}
-              className={`flex gap-4 p-5 rounded-xl border cursor-pointer transition
+              className={`flex gap-4 lg:p-5 p-2 rounded-lg lg:rounded-xl border cursor-pointer transition
               ${active
                 ? "border-[#00BC7D] bg-[#031F2E]"
                 : "border-[#1E293B] bg-[#020617]"
@@ -90,7 +90,7 @@ export default function AddressStep() {
 
       </div>
 
-      <button className="mt-6 w-full bg-[#E5E7EB] text-black py-4 rounded-xl flex items-center justify-center gap-2">
+      <button className="mt-6 w-full bg-[#E5E7EB] text-black py-4 rounded-lg lg:rounded-xl flex items-center justify-center gap-2">
 
         <Plus size={18} />
 

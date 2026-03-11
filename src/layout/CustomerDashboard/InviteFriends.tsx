@@ -48,7 +48,7 @@ export default function InviteFriends() {
           <Gift size={36} className="text-[#00D492]" />
         </div>
 
-        <h1 className="text-[54px] font-medium font-playfair mb-4">
+        <h1 className="lg:text-[54px] text-[32px] font-medium font-playfair mb-4">
           Invite Friends & Earn
         </h1>
 
@@ -58,18 +58,18 @@ export default function InviteFriends() {
           <span className="text-[#00BC7D] font-bold">$20 credit</span> when they dine.
         </p>
 
-        <div className="mt-16 bg-[#0F172B] border border-[#1D293D] rounded-2xl p-8 shadow-[0px_25px_50px_-12px_#000000]">
+        <div className="mt-16 bg-[#0F172B] border border-[#1D293D] lg:rounded-2xl rounded-lg lg:p-8 p-3 shadow-[0px_25px_50px_-12px_#000000]">
 
           <p className="text-sm text-start tracking-widest text-[#94A3B8] mb-3">
             YOUR REFERRAL CODE
           </p>
 
-          <div className="flex gap-3 mb-6">
+          <div className="flex gap-3 mb-6 flex-wrap">
 
-            <input value={referralCode} readOnly className="flex-1 h-16 flex items-center text-[22px] placeholder:text-[#00D492] text-[#00D492] outline-none px-4 rounded-lg border border-[#1E293B] bg-[#020618] tracking-widest" />
+            <input value={referralCode} readOnly className="md:flex-1 h-16 w-full flex items-center text-[22px] placeholder:text-[#00D492] text-[#00D492] outline-none px-4 rounded-lg border border-[#1E293B] bg-[#020618] tracking-widest" />
             <button
               onClick={copyCode}
-              className="px-10 flex items-center gap-2 rounded-lg bg-[#1E293B] hover:bg-[#334155]"
+              className="px-10 h-16 flex items-center gap-2 rounded-lg bg-[#1E293B] hover:bg-[#334155]"
             >
               <Copy size={18} />
               Copy

@@ -49,18 +49,18 @@ export default function SearchTab() {
 
         <Search
           size={20}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+          className="absolute sm:left-4 left-2 top-1/2 -translate-y-1/2 text-[#94A3B8]"
         />
 
         <input
           placeholder="Search for orders, products, or restaurants..."
-          className="w-full h-14 pl-12 pr-12 rounded-xl border border-[#E5E7EB] outline-none
+          className="w-full h-14 sm:pl-12 pl-8 sm:pr-12 pr-8 lg:rounded-xl text-sm sm:text-base rounded-lg border border-[#E5E7EB] outline-none
           shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]"
         />
 
         <FilterIcon
           size={20}
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+          className="absolute sm:right-4 right-2 top-1/2 -translate-y-1/2 text-[#94A3B8]"
         />
 
       </div>
@@ -71,12 +71,12 @@ export default function SearchTab() {
           RECENT SEARCHES
         </h3>
 
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap lg:gap-3 gap-2">
 
           {recent.map((item, i) => (
             <button
               key={i}
-              className="px-5 text-[#4A5565] py-2 rounded-full border border-[#E5E7EB] bg-white
+              className="lg:px-5 px-2 text-[#4A5565] sm:py-2 py-2 rounded-full border border-[#E5E7EB] bg-white
               shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]"
             >
               {item}
@@ -100,7 +100,7 @@ export default function SearchTab() {
           return (
             <div
               key={i}
-              className="flex items-center gap-4 p-5 rounded-xl border border-[#E5E7EB] bg-white
+              className="flex md:flex-row flex-col md:items-center gap-4 lg:p-5 p-2 rounded-lg lg:rounded-xl border border-[#E5E7EB] bg-white
               shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]"
             >
 
@@ -131,7 +131,7 @@ export default function SearchTab() {
                   {item.status}
                 </span>
 
-                <div className="text-right border-l border-[#E5E7EB] pl-6 flex flex-col items-end">
+                <div className="text-right border-l border-[#E5E7EB] pl-6 flex md:flex-col gap-3 md:items-end">
 
                   <p className="font-playfair text-lg">
                     {item.price}

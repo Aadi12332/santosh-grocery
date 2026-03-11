@@ -1,10 +1,9 @@
-import { Search, ShoppingBag, Bell, Menu } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
-import CustomerSidebar from "./CustomerSidebar"
-import CustomerHeader from "./CustomerHeader"
-import CustomerChild from "./CustomerChild"
+import RetailerChild from "./RetailerChild"
+import RetailerSidebar from "./RetailerSidebar"
+import RetailerHeader from "./RetailerHeader"
 
-export default function CustomerLayout() {
+export default function RetailerLayout() {
 
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("activeTab") || "overview"
@@ -44,20 +43,20 @@ export default function CustomerLayout() {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
 
-        <CustomerSidebar setSidebarOpen={setSidebarOpen} activeTab={activeTab} setActiveTab={handleTabChange}/>
+        <RetailerSidebar setSidebarOpen={setSidebarOpen} activeTab={activeTab} setActiveTab={handleTabChange}/>
       </div>
 
 
       <div className="flex flex-col flex-1 overflow-hidden">
 
-        <CustomerHeader
+        <RetailerHeader
           activeTab={activeTab}
           setActiveTab={handleTabChange}
           openSidebar={()=>setSidebarOpen(true)}
         />
 
         <div className="flex-1 overflow-y-auto scroll-hide lg:p-8 p-4">
-          <CustomerChild setActiveTab={handleTabChange} activeTab={activeTab}/>
+          <RetailerChild setActiveTab={handleTabChange} activeTab={activeTab}/>
         </div>
 
       </div>

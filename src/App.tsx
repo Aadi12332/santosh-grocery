@@ -21,6 +21,7 @@ import { RoleWiseSignIn } from "./pages/RoleWiseSignIn";
 import { CompleteOrderPage } from "./pages/CompleteOrderPage";
 import CustomerLayout from "./layout/CustomerDashboard/CustomerLayout";
 import Checkout from "./layout/CustomerDashboard/CheckoutStep/Checkout";
+import RetailerLayout from "./layout/RetailerDashboard/RetailerLayout";
 
 function App() {
   return (
@@ -48,8 +49,8 @@ function App() {
 
           <Route path="/customer/dashboard" element={<CustomerLayout />} />
           <Route path="/customer/dashboard/checkout" element={<Checkout />} />
-  {/* <Route path="/retailer/dashboard" element={<RetailerLayout />} />
-  <Route path="/supplier/dashboard" element={<SupplierLayout />} />
+  <Route path="/retailer/dashboard" element={<RetailerLayout />} />
+  {/* <Route path="/supplier/dashboard" element={<SupplierLayout />} />
   <Route path="/restaurant/dashboard" element={<RestaurantLayout />} /> */}
         
       </Routes>

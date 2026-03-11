@@ -22,7 +22,7 @@ export function PaymentStep() {
   ]
 
   return (
-    <div className="border border-[#1D293D] rounded-2xl p-6 bg-[#0F172B80]">
+    <div className="border border-[#1D293D] rounded-lg lg:rounded-2xl lg:p-6 p-3 bg-[#0F172B80]">
 
       <h2 className="font-playfair text-2xl mb-6 text-white">
         Payment Method
@@ -38,14 +38,14 @@ export function PaymentStep() {
             <div
               key={card.id}
               onClick={() => setSelected(card.id)}
-              className={`flex items-center justify-between p-5 rounded-xl border cursor-pointer transition
+              className={`flex items-center relative justify-between lg:p-5 p-3 rounded-lg lg:rounded-xl border cursor-pointer transition
               ${active
                 ? "border-[#00BC7D] bg-[#031F2E]"
                 : "border-[#1E293B]"
               }`}
             >
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center lg:gap-4 gap-2 ">
 
                 <div className="w-14 h-10 bg-[#1E293B] rounded-md flex items-center justify-center text-sm font-semibold">
 
@@ -62,14 +62,14 @@ export function PaymentStep() {
 
                 <div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 ">
 
-                    <p className="text-white text-lg">
+                    <p className="text-white lg:text-lg text-sm">
                       {card.name} {card.number}
                     </p>
 
                     {card.primary && (
-                      <span className="text-xs px-2 py-1 rounded-full bg-[#1E293B] text-[#94A3B8]">
+                      <span className="absolute sm:relative -top-3 sm:top-[unset] right-2 sm:right-[unset] text-xs px-2 py-1 rounded-full bg-[#1E293B] text-[#94A3B8]">
                         Primary
                       </span>
                     )}

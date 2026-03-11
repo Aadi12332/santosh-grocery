@@ -14,10 +14,10 @@ export default function WalletPayments() {
     <div className="space-y-8">
 
       <div>
-        <h1 className="text-[34px] font-playfair font-medium text-[#0F172A]">
+        <h1 className="lg:text-[34px] text-[24px] font-playfair font-medium text-[#0F172A]">
           Wallet & Payments
         </h1>
-        <p className="text-[#6A7282] mt-1 text-lg">
+        <p className="text-[#6A7282] mt-1 lg:text-lg text-base">
           Manage payment methods, view balance, and track transactions.
         </p>
       </div>
@@ -26,25 +26,25 @@ export default function WalletPayments() {
 
         <div className="space-y-6">
 
-          <div className="border border-[#D1FAE5] bg-gradient-to-br from-white to-[#ECFDF580] rounded-2xl p-8 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex justify-between items-start">
+          <div className="border border-[#D1FAE5] bg-gradient-to-br from-white to-[#ECFDF580] lg:rounded-2xl rounded-lg lg:p-8 p-3 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex justify-between items-start">
 
             <div>
               <p className="text-[#009966] tracking-widest text-sm mb-3">
                 HUBNEPA BALANCE
               </p>
 
-              <h2 className="font-playfair text-[52px] text-[#0F172A]">
+              <h2 className="font-playfair text-[32px] lg:text-[52px] text-[#0F172A]">
                 $1,240.50
               </h2>
 
-              <div className="flex gap-4 mt-6">
+              <div className="flex lg:gap-4 gap-2 mt-6">
 
-                <button className="flex items-center gap-2 px-5 py-3 bg-[#009966] text-white rounded-lg shadow-sm">
+                <button className="flex items-center gap-2 lg:px-5 px-3 lg:text-base text-sm min-w-max lg:py-3 py-1.5 bg-[#009966] text-white rounded-lg shadow-sm">
                   <Plus size={18}/>
                   Top Up Wallet
                 </button>
 
-                <button className="flex items-center gap-2 px-5 py-3 border border-[#D1FAE5] text-[#009966] rounded-lg shadow-sm">
+                <button className="flex items-center gap-2 lg:px-5 px-3 lg:text-base text-sm lg:py-3 py-1.5 border border-[#D1FAE5] text-[#009966] rounded-lg shadow-sm">
                   <ArrowUpRight size={18}/>
                   Withdraw
                 </button>
@@ -62,7 +62,7 @@ export default function WalletPayments() {
 
           <div className="grid md:grid-cols-2 gap-6">
 
-            <div className="border border-[#E5E7EB] rounded-xl p-6 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+            <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-8 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
 
               <div className="flex items-center gap-2 mb-5">
                 <CreditCard size={18}/>
@@ -110,7 +110,7 @@ export default function WalletPayments() {
             </div>
 
 
-            <div className="border border-[#E5E7EB] rounded-xl p-6 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+            <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-8 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
 
               <div className="flex items-center gap-2 mb-5">
                 <Gift size={18}/>
@@ -163,7 +163,7 @@ export default function WalletPayments() {
         </div>
 
 
-        <div className="border border-[#E5E7EB] rounded-xl p-6 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+        <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-8 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
 
           <div className="flex items-center gap-2 mb-6">
             <Clock size={18}/>

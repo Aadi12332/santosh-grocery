@@ -1,21 +1,25 @@
-import { Search, ShoppingBag, Bell } from "lucide-react"
+import { Search, ShoppingBag, Bell, Menu } from "lucide-react"
 import { useState } from "react"
 import CartModal from "./CartModal"
 
-export default function CustomerHeader({ activeTab, setActiveTab }: { activeTab: string; setActiveTab: (tab: string) => void }) {
-  const [openCart, setOpenCart] = useState(false)
+export default function CustomerHeader({ activeTab, setActiveTab, openSidebar }: { activeTab: string; setActiveTab: (tab: string) => void; openSidebar: () => void }) {
+  const [openCart, setOpenCart] = useState(false);
   return (
     <div className="flex items-center justify-between lg:px-8 px-4 h-[72px] bg-white border-b border-[#E5E7EB]">
 
-      <div className="flex items-center gap-3 text-sm">
+      <div className="cursor-pointer lg:hidden" onClick={openSidebar}>
+        <Menu />
+      </div>
+
+      <div className="sm:flex items-center gap-3 text-sm ml-3 hidden">
         <span className="text-[#64748B]">HubNepa</span>
         <span className="text-[#94A3B8]">›</span>
         <span className="font-semibold text-[#0F172A]">Dashboard</span>
       </div>
 
 
-      <div className="flex items-center gap-4 flex-1 justify-end">
-        <div className="relative max-w-[250px] w-full cursor-pointer" onClick={() => setActiveTab("search")}>
+      <div className="flex items-center sm:gap-4 gap-1 flex-1 justify-end">
+        <div className="relative sm:max-w-[250px] max-w-[150px] w-full cursor-pointer" onClick={() => setActiveTab("search")}>
           <Search
             size={18}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8] cursor-pointer"

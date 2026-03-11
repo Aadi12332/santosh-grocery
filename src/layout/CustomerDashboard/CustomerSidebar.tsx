@@ -22,14 +22,16 @@ const menu = [
 
 export default function CustomerSidebar({
   activeTab,
-  setActiveTab
+  setActiveTab,
+  setSidebarOpen
 }: {
   activeTab: string
   setActiveTab: (tab: string) => void
+  setSidebarOpen: (open: boolean) => void
 }) {
   const navigate = useNavigate()
   return (
-    <div className="w-[288px] border-r border-[#E5E7EB] bg-white flex flex-col">
+    <div className="w-[288px] flex flex-col h-full pb-5">
 
       <div className="px-6 py-6">
         <img src={Logo} alt="" />
@@ -48,16 +50,17 @@ export default function CustomerSidebar({
         </div>
       </div>
 
-      <div className="flex-1 mt-6 px-4 space-y-1">
+      <div className="flex-1 mt-6 px-4 space-y-1 flex flex-col justify-between gap-1 h-full">
 
-        {menu.map((item) => {
+        <div className="space-y-1">
+          {menu.map((item) => {
           const Icon = item.icon
           const active = activeTab === item.id
 
           return (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {setActiveTab(item.id);setSidebarOpen(false)}}
               className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm transition ${
                 active
                   ? "bg-[#ECFDF5] text-[#009966] font-medium"
@@ -80,6 +83,7 @@ export default function CustomerSidebar({
           <ShoppingBag size={20} />
           Marketplace
         </button>
+        </div>
 
         <button onClick={()=>navigate("/role-wise-sign-in?role=customer")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
           <LogOut size={20} />

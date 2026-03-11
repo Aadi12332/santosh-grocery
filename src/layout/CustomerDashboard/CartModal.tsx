@@ -2,7 +2,7 @@ import { ShoppingBag, X, Minus, Plus, Trash2, ArrowRight } from "lucide-react"
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function CartModal({ open, onClose, selectedProduct }: { open: boolean; onClose: () => void; selectedProduct?: string }) {
+export default function CartModal({ open, onClose, selectedProduct, setActiveTab }: { open: boolean; onClose: () => void; selectedProduct?: string; setActiveTab?: (tab: string) => void }) {
 const navigate = useNavigate();
 
   const [qty, setQty] = useState(1)
@@ -54,9 +54,9 @@ const navigate = useNavigate();
           selectedProduct ? 
                   <div className="flex flex-col h-full justify-between">
 
-          <div className="p-5">
+          <div className="lg:p-5 p-3">
 
-            <div className="bg-[#0F172A] border border-[#1E293B] rounded-xl p-4 flex gap-4 items-start">
+            <div className="bg-[#0F172A] border border-[#1E293B] rounded-lg lg:rounded-xl lg:p-4 p-2 flex gap-4 items-start">
 
               <img
                 src={item.img}
@@ -119,7 +119,7 @@ const navigate = useNavigate();
 
           </div>
 
-          <div className="bg-[#0F172A] p-6 border-t border-[#1E293B]">
+          <div className="bg-[#0F172A] lg:p-6 p-3 border-t border-[#1E293B]">
 
             <div className="space-y-3 text-[#94A3B8]">
 

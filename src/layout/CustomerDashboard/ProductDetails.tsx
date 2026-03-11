@@ -12,9 +12,9 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import CartModal from "./CartModal";
 
-export default function ProductDetails() {
+export default function ProductDetails({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
   const navigate = useNavigate();
-const [openCart, setOpenCart] = useState(false);
+  const [openCart, setOpenCart] = useState(false);
 
   const images = [
     "https://images.unsplash.com/photo-1553621042-f6e147245754",
@@ -23,12 +23,15 @@ const [openCart, setOpenCart] = useState(false);
   ]
 
   const [activeImg, setActiveImg] = useState(images[0])
+  const price = 89.99
   const [qty, setQty] = useState(1)
+
+  const total = (price * qty).toFixed(2)
 
   return (
     <div className="">
 
-      <button onClick={()=>navigate(-1)} className="mb-6 text-[#6A7282]">
+      <button onClick={() => navigate(-1)} className="mb-6 text-[#6A7282]">
         ← Back to Dashboard
       </button>
 
@@ -60,11 +63,10 @@ const [openCart, setOpenCart] = useState(false);
                 key={i}
                 src={img}
                 onClick={() => setActiveImg(img)}
-                className={`aspect-square rounded-lg object-cover cursor-pointer border ${
-                  activeImg === img
+                className={`aspect-square rounded-lg object-cover cursor-pointer border ${activeImg === img
                     ? "border-[#009966]"
                     : "border-[#E5E7EB]"
-                }`}
+                  }`}
               />
             ))}
 
@@ -87,15 +89,15 @@ const [openCart, setOpenCart] = useState(false);
 
           </div>
 
-          <h1 className="text-[40px] font-playfair mb-6">
+          <h1 className="lg:text-[40px] text-[32px] font-playfair mb-6">
             Sushi Masterclass Kit
           </h1>
 
-          <p className="text-[32px] text-[#101828] mb-4">
+          <p className="lg:text-[32px] text-xl text-[#101828] mb-4">
             $89.99
           </p>
 
-          <p className="text-[#6A7282] text-[20px] leading-relaxed mb-10">
+          <p className="text-[#6A7282] lg:text-[20px] text-base leading-relaxed mb-10">
             Master the art of sushi making from the comfort of your home.
             This premium kit includes professional-grade tools, authentic
             ingredients sourced from Japan, and step-by-step video guides
@@ -104,9 +106,9 @@ const [openCart, setOpenCart] = useState(false);
 
           <div className="grid grid-cols-2 gap-4 mb-16">
 
-            <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-xl p-5 flex gap-3">
+            <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg lg:rounded-xl lg:p-5 p-2 flex gap-3 sm:flex-row flex-col">
 
-              <ShoppingBag className="text-[#009966]" />
+              <ShoppingBag className="text-[#009966] min-w-4" />
 
               <div>
                 <p className="font-medium">Pro Tools</p>
@@ -117,9 +119,9 @@ const [openCart, setOpenCart] = useState(false);
 
             </div>
 
-            <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-xl p-5 flex gap-3">
+            <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg lg:rounded-xl lg:p-5 p-2 flex gap-3 sm:flex-row flex-col">
 
-              <Truck className="text-[#2563EB]" />
+              <Truck className="text-[#2563EB] min-w-4" />
 
               <div>
                 <p className="font-medium">Free Delivery</p>
@@ -132,9 +134,9 @@ const [openCart, setOpenCart] = useState(false);
 
           </div>
 
-          <div className="flex gap-4 mb-6">
+          <div className="flex gap-4 mb-6 sm:flex-row flex-col">
 
-            <div className="flex items-center border border-[#E5E7EB] rounded-lg">
+            <div className="flex items-center justify-center border border-[#E5E7EB] rounded-lg">
 
               <button
                 onClick={() => setQty(Math.max(1, qty - 1))}
@@ -154,12 +156,15 @@ const [openCart, setOpenCart] = useState(false);
 
             </div>
 
-            <button onClick={() => setOpenCart(true)} className="flex-1 bg-[#009966] text-white rounded-lg flex items-center justify-center gap-2 shadow-lg">
+            <button
+              onClick={() => setOpenCart(true)}
+              className="flex-1 bg-[#009966] text-white rounded-lg px-3 flex items-center justify-center gap-2 py-4 shadow-lg"
+            >
               <ShoppingBag size={18} />
-              Add to Cart — $89.99
+              Add to Cart — ${total}
             </button>
 
-            <CartModal selectedProduct="selected" open={openCart} onClose={() => setOpenCart(false)} />
+            <CartModal setActiveTab={setActiveTab} selectedProduct="selected" open={openCart} onClose={() => setOpenCart(false)} />
 
           </div>
 

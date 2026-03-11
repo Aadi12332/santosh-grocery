@@ -5,8 +5,13 @@ import InviteFriends from "./InviteFriends"
 import ProductDetails from "./ProductDetails"
 import OrderHistory from "./OrderHistory"
 import WalletPayments from "./WalletPayments"
+import SavedItems from "./SavedItems"
+import AccountSettings from "./AccountSettings"
+import HelpCenter from "./HelpCenter"
+
 
 export default function CustomerChild({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) {
+  console.log({activeTab})
   if (activeTab === "overview") {
     return (
       <Overview setActiveTab={setActiveTab} />
@@ -33,15 +38,15 @@ export default function CustomerChild({ activeTab, setActiveTab }: { activeTab: 
 
   if (activeTab === "product-details") {
     return (
-      <ProductDetails />
+      <ProductDetails setActiveTab={setActiveTab} />
     )
   }
 
   if (activeTab === "orders") {return (<OrderHistory />)}
   if (activeTab === "wallet") {return (<WalletPayments />)}
-  if (activeTab === "saved") return <div>Saved Items</div>
-  if (activeTab === "profile") return <div>Profile Settings</div>
-  if (activeTab === "support") return <div>Support Page</div>
+  if (activeTab === "saved") {return (<SavedItems />)}
+  if (activeTab === "profile") {return (<AccountSettings />)}
+  if (activeTab === "support") {return (<HelpCenter />)}
 
   return null
 }

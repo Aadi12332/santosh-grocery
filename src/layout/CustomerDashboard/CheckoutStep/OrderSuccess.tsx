@@ -10,7 +10,7 @@ export default function OrderSuccess() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-6">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] text-center lg:px-6 px-3 py-10">
 
       <div className="w-24 h-24 rounded-full bg-[#043D34] flex items-center justify-center mb-6">
 
@@ -30,7 +30,7 @@ export default function OrderSuccess() {
         Your order <span className="text-white">#{order.id}</span> has been placed successfully.
       </p>
 
-      <div className="w-full max-w-[520px] border border-[#1D293D] rounded-2xl p-6 bg-[#0F172B80] text-left mb-8">
+      <div className="w-full max-w-[520px] border border-[#1D293D] rounded-lg lg:rounded-2xl lg:p-6 p-3 bg-[#0F172B80] text-left mb-8">
 
         <div className="flex items-center gap-3 mb-4">
 
@@ -62,7 +62,7 @@ export default function OrderSuccess() {
 
       </div>
 
-      <button onClick={()=> navigate("/customer/dashboard")} className="w-full max-w-[520px] bg-[#009966] text-white py-4 rounded-xl text-lg font-medium mb-6">
+      <button onClick={()=> navigate("/customer/dashboard")} className="w-full max-w-[520px] bg-[#009966] text-white py-4 rounded-lg lg:rounded-xl text-lg font-medium mb-6">
 
         Track Order
 
