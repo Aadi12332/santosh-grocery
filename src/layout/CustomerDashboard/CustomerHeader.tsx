@@ -14,7 +14,7 @@ export default function CustomerHeader({ activeTab, setActiveTab, openSidebar }:
       <div className="sm:flex items-center gap-3 text-sm ml-3 hidden">
         <span className="text-[#64748B]">HubNepa</span>
         <span className="text-[#94A3B8]">›</span>
-        <span className="font-semibold text-[#0F172A]">Dashboard</span>
+        <span className="font-semibold text-[#0F172A]">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</span>
       </div>
 
 

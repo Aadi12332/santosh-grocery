@@ -85,7 +85,7 @@ export default function CustomerSidebar({
         </button>
         </div>
 
-        <button onClick={()=>navigate("/role-wise-sign-in?role=customer")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
+        <button onClick={()=>{navigate("/sign-in");setActiveTab("")}} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
           <LogOut size={20} />
           Sign Out
         </button>

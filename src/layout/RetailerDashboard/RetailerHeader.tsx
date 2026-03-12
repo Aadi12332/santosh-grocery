@@ -18,7 +18,7 @@ export default function RetailerHeader({ activeTab, setActiveTab, openSidebar }:
 
           <input
             placeholder="Search orders..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F1F5F9] text-sm outline-none"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[#F1F5F9] text-sm outline-none text-black"
           />
         </div>
 
@@ -28,7 +28,7 @@ export default function RetailerHeader({ activeTab, setActiveTab, openSidebar }:
 
             <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>
-          <ProfileMenu />
+          <ProfileMenu setActiveTab={setActiveTab} />
         </div>
 
 

@@ -1,0 +1,220 @@
+import { Search, Copy, MoreHorizontal, Pencil, Trash2 } from "lucide-react"
+import { useState } from "react"
+
+const coupons = [
+  {
+    code: "SUMMER20",
+    discount: "20%",
+    type: "Percentage",
+    valid: "Oct 31, 2023",
+    usage: 45,
+    status: "Active"
+  },
+  {
+    code: "WELCOME10",
+    discount: "10%",
+    type: "Percentage",
+    valid: "Dec 31, 2023",
+    usage: 120,
+    status: "Active"
+  },
+  {
+    code: "FLAT50",
+    discount: "$50",
+    type: "Fixed Amount",
+    valid: "Sep 30, 2023",
+    usage: 89,
+    status: "Expired"
+  },
+  {
+    code: "FREESHIP",
+    discount: "Free Shipping",
+    type: "Shipping",
+    valid: "Nov 15, 2023",
+    usage: 12,
+    status: "Active"
+  }
+]
+
+const statusStyles: any = {
+  Active: "bg-green-100 text-green-700",
+  Expired: "bg-gray-200 text-gray-600"
+}
+
+export default function OffersCoupons({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
+  return (
+    <div className="space-y-6">
+
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+
+        <div>
+          <h1 className="lg:text-[34px] text-3xl font-playfair font-semibold">
+            Offers & Coupons
+          </h1>
+
+          <p className="text-[#6A7282] mt-2 lg:text-[18px] text-base">
+            Create and manage discount codes for your customers.
+          </p>
+        </div>
+
+        <button onClick={() => setActiveTab("createoffer")} className="bg-[#F54900] text-white rounded-lg px-5 py-2.5 shadow-sm">
+          + Create New Offer
+        </button>
+
+      </div>
+
+
+
+      <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
+
+          <div className="flex items-center border border-[#E5E7EB] rounded-lg px-3 w-full lg:w-[320px]">
+            <Search size={18} className="text-[#6A7282]" />
+            <input
+              placeholder="Search coupons..."
+              className="w-full px-3 py-2 outline-none text-sm"
+            />
+          </div>
+
+          <button className="border border-[#E5E7EB] bg-white px-4 py-2 rounded-lg shadow-sm">
+            Active Only
+          </button>
+
+        </div>
+
+
+
+        <div className="">
+
+          <table className="w-full text-left">
+
+            <thead className="border-b text-[#6A7282] text-sm">
+
+              <tr>
+
+                <th className="py-3 text-sm font-medium text-[#62748E]">
+                  COUPON CODE
+                </th>
+
+                <th className="py-3 text-sm font-medium text-[#62748E]">
+                  DISCOUNT
+                </th>
+
+                <th className="py-3 text-sm font-medium text-[#62748E]">
+                  TYPE
+                </th>
+
+                <th className="py-3 text-sm font-medium text-[#62748E]">
+                  VALID UNTIL
+                </th>
+
+                <th className="py-3 text-sm font-medium text-[#62748E]">
+                  USAGE
+                </th>
+
+                <th className="py-3 text-sm font-medium text-[#62748E]">
+                  STATUS
+                </th>
+
+                <th className="py-3 text-sm font-medium text-[#62748E] text-center">
+                  ACTIONS
+                </th>
+
+              </tr>
+
+            </thead>
+
+
+
+            <tbody>
+
+              {coupons.map((c, i) => (
+
+                <tr key={i} className="border-b last:border-none">
+
+                  <td className="py-5">
+
+                    <div className="flex items-center gap-3">
+
+                      <span className="px-3 py-1.5 rounded-md bg-orange-50 text-[#F54900] text-sm border border-[#FFD6A7] font-medium">
+                        {c.code}
+                      </span>
+
+                      <Copy size={16} className="text-[#6A7282] cursor-pointer" />
+
+                    </div>
+
+                  </td>
+
+                  <td className="py-5 font-semibold text-[#111827]">
+                    {c.discount}
+                  </td>
+
+                  <td className="py-5 text-[#374151]">
+                    {c.type}
+                  </td>
+
+                  <td className="py-5 text-[#374151]">
+                    {c.valid}
+                  </td>
+
+                  <td className="py-5 text-[#111827]">
+                    {c.usage}
+                  </td>
+
+                  <td className="py-5">
+
+                    <span className={`px-3 py-1 rounded-full text-xs ${statusStyles[c.status]}`}>
+                      {c.status}
+                    </span>
+
+                  </td>
+
+                  <td className="py-5 text-center relative">
+
+                    <button onClick={() =>
+                      setOpenIndex(openIndex === i ? null : i)
+                    } className="p-2 hover:bg-gray-100 rounded-lg">
+                      <MoreHorizontal size={18} />
+                    </button>
+                    {openIndex === i && (
+                      <div className="absolute bottom-12 right-10 mt-2 w-[180px] bg-white rounded-xl shadow-lg border border-[#E5E7EB] overflow-hidden z-50">
+
+                        <button
+                          onClick={() => setOpenIndex(null)}
+                          className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-gray-50 text-[#334155]"
+                        >
+                          <Pencil size={18} />
+                          Edit Details
+                        </button>
+
+                        <button
+                          onClick={() => setOpenIndex(null)}
+                          className="flex items-center gap-3 w-full px-4 py-3 text-left hover:bg-red-50 text-red-600"
+                        >
+                          <Trash2 size={18} />
+                          Deactivate
+                        </button>
+
+                      </div>
+                    )}
+
+                  </td>
+
+                </tr>
+
+              ))}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+    </div>
+  )
+}

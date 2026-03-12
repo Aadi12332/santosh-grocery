@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react"
+import { useNavigate } from "react-router-dom";
 
-export default function ProfileMenu() {
-
+export default function ProfileMenu({ setActiveTab }: { setActiveTab: (tab: string) => void;}) {
+const navigate = useNavigate();
   const [open,setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -50,17 +51,36 @@ export default function ProfileMenu() {
 
             <div className="flex flex-col">
 
-              <button className="text-left px-6 py-3 text-base hover:bg-gray-50 text-[#0F172B]">
-                Profile Settings
-              </button>
+             <button
+  onClick={() => {
+    setActiveTab("settings")
+    setOpen(false)
+  }}
+  className="text-left px-6 py-3 text-base hover:bg-gray-50 text-[#0F172B]"
+>
+  Profile Settings
+</button>
 
-              <button className="text-left px-6 py-3 text-base hover:bg-gray-50 text-[#0F172B] border-b">
-                Billing & Wallet
-              </button>
+<button
+  onClick={() => {
+    setActiveTab("finance")
+    setOpen(false)
+  }}
+  className="text-left px-6 py-3 text-base hover:bg-gray-50 text-[#0F172B] border-b"
+>
+  Billing & Wallet
+</button>
 
-              <button className="text-left px-6 py-3 text-base text-[#E7000B] hover:bg-red-50">
-                Log out
-              </button>
+<button
+  onClick={() => {
+    navigate("/sign-in")
+    setActiveTab("")
+    setOpen(false)
+  }}
+  className="text-left px-6 py-3 text-base text-[#E7000B] hover:bg-red-50"
+>
+  Log out
+</button>
 
             </div>
 

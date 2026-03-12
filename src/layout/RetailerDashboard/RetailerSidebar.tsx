@@ -37,6 +37,7 @@ export default function RetailerSidebar({
   setSidebarOpen: (open: boolean) => void
 }) {
   const navigate = useNavigate()
+
   return (
     <div className="w-[288px] flex flex-col h-full pb-5">
 
@@ -47,39 +48,45 @@ export default function RetailerSidebar({
       <div className="flex-1 px-4 space-y-1 flex flex-col justify-between gap-1 h-full">
 
         <div className="space-y-1">
-         {menu.map((item) => {
-  const Icon = item.icon
-  const active = activeTab === item.id
+          {menu.map((item) => {
+            const Icon = item.icon
 
-  return (
-    <button
-      key={item.id}
-      onClick={() => {
-        setActiveTab(item.id)
-        setSidebarOpen(false)
-      }}
-      className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[15px] transition ${
-        active
-          ? "bg-[#F3EDE6] text-[#F97316] font-medium"
-          : "text-[#64748B] hover:bg-gray-100"
-      }`}
-    >
-      <Icon
-        size={20}
-        className={active ? "text-[#F97316]" : "text-[#94A3B8]"}
-      />
+            const tabMap: Record<string, string> = {
+              createoffer: "offers",
+              addproduct: "products"
+            }
 
-      {item.label}
-    </button>
-  )
-})}
+            const active =
+              activeTab === item.id || tabMap[activeTab] === item.id
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => {
+                  setActiveTab(item.id)
+                  setSidebarOpen(false)
+                }}
+                className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[15px] transition ${active
+                    ? "bg-[#F3EDE6] text-[#F97316] font-medium"
+                    : "text-[#64748B] hover:bg-gray-100"
+                  }`}
+              >
+                <Icon
+                  size={20}
+                  className={active ? "text-[#F97316]" : "text-[#94A3B8]"}
+                />
+
+                {item.label}
+              </button>
+            )
+          })}
         </div>
 
-        <button onClick={()=>navigate("/role-wise-sign-in?role=retailer")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
+
+        <button onClick={() => { navigate("/sign-in"); setActiveTab("") }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
           <LogOut size={20} />
           Sign Out
         </button>
-
       </div>
 
     </div>

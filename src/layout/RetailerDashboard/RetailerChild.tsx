@@ -1,13 +1,24 @@
+import AddProduct from "./AddProduct"
+import CreateOffer from "./CreateOffer"
+import CustomersandReviews from "./Customers&Reviews"
+import FinanceWallet from "./FinanceWallet"
 import Notifications from "./Notifications"
+import OffersCoupons from "./OffersCoupons"
+import Orders from "./Orders"
+import ProductsTable from "./ProductsTable"
+import RefundRequests from "./RefundRequests"
+import ReportsAnalytics from "./ReportsAnalytics"
+import RetailerDashboard from "./RetailerDashboard"
+import RetailerSettings from "./RetailerSettings"
+import SupportCenter from "./SupportCenter"
 
 
 export default function RetailerChild({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) {
-  console.log({activeTab})
-  // if (activeTab === "overview") {
-  //   return (
-  //     <Overview setActiveTab={setActiveTab} />
-  //   )
-  // }
+  if (activeTab === "dashboard") {
+    return (
+      <RetailerDashboard setActiveTab={setActiveTab} />
+    )
+  }
 
   if (activeTab === "notifications") {
     return (
@@ -15,29 +26,42 @@ export default function RetailerChild({ activeTab, setActiveTab }: { activeTab: 
     )
   }
 
-  // if (activeTab === "search") {
-  //   return (
-  //     <SearchTab />
-  //   )
-  // }
+  if (activeTab === "products") {
+    return (
+      <ProductsTable setActiveTab={setActiveTab} />
+    )
+  }
 
-  // if (activeTab === "invite") {
-  //   return (
-  //     <InviteFriends />
-  //   )
-  // }
+  if (activeTab === "orders") {
+    return (
+      <Orders />
+    )
+  }
 
-  // if (activeTab === "product-details") {
-  //   return (
-  //     <ProductDetails setActiveTab={setActiveTab} />
-  //   )
-  // }
+  if (activeTab === "createoffer") {
+    return (
+      <CreateOffer setActiveTab={setActiveTab} />
+    )
+  }
 
-  // if (activeTab === "orders") {return (<OrderHistory />)}
-  // if (activeTab === "wallet") {return (<WalletPayments />)}
-  // if (activeTab === "saved") {return (<SavedItems />)}
-  // if (activeTab === "profile") {return (<AccountSettings />)}
-  // if (activeTab === "support") {return (<HelpCenter />)}
+  if (activeTab === "addproduct") {
+    return (
+      <AddProduct setActiveTab={setActiveTab} />
+    )
+  }
+
+  if (activeTab === "customers") {
+    return (
+      <CustomersandReviews />
+    )
+  }
+
+  if (activeTab === "offers") {return (<OffersCoupons setActiveTab={setActiveTab} />)}
+  if (activeTab === "finance") {return (<FinanceWallet />)}
+  if (activeTab === "refunds") {return (<RefundRequests />)}
+  if (activeTab === "reports") {return (<ReportsAnalytics />)}
+  if (activeTab === "support") {return (<SupportCenter />)}
+  if (activeTab === "settings") {return (<RetailerSettings />)}
 
   return null
 }

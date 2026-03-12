@@ -6,7 +6,7 @@ import RetailerHeader from "./RetailerHeader"
 export default function RetailerLayout() {
 
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("activeTab") || "overview"
+    return localStorage.getItem("activeTab") || "dashboard"
   })
 
   const [sidebarOpen,setSidebarOpen] = useState(false)

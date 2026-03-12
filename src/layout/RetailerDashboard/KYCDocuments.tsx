@@ -1,0 +1,122 @@
+import { FileText, Upload, CheckCircle } from "lucide-react"
+
+export default function KYCDocuments() {
+
+  const docs = [
+    {
+      title: "Business License",
+      file: "license_2023.pdf",
+      size: "2.4 MB",
+      date: "Oct 10",
+      status: "Approved"
+    },
+    {
+      title: "Tax Identification",
+      file: "tax_id_doc.pdf",
+      size: "1.8 MB",
+      date: "Oct 10",
+      status: "Approved"
+    }
+  ]
+
+  return (
+    <div className="space-y-6 border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm">
+
+      <div className="flex items-center justify-between">
+
+        <div>
+          <h3 className="font-playfair text-2xl">
+            Verification Documents
+          </h3>
+
+          <p className="text-[#6A7282] mt-1">
+            Upload official documents to verify your business.
+          </p>
+        </div>
+
+        <span className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm">
+          <CheckCircle size={16}/>
+          Verified Seller
+        </span>
+
+      </div>
+
+
+
+      <div className="grid md:grid-cols-2 gap-6">
+
+        {docs.map((d, i) => (
+
+          <div
+            key={i}
+            className="border border-[#E2E8F0] bg-[#F8FAFC] rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm"
+          >
+
+            <div className="flex items-center justify-between mb-4">
+
+              <h4 className="font-playfair text-xl">
+                {d.title}
+              </h4>
+
+              <span className="bg-green-100 text-green-700 px-3 py-1 rounded-md text-sm">
+                {d.status}
+              </span>
+
+            </div>
+
+
+
+            <div className="border border-[#E2E8F0] rounded-lg p-4 bg-white flex items-center gap-3">
+
+              <FileText className="text-[#6A7282]" size={28}/>
+
+              <div>
+                <p className="font-medium text-[#111827]">
+                  {d.file}
+                </p>
+
+                <p className="text-sm text-[#6A7282]">
+                  {d.size} • Uploaded on {d.date}
+                </p>
+              </div>
+
+            </div>
+
+
+
+            <button className="mt-4 w-full border border-[#CAD5E2] rounded-lg py-2 bg-[#F8FAFC]">
+              Re-upload
+            </button>
+
+          </div>
+
+        ))}
+
+      </div>
+
+
+
+      <div className="border border-[#E2E8F0] bg-[#F8FAFC] rounded-lg lg:rounded-xl p-10 shadow-sm text-center">
+
+        <div className="flex justify-center mb-4">
+          <Upload size={28} className="text-[#6A7282]"/>
+        </div>
+
+        <h3 className="font-playfair text-xl mb-2">
+          Upload Additional Documents
+        </h3>
+
+        <p className="text-[#6A7282] mb-6">
+          Need to submit more info? Drag and drop your files here <br/>
+          or click to browse.
+        </p>
+
+        <button className="border border-[#E2E8F0] bg-[#F8FAFC] px-5 py-2 rounded-lg">
+          Select Files
+        </button>
+
+      </div>
+
+    </div>
+  )
+}
