@@ -1,33 +1,32 @@
 import {
-  Home,
   Wallet,
   Settings,
-  ShoppingBag,
   LogOut,
   Package,
   Users,
-  Tag,
-  RotateCcw,
   BarChart3,
   MessageSquare,
-  Store,
+  Truck,
+  LucideHouse,
+  NotepadText,
+  LayoutDashboard,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 const menu = [
-  { id: "dashboard", label: "Dashboard", icon: Home },
-  { id: "products", label: "Products", icon: Package },
-  { id: "orders", label: "Orders", icon: ShoppingBag },
-  { id: "customers", label: "Customers", icon: Users },
-  { id: "offers", label: "Offers", icon: Tag },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "products", label: "Products Catalog", icon: Package },
+  { id: "orders", label: "Bulk Orders", icon: NotepadText },
+  { id: "warehouse", label: "Warehouse", icon: LucideHouse },
+  { id: "clients", label: "Clients", icon: Users },
+  { id: "logistics", label: "Logistics", icon: Truck },
   { id: "finance", label: "Finance", icon: Wallet },
-  { id: "refunds", label: "Refunds", icon: RotateCcw },
   { id: "reports", label: "Reports", icon: BarChart3 },
+  { id: "settings", label: "Settings", icon: Settings },
   { id: "support", label: "Support", icon: MessageSquare },
-  { id: "settings", label: "Settings", icon: Settings }
 ]
 
-export default function RetailerSidebar({
+export default function SupplierSidebar({
   activeTab,
   setActiveTab,
   setSidebarOpen
@@ -42,8 +41,8 @@ export default function RetailerSidebar({
     <div className="w-[288px] flex flex-col h-full pb-5">
 
       <div className="px-6 py-6 flex items-center gap-2 font-bold text-[21px] text-[#0F172B]">
-        <Store size={22} className="text-[#F54900]" />
-        Reatiler Panel
+        <Truck size={22} className="text-[#155DFC]" />
+        Supplier Panel
       </div>
 
       <div className="flex-1 px-4 space-y-1 flex flex-col justify-between gap-1 h-full">
@@ -68,13 +67,13 @@ export default function RetailerSidebar({
                   setSidebarOpen(false)
                 }}
                 className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[15px] transition ${active
-                    ? "bg-[#F3EDE6] text-[#F54900] font-medium"
-                    : "text-[#64748B] hover:bg-gray-100"
+                    ? "bg-[#EFF6FF] text-[#155DFC] font-medium"
+                    : "text-[#64748B] hover:bg-[#EFF6FF]"
                   }`}
               >
                 <Icon
                   size={20}
-                  className={active ? "text-[#F54900]" : "text-[#94A3B8]"}
+                  className={active ? "text-[#155DFC]" : "text-[#94A3B8]"}
                 />
 
                 {item.label}

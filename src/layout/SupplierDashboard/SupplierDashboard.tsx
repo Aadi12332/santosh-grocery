@@ -1,0 +1,481 @@
+import { DollarSign, Package, Users, AlertTriangle, Truck } from "lucide-react";
+import mapImage from "../../assets/images/dashboardmap.jpg";
+
+const stats = [
+  {
+    title: "Total Revenue",
+    value: "$124,592",
+    change: "+12.5%",
+    icon: DollarSign,
+    iconBg: "bg-blue-100",
+    iconColor: "text-[#155DFC]",
+    trend: "up"
+  },
+  {
+    title: "Active Orders",
+    value: "48",
+    change: "+4",
+    icon: Package,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    trend: "up"
+  },
+  {
+    title: "Low Stock Items",
+    value: "12",
+    change: "-2",
+    icon: AlertTriangle,
+    iconBg: "bg-orange-100",
+    iconColor: "text-orange-600",
+    trend: "down"
+  },
+  {
+    title: "Active Clients",
+    value: "156",
+    change: "+8",
+    icon: Users,
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
+    trend: "up"
+  }
+]
+
+const orders = [
+  {
+    id:"#ORD-7782",
+    client:"Fresh Market NYC",
+    item:"Organic Avocados (50 crates)",
+    amount:"$4,250",
+    image:"https://picsum.photos/40?1"
+  },
+  {
+    id:"#ORD-7781",
+    client:"Bistro 55",
+    item:"Premium Steak Cuts (200kg)",
+    amount:"$8,900",
+    image:"https://picsum.photos/40?2"
+  },
+  {
+    id:"#ORD-7780",
+    client:"Green Grocers",
+    item:"Seasonal Fruits Mix",
+    amount:"$1,200",
+    image:"https://picsum.photos/40?3"
+  },
+  {
+    id:"#ORD-7779",
+    client:"Sushi Zen",
+    item:"Fresh Salmon (Imported)",
+    amount:"$12,400",
+    image:"https://picsum.photos/40?4"
+  },
+  {
+    id:"#ORD-7778",
+    client:"Daily Mart",
+    item:"Dairy Products Bulk",
+    amount:"$3,150",
+    image:"https://picsum.photos/40?5"
+  }
+]
+
+export default function SupplierDashboard({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
+
+  return (
+
+    <div className="space-y-6">
+
+      <div className="flex justify-between items-center">
+
+        <div>
+          <h1 className="text-3xl lg:text-[34px] font-semibold font-playfair">
+            Dashboard
+          </h1>
+          <p className="text-[#64748B]">
+            Overview of your supply chain operations
+          </p>
+        </div>
+
+        <div className="flex gap-3">
+
+          <button className="border border-[#E5E7EB] bg-white rounded-lg px-4 py-2 flex items-center gap-2">
+            History
+          </button>
+
+          <button className="bg-[#155DFC] text-white rounded-lg px-4 py-2 flex items-center gap-2 shadow">
+            New Shipment
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <div className="">
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-5 mb-5">
+
+          {stats.map((s, i) => {
+
+            const Icon = s.icon
+
+            return (
+
+              <div
+                key={i}
+                className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm"
+              >
+
+                <div className="flex justify-between">
+
+                  <div>
+
+                    <p className="text-sm text-[#64748B]">
+                      {s.title}
+                    </p>
+
+                    <h3 className="text-xl font-semibold mt-2">
+                      {s.value}
+                    </h3>
+
+                  </div>
+
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${s.iconBg}`}>
+                    <Icon className={s.iconColor} size={18} />
+                  </div>
+
+                </div>
+
+                <p className={`text-sm mt-3 text-gray-400`}>
+                  <span className={`text-sm mt-3 ${s.trend === "up" ? "text-green-600" : "text-red-600"}`}>{s.change}</span> vs last month
+                </p>
+
+              </div>
+
+            )
+          })}
+
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-5 grid-cols-1">
+          <div className="lg:col-span-2">
+           <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 mb-5">
+
+  <div className="flex justify-between items-center mb-6">
+
+    <div>
+      <h3 className="text-xl font-playfair">
+        Recent Bulk Orders
+      </h3>
+
+      <p className="text-sm text-[#64748B]">
+        Orders from restaurants and retailers
+      </p>
+    </div>
+
+    <button className="text-[#155DFC] font-medium">
+      View All
+    </button>
+
+  </div>
+
+
+  <div className="overflow-x-auto">
+
+    <table className="w-full text-left">
+
+      <thead className="text-sm text-[#94A3B8] border-b">
+
+        <tr>
+          <th className="py-3 font-medium">ORDER ID</th>
+          <th className="py-3 font-medium">CLIENT</th>
+          <th className="py-3 font-medium">ITEMS</th>
+          <th className="py-3 font-medium">AMOUNT</th>
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+        {orders.map((o,i)=>{
+
+          const orderPrefix = o.id.split("-")[0] + "-"
+          const orderNumber = o.id.split("-")[1]
+
+          return(
+
+            <tr
+              key={i}
+              className="border-b border-[#F1F5F9] last:border-none"
+            >
+
+              <td className="py-5 font-medium text-[#0F172A]">
+
+                <div className="leading-5">
+                  <p>{orderPrefix}</p>
+                  <p>{orderNumber}</p>
+                </div>
+
+              </td>
+
+
+              <td className="py-5">
+
+                <div className="flex items-center gap-3">
+
+                  <img
+                    src={o.image}
+                    className="w-10 h-10 min-w-10 rounded-full object-cover"
+                  />
+
+                  <p className="font-medium text-[#334155]">
+                    {o.client}
+                  </p>
+
+                </div>
+
+              </td>
+
+
+              <td className="py-5 text-[#64748B] max-w-[220px]">
+                {o.item}
+              </td>
+
+
+              <td className="py-5 font-semibold text-[#0F172A]">
+                {o.amount}
+              </td>
+
+            </tr>
+
+          )
+
+        })}
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6">
+
+              <h3 className="text-xl font-playfair mb-4">
+                Live Fleet Tracking
+              </h3>
+
+              <div className="relative">
+
+                <img
+                  src={mapImage}
+                  className="rounded-lg w-full h-[300px] object-cover"
+                />
+
+                <div className="absolute right-4 top-4 bg-white rounded-lg shadow px-4 py-2 flex items-center gap-2">
+                  <Truck size={16} />
+                  <span className="text-sm">12 Vehicles Active</span>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+          <div className="space-y-5">
+
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6">
+
+              <h3 className="text-xl font-playfair mb-5">
+                Low Stock Alerts
+              </h3>
+
+              <div className="space-y-4">
+
+                <div className="flex items-center justify-between bg-[#F3F4F6] rounded-xl p-3">
+
+                  <div className="flex items-center gap-3">
+
+                    <img
+                      src="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200"
+                      className="w-12 h-12 rounded-lg object-cover"
+                    />
+
+                    <div>
+                      <p className="font-medium">Organic Rice 50kg</p>
+                      <p className="text-sm text-[#64748B]">
+                        5 units remaining
+                      </p>
+                    </div>
+
+                  </div>
+
+                  <span className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-md">
+                    Critical
+                  </span>
+
+                </div>
+
+
+                <div className="flex items-center justify-between bg-[#F3F4F6] rounded-xl p-3">
+
+                  <div className="flex items-center gap-3">
+
+                    <img
+                      src="https://images.unsplash.com/photo-1600788907416-456578634209?w=200"
+                      className="w-12 h-12 rounded-lg object-cover"
+                    />
+
+                    <div>
+                      <p className="font-medium">Almond Milk Bulk</p>
+                      <p className="text-sm text-[#64748B]">
+                        12 crates remaining
+                      </p>
+                    </div>
+
+                  </div>
+
+                  <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-md">
+                    Low
+                  </span>
+
+                </div>
+
+
+                <div className="flex items-center justify-between bg-[#F3F4F6] rounded-xl p-3">
+
+                  <div className="flex items-center gap-3">
+
+                    <img
+                      src="https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200"
+                      className="w-12 h-12 rounded-lg object-cover"
+                    />
+
+                    <div>
+                      <p className="font-medium">Frozen Berries</p>
+                      <p className="text-sm text-[#64748B]">
+                        8 boxes remaining
+                      </p>
+                    </div>
+
+                  </div>
+
+                  <span className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-md">
+                    Low
+                  </span>
+
+                </div>
+
+              </div>
+
+              <button className="mt-5 w-full border border-[#D1D5DB] rounded-lg py-2 text-[#155DFC] font-medium">
+                Manage Inventory
+              </button>
+
+            </div>
+
+
+
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6">
+
+              <h3 className="text-xl font-playfair mb-5">
+                Top Clients
+              </h3>
+
+              <div className="space-y-5">
+
+                <div className="flex items-center justify-between">
+
+                  <div className="flex items-center gap-3">
+
+                    <div className="w-9 h-9 bg-[#E5EDFF] text-[#155DFC] flex items-center justify-center rounded-full font-medium">
+                      U
+                    </div>
+
+                    <div>
+                      <p className="font-medium">
+                        Urban Bistro Group
+                      </p>
+                      <p className="text-sm text-[#64748B]">
+                        Vol: $45k/mo
+                      </p>
+                    </div>
+
+                  </div>
+
+                  <span className="text-green-600 text-sm font-medium">
+                    +5%
+                  </span>
+
+                </div>
+
+
+
+                <div className="flex items-center justify-between">
+
+                  <div className="flex items-center gap-3">
+
+                    <div className="w-9 h-9 bg-[#E5EDFF] text-[#155DFC] flex items-center justify-center rounded-full font-medium">
+                      W
+                    </div>
+
+                    <div>
+                      <p className="font-medium">
+                        Whole Foods Local
+                      </p>
+                      <p className="text-sm text-[#64748B]">
+                        Vol: $32k/mo
+                      </p>
+                    </div>
+
+                  </div>
+
+                  <span className="text-green-600 text-sm font-medium">
+                    +12%
+                  </span>
+
+                </div>
+
+
+
+                <div className="flex items-center justify-between">
+
+                  <div className="flex items-center gap-3">
+
+                    <div className="w-9 h-9 bg-[#E5EDFF] text-[#155DFC] flex items-center justify-center rounded-full font-medium">
+                      F
+                    </div>
+
+                    <div>
+                      <p className="font-medium">
+                        Fresh Eats Chain
+                      </p>
+                      <p className="text-sm text-[#64748B]">
+                        Vol: $28k/mo
+                      </p>
+                    </div>
+
+                  </div>
+
+                  <span className="text-red-500 text-sm font-medium">
+                    -2%
+                  </span>
+
+                </div>
+
+              </div>
+
+              <button className="mt-5 text-[#155DFC] text-sm font-medium">
+                View All Clients
+              </button>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  )
+}

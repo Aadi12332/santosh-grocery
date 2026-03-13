@@ -112,7 +112,7 @@ export default function AddProduct({ setActiveTab }: { setActiveTab: (tab: strin
                                 value={form.name}
                                 onChange={handleChange}
                                 placeholder="e.g. Organic Whole Milk"
-                                className="w-full mt-2 border outline-none outline-none border-[#E5E7EB] rounded-lg px-4 py-3"
+                                className="w-full mt-2 border outline-none border-[#E5E7EB] rounded-lg px-4 py-3"
                             />
                         </div>
 
