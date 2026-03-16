@@ -1,9 +1,9 @@
-import FinanceWallet from "./FinanceWallet"
+// import FinanceWallet from "./FinanceWallet"
 import Notifications from "./Notifications"
 import Orders from "./Orders"
 import ReportsAnalytics from "./ReportsAnalytics"
 import SupportCenter from "./SupportCenter"
-import MenuManagement from "./MenuManagement"
+// import MenuManagement from "./MenuManagement"
 import RestaurantDashboard from "./RestaurantDashboard"
 import RestaurantSettings from "./RestaurantSettings"
 
