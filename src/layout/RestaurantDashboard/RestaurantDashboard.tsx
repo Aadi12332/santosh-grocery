@@ -1,0 +1,367 @@
+import { DollarSign, Package, Users, Clock, ArrowUpRight, ArrowDownRight } from "lucide-react";
+
+const stats = [
+  {
+    title: "Total Orders",
+    value: "156",
+    change: "+12%",
+    icon: Package,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    trend: "up"
+  },
+  {
+    title: "Total Revenue",
+    value: "$4,250",
+    change: "+8%",
+    icon: DollarSign,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    trend: "up"
+  },
+  {
+    title: "Active Customers",
+    value: "89",
+    change: "+5%",
+    icon: Users,
+    iconBg: "bg-green-100",
+    iconColor: "text-green-600",
+    trend: "up"
+  },
+  {
+    title: "Avg Prep Time",
+    value: "18m",
+    change: "-2%",
+    icon: Clock,
+    iconBg: "bg-blue-100",
+    iconColor: "text-[#2563EB]",
+    trend: "down"
+  }
+]
+
+const orders = [
+  {
+    id: "#ORD-8821",
+    customer: "John Doe",
+    time: "2 min ago",
+    items: "2x Chicken Burger, 1x Coke",
+    status: "New",
+    total: "$24.50"
+  },
+  {
+    id: "#ORD-8820",
+    customer: "Alice Smith",
+    time: "15 min ago",
+    items: "1x Veg Pizza, 1x Garlic Bread",
+    status: "Cooking",
+    total: "$18.00"
+  },
+  {
+    id: "#ORD-8819",
+    customer: "Bob Wilson",
+    time: "25 min ago",
+    items: "3x Pasta Alfredo",
+    status: "Ready",
+    total: "$45.00"
+  },
+  {
+    id: "#ORD-8818",
+    customer: "Emma Davis",
+    time: "1 hour ago",
+    items: "1x Caesar Salad",
+    status: "Delivered",
+    total: "$12.50"
+  }
+]
+
+const popularItems = [
+  {
+    name: "Spicy Chicken Bowl",
+    orders: 24,
+    price: "$12.99",
+    image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200"
+  },
+  {
+    name: "Spicy Chicken Bowl",
+    orders: 24,
+    price: "$12.99",
+    image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200"
+  },
+  {
+    name: "Spicy Chicken Bowl",
+    orders: 24,
+    price: "$12.99",
+    image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200"
+  },
+  {
+    name: "Spicy Chicken Bowl",
+    orders: 24,
+    price: "$12.99",
+    image: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200"
+  }
+]
+
+const statusStyles: any = {
+  New: "bg-blue-100 text-blue-600",
+  Cooking: "bg-orange-100 text-orange-600",
+  Ready: "bg-purple-100 text-purple-600",
+  Delivered: "bg-green-100 text-green-600"
+}
+
+export default function RestaurantDashboard({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
+
+  return (
+
+    <div className="space-y-6">
+
+      <div className="flex justify-between items-center">
+
+        <div>
+          <h1 className="text-3xl lg:text-[34px] font-semibold font-playfair">
+            Dashboard
+          </h1>
+          <p className="text-[#64748B]">
+            Welcome back! Here's what's happening in your restaurant today.
+          </p>
+        </div>
+      </div>
+
+
+      <div className="">
+        <div className="grid lg:grid-cols-4 md:grid-cols-2 gap-5 mb-5">
+
+          {stats.map((s, i) => {
+
+            const Icon = s.icon
+
+            return (
+
+              <div
+                key={i}
+                className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm"
+              >
+
+                <div className="flex items-start justify-between">
+
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${s.iconBg}`}>
+                    <Icon className={s.iconColor} size={22} />
+                  </div>
+
+                  <div className={`flex items-center gap-1 text-sm font-medium ${s.trend === "up" ? "text-green-600" : "text-red-600"}`}>
+
+                    {s.trend === "up" ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
+
+                    {s.change}
+
+                  </div>
+
+                </div>
+
+
+
+                <p className="text-[#64748B] mt-4">
+                  {s.title}
+                </p>
+
+                <h3 className="text-[28px] font-playfair mt-2 text-[#0F172A]">
+                  {s.value}
+                </h3>
+
+              </div>
+
+            )
+
+          })}
+
+        </div>
+
+
+
+        <div className="grid lg:grid-cols-3 gap-5 grid-cols-1">
+
+          <div className="lg:col-span-2">
+
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6">
+
+              <div className="flex justify-between items-center mb-6">
+
+                <h3 className="text-xl font-playfair">
+                  Recent Orders
+                </h3>
+
+                <button  onClick={()=>setActiveTab("orders")} className="text-green-600 font-medium">
+                  View All
+                </button>
+
+              </div>
+
+
+
+              <div className="overflow-x-auto">
+
+                <table className="w-full text-left min-w-[700px]">
+
+                  <thead className="border-b text-sm text-[#64748B]">
+
+                    <tr>
+
+                      <th className="py-3 font-medium">ORDER ID</th>
+                      <th className="py-3 font-medium">CUSTOMER</th>
+                      <th className="py-3 font-medium">ITEMS</th>
+                      <th className="py-3 font-medium">STATUS</th>
+                      <th className="py-3 font-medium text-end">TOTAL</th>
+
+                    </tr>
+
+                  </thead>
+
+
+
+                  <tbody>
+
+                    {orders.map((o, i) => {
+
+                      const orderPrefix = o.id.split("-")[0] + "-"
+                      const orderNumber = o.id.split("-")[1]
+
+                      return (
+
+                        <tr
+                          key={i}
+                          className="border-b border-[#F1F5F9] last:border-none"
+                        >
+
+                          <td className="py-5 font-medium text-[#0F172A]">
+
+                            <div className="leading-5">
+                              <p>{orderPrefix}</p>
+                              <p>{orderNumber}</p>
+                            </div>
+
+                          </td>
+
+
+
+                          <td className="py-5">
+
+                            <div className="flex items-center gap-3">
+
+                              <div>
+                                <p className="font-medium text-[#334155]">
+                                  {o.customer}
+                                </p>
+
+                                <p className="text-sm text-[#64748B]">
+                                  {o.time}
+                                </p>
+                              </div>
+
+                            </div>
+
+                          </td>
+
+
+
+                          <td className="py-5 text-[#64748B] max-w-[240px]">
+                            {o.items}
+                          </td>
+
+
+
+                          <td className="py-5">
+
+                            <span className={`px-3 py-1 text-sm rounded-full ${statusStyles[o.status]}`}>
+                              {o.status}
+                            </span>
+
+                          </td>
+
+
+
+                          <td className="py-5 font-semibold text-[#0F172A] text-end">
+                            {o.total}
+                          </td>
+
+                        </tr>
+
+                      )
+
+                    })}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </div>
+
+          </div>
+
+
+
+          <div>
+
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6">
+
+              <h3 className="text-xl font-playfair mb-6">
+                Popular Items
+              </h3>
+
+
+
+              <div className="space-y-5">
+
+                {popularItems.map((p, i) => (
+
+                  <div key={i} className="flex items-center justify-between">
+
+                    <div className="flex items-center gap-3">
+
+                      <img
+                        src={p.image}
+                        className="w-14 h-14 rounded-xl object-cover"
+                      />
+
+                      <div>
+
+                        <p className="font-medium text-[#0F172A]">
+                          {p.name}
+                        </p>
+
+                        <p className="text-sm text-[#64748B]">
+                          {p.orders} orders today
+                        </p>
+
+                      </div>
+
+                    </div>
+
+                    <p className="font-semibold text-[#0F172A]">
+                      {p.price}
+                    </p>
+
+                  </div>
+
+                ))}
+
+              </div>
+
+
+
+              <button  onClick={()=>setActiveTab("reports")} className="mt-6 w-full bg-[#F1F5F9] rounded-lg py-3 font-medium">
+                View Full Report
+              </button>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  )
+}

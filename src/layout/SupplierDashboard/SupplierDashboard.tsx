@@ -42,39 +42,39 @@ const stats = [
 
 const orders = [
   {
-    id:"#ORD-7782",
-    client:"Fresh Market NYC",
-    item:"Organic Avocados (50 crates)",
-    amount:"$4,250",
-    image:"https://picsum.photos/40?1"
+    id: "#ORD-7782",
+    client: "Fresh Market NYC",
+    item: "Organic Avocados (50 crates)",
+    amount: "$4,250",
+    image: "https://picsum.photos/40?1"
   },
   {
-    id:"#ORD-7781",
-    client:"Bistro 55",
-    item:"Premium Steak Cuts (200kg)",
-    amount:"$8,900",
-    image:"https://picsum.photos/40?2"
+    id: "#ORD-7781",
+    client: "Bistro 55",
+    item: "Premium Steak Cuts (200kg)",
+    amount: "$8,900",
+    image: "https://picsum.photos/40?2"
   },
   {
-    id:"#ORD-7780",
-    client:"Green Grocers",
-    item:"Seasonal Fruits Mix",
-    amount:"$1,200",
-    image:"https://picsum.photos/40?3"
+    id: "#ORD-7780",
+    client: "Green Grocers",
+    item: "Seasonal Fruits Mix",
+    amount: "$1,200",
+    image: "https://picsum.photos/40?3"
   },
   {
-    id:"#ORD-7779",
-    client:"Sushi Zen",
-    item:"Fresh Salmon (Imported)",
-    amount:"$12,400",
-    image:"https://picsum.photos/40?4"
+    id: "#ORD-7779",
+    client: "Sushi Zen",
+    item: "Fresh Salmon (Imported)",
+    amount: "$12,400",
+    image: "https://picsum.photos/40?4"
   },
   {
-    id:"#ORD-7778",
-    client:"Daily Mart",
-    item:"Dairy Products Bulk",
-    amount:"$3,150",
-    image:"https://picsum.photos/40?5"
+    id: "#ORD-7778",
+    client: "Daily Mart",
+    item: "Dairy Products Bulk",
+    amount: "$3,150",
+    image: "https://picsum.photos/40?5"
   }
 ]
 
@@ -97,11 +97,11 @@ export default function SupplierDashboard({ setActiveTab }: { setActiveTab: (tab
 
         <div className="flex gap-3">
 
-          <button className="border border-[#E5E7EB] bg-white rounded-lg px-4 py-2 flex items-center gap-2">
+          <button onClick={() => setActiveTab("shipment-history")} className="border border-[#E5E7EB] bg-white rounded-lg px-4 py-2 flex items-center gap-2">
             History
           </button>
 
-          <button className="bg-[#155DFC] text-white rounded-lg px-4 py-2 flex items-center gap-2 shadow">
+          <button onClick={() => setActiveTab("new-shipment")} className="bg-[#155DFC] text-white rounded-lg px-4 py-2 flex items-center gap-2 shadow">
             New Shipment
           </button>
 
@@ -157,106 +157,106 @@ export default function SupplierDashboard({ setActiveTab }: { setActiveTab: (tab
 
         <div className="grid lg:grid-cols-3 gap-5 grid-cols-1">
           <div className="lg:col-span-2">
-           <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 mb-5">
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 mb-5">
 
-  <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-6">
 
-    <div>
-      <h3 className="text-xl font-playfair">
-        Recent Bulk Orders
-      </h3>
+                <div>
+                  <h3 className="text-xl font-playfair">
+                    Recent Bulk Orders
+                  </h3>
 
-      <p className="text-sm text-[#64748B]">
-        Orders from restaurants and retailers
-      </p>
-    </div>
-
-    <button className="text-[#155DFC] font-medium">
-      View All
-    </button>
-
-  </div>
-
-
-  <div className="overflow-x-auto">
-
-    <table className="w-full text-left">
-
-      <thead className="text-sm text-[#94A3B8] border-b">
-
-        <tr>
-          <th className="py-3 font-medium">ORDER ID</th>
-          <th className="py-3 font-medium">CLIENT</th>
-          <th className="py-3 font-medium">ITEMS</th>
-          <th className="py-3 font-medium">AMOUNT</th>
-        </tr>
-
-      </thead>
-
-      <tbody>
-
-        {orders.map((o,i)=>{
-
-          const orderPrefix = o.id.split("-")[0] + "-"
-          const orderNumber = o.id.split("-")[1]
-
-          return(
-
-            <tr
-              key={i}
-              className="border-b border-[#F1F5F9] last:border-none"
-            >
-
-              <td className="py-5 font-medium text-[#0F172A]">
-
-                <div className="leading-5">
-                  <p>{orderPrefix}</p>
-                  <p>{orderNumber}</p>
-                </div>
-
-              </td>
-
-
-              <td className="py-5">
-
-                <div className="flex items-center gap-3">
-
-                  <img
-                    src={o.image}
-                    className="w-10 h-10 min-w-10 rounded-full object-cover"
-                  />
-
-                  <p className="font-medium text-[#334155]">
-                    {o.client}
+                  <p className="text-sm text-[#64748B]">
+                    Orders from restaurants and retailers
                   </p>
-
                 </div>
 
-              </td>
+                <button className="text-[#155DFC] font-medium">
+                  View All
+                </button>
+
+              </div>
 
 
-              <td className="py-5 text-[#64748B] max-w-[220px]">
-                {o.item}
-              </td>
+              <div className="overflow-x-auto">
+
+                <table className="w-full text-left">
+
+                  <thead className="text-sm text-[#94A3B8] border-b">
+
+                    <tr>
+                      <th className="py-3 font-medium">ORDER ID</th>
+                      <th className="py-3 font-medium">CLIENT</th>
+                      <th className="py-3 font-medium">ITEMS</th>
+                      <th className="py-3 font-medium">AMOUNT</th>
+                    </tr>
+
+                  </thead>
+
+                  <tbody>
+
+                    {orders.map((o, i) => {
+
+                      const orderPrefix = o.id.split("-")[0] + "-"
+                      const orderNumber = o.id.split("-")[1]
+
+                      return (
+
+                        <tr
+                          key={i}
+                          className="border-b border-[#F1F5F9] last:border-none"
+                        >
+
+                          <td className="py-5 font-medium text-[#0F172A]">
+
+                            <div className="leading-5">
+                              <p>{orderPrefix}</p>
+                              <p>{orderNumber}</p>
+                            </div>
+
+                          </td>
 
 
-              <td className="py-5 font-semibold text-[#0F172A]">
-                {o.amount}
-              </td>
+                          <td className="py-5">
 
-            </tr>
+                            <div className="flex items-center gap-3">
 
-          )
+                              <img
+                                src={o.image}
+                                className="w-10 h-10 min-w-10 rounded-full object-cover"
+                              />
 
-        })}
+                              <p className="font-medium text-[#334155]">
+                                {o.client}
+                              </p>
 
-      </tbody>
+                            </div>
 
-    </table>
+                          </td>
 
-  </div>
 
-</div>
+                          <td className="py-5 text-[#64748B] max-w-[220px]">
+                            {o.item}
+                          </td>
+
+
+                          <td className="py-5 font-semibold text-[#0F172A]">
+                            {o.amount}
+                          </td>
+
+                        </tr>
+
+                      )
+
+                    })}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </div>
 
 
             <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6">

@@ -1,87 +1,92 @@
 import { Search, Filter, Mail, Phone, MapPin, MoreHorizontal, Building2 } from "lucide-react"
+import { useState } from "react";
+import BroadcastMessageModal from "./BroadcastMessageModal";
+
+const clients = [
+  {
+    name: "Urban Bistro Group",
+    type: "Restaurant Chain",
+    email: "marco@urbanbistro.com",
+    phone: "+1 (555) 123-4567",
+    location: "Downtown, NY",
+    spend: "$45,200",
+    orders: 12,
+    status: "Active",
+    initial: "U",
+    color: "bg-orange-100 text-orange-600"
+  },
+  {
+    name: "Whole Foods Local",
+    type: "Retailer",
+    email: "purchasing@wholefoods.loc",
+    phone: "+1 (555) 987-6543",
+    location: "Westside, NY",
+    spend: "$32,150",
+    orders: 8,
+    status: "Active",
+    initial: "W",
+    color: "bg-green-100 text-green-700"
+  },
+  {
+    name: "Fresh Eats Chain",
+    type: "Restaurant Chain",
+    email: "david@fresheats.com",
+    phone: "+1 (555) 234-5678",
+    location: "Brooklyn, NY",
+    spend: "$28,900",
+    orders: 15,
+    status: "Review",
+    initial: "F",
+    color: "bg-orange-100 text-orange-600"
+  },
+  {
+    name: "Green Grocers",
+    type: "Retailer",
+    email: "lisa@greengrocers.com",
+    phone: "+1 (555) 876-5432",
+    location: "Queens, NY",
+    spend: "$15,400",
+    orders: 6,
+    status: "Active",
+    initial: "G",
+    color: "bg-green-100 text-green-700"
+  },
+  {
+    name: "Sushi Zen",
+    type: "Restaurant",
+    email: "kenji@sushizen.com",
+    phone: "+1 (555) 345-6789",
+    location: "SoHo, NY",
+    spend: "$12,400",
+    orders: 4,
+    status: "Active",
+    initial: "S",
+    color: "bg-orange-100 text-orange-600"
+  },
+  {
+    name: "Daily Mart",
+    type: "Retailer",
+    email: "tom@dailymart.com",
+    phone: "+1 (555) 654-3210",
+    location: "Bronx, NY",
+    spend: "$8,200",
+    orders: 3,
+    status: "Inactive",
+    initial: "D",
+    color: "bg-green-100 text-green-700"
+  }
+]
+
+const statusStyles: any = {
+  Active: "bg-green-100 text-green-700",
+  Review: "bg-yellow-100 text-yellow-700",
+  Inactive: "bg-gray-200 text-gray-600"
+}
 
 export default function Clients({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
 
-  const clients = [
-    {
-      name: "Urban Bistro Group",
-      type: "Restaurant Chain",
-      email: "marco@urbanbistro.com",
-      phone: "+1 (555) 123-4567",
-      location: "Downtown, NY",
-      spend: "$45,200",
-      orders: 12,
-      status: "Active",
-      initial: "U",
-      color: "bg-orange-100 text-orange-600"
-    },
-    {
-      name: "Whole Foods Local",
-      type: "Retailer",
-      email: "purchasing@wholefoods.loc",
-      phone: "+1 (555) 987-6543",
-      location: "Westside, NY",
-      spend: "$32,150",
-      orders: 8,
-      status: "Active",
-      initial: "W",
-      color: "bg-green-100 text-green-700"
-    },
-    {
-      name: "Fresh Eats Chain",
-      type: "Restaurant Chain",
-      email: "david@fresheats.com",
-      phone: "+1 (555) 234-5678",
-      location: "Brooklyn, NY",
-      spend: "$28,900",
-      orders: 15,
-      status: "Review",
-      initial: "F",
-      color: "bg-orange-100 text-orange-600"
-    },
-    {
-      name: "Green Grocers",
-      type: "Retailer",
-      email: "lisa@greengrocers.com",
-      phone: "+1 (555) 876-5432",
-      location: "Queens, NY",
-      spend: "$15,400",
-      orders: 6,
-      status: "Active",
-      initial: "G",
-      color: "bg-green-100 text-green-700"
-    },
-    {
-      name: "Sushi Zen",
-      type: "Restaurant",
-      email: "kenji@sushizen.com",
-      phone: "+1 (555) 345-6789",
-      location: "SoHo, NY",
-      spend: "$12,400",
-      orders: 4,
-      status: "Active",
-      initial: "S",
-      color: "bg-orange-100 text-orange-600"
-    },
-    {
-      name: "Daily Mart",
-      type: "Retailer",
-      email: "tom@dailymart.com",
-      phone: "+1 (555) 654-3210",
-      location: "Bronx, NY",
-      spend: "$8,200",
-      orders: 3,
-      status: "Inactive",
-      initial: "D",
-      color: "bg-green-100 text-green-700"
-    }
-  ]
 
-  const statusStyles: any = {
-    Active: "bg-green-100 text-green-700",
-    Review: "bg-yellow-100 text-yellow-700",
-    Inactive: "bg-gray-200 text-gray-600"
-  }
+  const [openBroadcast, setOpenBroadcast] = useState(false);
 
   return (
 
@@ -101,10 +106,15 @@ export default function Clients({ setActiveTab }: { setActiveTab: (tab: string) 
 
         </div>
 
-        <button className="bg-[#155DFC] text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
+        <button onClick={() => setOpenBroadcast(true)} className="bg-[#155DFC] text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
           <Mail size={16} />
           Broadcast Message
         </button>
+
+        <BroadcastMessageModal
+          open={openBroadcast}
+          onClose={() => setOpenBroadcast(false)}
+        />
 
       </div>
 

@@ -1,89 +1,90 @@
 import { Search, Download, Truck, PackageCheck, Clock, Box, MoreHorizontal, Filter, Package } from "lucide-react"
 
-export default function Orders() {
+const stats = [
+  { label: "Pending", value: 12, color: "bg-blue-100 text-blue-600", icon: Clock },
+  { label: "Processing", value: 8, color: "bg-yellow-100 text-yellow-600", icon: Box },
+  { label: "In Transit", value: 24, color: "bg-indigo-100 text-indigo-600", icon: Truck },
+  { label: "Completed", value: 156, color: "bg-green-100 text-green-600", icon: PackageCheck }
+]
 
-  const stats = [
-    { label: "Pending", value: 12, color: "bg-blue-100 text-blue-600", icon: Clock },
-    { label: "Processing", value: 8, color: "bg-yellow-100 text-yellow-600", icon: Box },
-    { label: "In Transit", value: 24, color: "bg-indigo-100 text-indigo-600", icon: Truck },
-    { label: "Completed", value: 156, color: "bg-green-100 text-green-600", icon: PackageCheck }
-  ]
-
-  const orders = [
-    {
-      id: "ORD-7782",
-      date: "Feb 5, 2026",
-      client: "Fresh Market NYC",
-      type: "Retailer",
-      img: "https://picsum.photos/40?1",
-      items: "4 Items",
-      weight: "250 kg",
-      amount: "$4,250.00",
-      payment: "Paid",
-      shipping: "Express",
-      status: "Processing"
-    },
-    {
-      id: "ORD-7781",
-      date: "Feb 4, 2026",
-      client: "Bistro 55",
-      type: "Restaurant",
-      img: "https://picsum.photos/40?2",
-      items: "12 Items",
-      weight: "800 kg",
-      amount: "$8,900.50",
-      payment: "Net 30",
-      shipping: "Standard",
-      status: "In Transit"
-    },
-    {
-      id: "ORD-7780",
-      date: "Feb 4, 2026",
-      client: "Green Grocers",
-      type: "Retailer",
-      img: "https://picsum.photos/40?3",
-      items: "2 Items",
-      weight: "45 kg",
-      amount: "$1,200.00",
-      payment: "Paid",
-      shipping: "Local",
-      status: "Delivered"
-    },
-    {
-      id: "ORD-7779",
-      date: "Feb 3, 2026",
-      client: "Sushi Zen",
-      type: "Restaurant",
-      img: "https://picsum.photos/40?4",
-      items: "1 Item",
-      weight: "500 kg",
-      amount: "$12,400.00",
-      payment: "Unpaid",
-      shipping: "Refrigerated",
-      status: "New"
-    },
-    {
-      id: "ORD-7778",
-      date: "Feb 3, 2026",
-      client: "Daily Mart",
-      type: "Retailer",
-      img: "https://picsum.photos/40?5",
-      items: "8 Items",
-      weight: "180 kg",
-      amount: "$3,150.00",
-      payment: "Paid",
-      shipping: "Standard",
-      status: "Pending"
-    }
-  ]
-
-  const statusStyles: any = {
-    Processing: "bg-yellow-100 text-yellow-700",
-    "In Transit": "bg-blue-100 text-blue-700",
-    Delivered: "bg-green-100 text-green-700",
-    New: "bg-purple-100 text-purple-700",
-    Pending: "bg-gray-100 text-gray-600"
+const orders = [
+  {
+    id: "ORD-7782",
+    date: "Feb 5, 2026",
+    client: "Fresh Market NYC",
+    type: "Retailer",
+    img: "https://picsum.photos/40?1",
+    items: "4 Items",
+    weight: "250 kg",
+    amount: "$4,250.00",
+    payment: "Paid",
+    shipping: "Express",
+    status: "Processing"
+  },
+  {
+    id: "ORD-7781",
+    date: "Feb 4, 2026",
+    client: "Bistro 55",
+    type: "Restaurant",
+    img: "https://picsum.photos/40?2",
+    items: "12 Items",
+    weight: "800 kg",
+    amount: "$8,900.50",
+    payment: "Net 30",
+    shipping: "Standard",
+    status: "In Transit"
+  },
+  {
+    id: "ORD-7780",
+    date: "Feb 4, 2026",
+    client: "Green Grocers",
+    type: "Retailer",
+    img: "https://picsum.photos/40?3",
+    items: "2 Items",
+    weight: "45 kg",
+    amount: "$1,200.00",
+    payment: "Paid",
+    shipping: "Local",
+    status: "Delivered"
+  },
+  {
+    id: "ORD-7779",
+    date: "Feb 3, 2026",
+    client: "Sushi Zen",
+    type: "Restaurant",
+    img: "https://picsum.photos/40?4",
+    items: "1 Item",
+    weight: "500 kg",
+    amount: "$12,400.00",
+    payment: "Unpaid",
+    shipping: "Refrigerated",
+    status: "New"
+  },
+  {
+    id: "ORD-7778",
+    date: "Feb 3, 2026",
+    client: "Daily Mart",
+    type: "Retailer",
+    img: "https://picsum.photos/40?5",
+    items: "8 Items",
+    weight: "180 kg",
+    amount: "$3,150.00",
+    payment: "Paid",
+    shipping: "Standard",
+    status: "Pending"
   }
+]
+
+const statusStyles: any = {
+  Processing: "bg-yellow-100 text-yellow-700",
+  "In Transit": "bg-blue-100 text-blue-700",
+  Delivered: "bg-green-100 text-green-700",
+  New: "bg-purple-100 text-purple-700",
+  Pending: "bg-gray-100 text-gray-600"
+}
+
+export default function Orders({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
+
 
   return (
 
@@ -108,7 +109,7 @@ export default function Orders() {
             Export
           </button>
 
-          <button className="bg-[#155DFC] text-white rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm ">
+          <button onClick={()=>setActiveTab("create-manifest")} className="bg-[#155DFC] text-white rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm ">
             <Package size={16} />
             Create Manifest
           </button>

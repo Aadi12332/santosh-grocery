@@ -54,38 +54,37 @@ export default function CustomerSidebar({
 
         <div className="space-y-1">
           {menu.map((item) => {
-          const Icon = item.icon
-          const active = activeTab === item.id
+            const Icon = item.icon
+            const active = activeTab === item.id
 
-          return (
-            <button
-              key={item.id}
-              onClick={() => {setActiveTab(item.id);setSidebarOpen(false)}}
-              className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm transition ${
-                active
-                  ? "bg-[#ECFDF5] text-[#009966] font-medium"
-                  : "text-[#6A7282] hover:bg-gray-50"
-              }`}
-            >
-              <Icon size={20} />
-              {item.label}
-            </button>
-          )
-        })}
+            return (
+              <button
+                key={item.id}
+                onClick={() => { setActiveTab(item.id); setSidebarOpen(false) }}
+                className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm transition ${active
+                    ? "bg-[#ECFDF5] text-[#009966] font-medium"
+                    : "text-[#6A7282] hover:bg-gray-50"
+                  }`}
+              >
+                <Icon size={20} />
+                {item.label}
+              </button>
+            )
+          })}
 
-        <div className="border-t border-[#E5E7EB] my-4"></div>
+          <div className="border-t border-[#E5E7EB] my-4"></div>
 
-        <div className="px-4 text-xs font-semibold text-[#9CA3AF] tracking-wider !mt-5">
-          SHOP
+          <div className="px-4 text-xs font-semibold text-[#9CA3AF] tracking-wider !mt-5">
+            SHOP
+          </div>
+
+          <button onClick={() => navigate("/marketplace")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-[#6A7282] hover:bg-gray-50">
+            <ShoppingBag size={20} />
+            Marketplace
+          </button>
         </div>
 
-        <button onClick={()=>navigate("/marketplace")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-[#6A7282] hover:bg-gray-50">
-          <ShoppingBag size={20} />
-          Marketplace
-        </button>
-        </div>
-
-        <button onClick={()=>{navigate("/sign-in");setActiveTab("")}} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
+        <button onClick={() => { navigate("/sign-in"); setActiveTab("") }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
           <LogOut size={20} />
           Sign Out
         </button>

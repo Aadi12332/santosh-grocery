@@ -9,6 +9,10 @@ import SupplierDashboard from "./SupplierDashboard"
 import SupplierSettings from "./SupplierSettings"
 import SupportCenter from "./SupportCenter"
 import Warehouse from "./Warehouse"
+import ShipmentHistory from "./ShipmentHistory"
+import CreateShipment from "./NewShipment"
+import AddProduct from "./AddProduct"
+import CreateManifest from "./CreateManifest"
 
 
 export default function SupplierChild({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) {
@@ -30,15 +34,39 @@ export default function SupplierChild({ activeTab, setActiveTab }: { activeTab: 
     )
   }
 
+  if (activeTab === "add-product") {
+    return (
+      <AddProduct setActiveTab={setActiveTab} />
+    )
+  }
+
   if (activeTab === "orders") {
     return (
-      <Orders />
+      <Orders  setActiveTab={setActiveTab}/>
+    )
+  }
+
+  if (activeTab === "create-manifest") {
+    return (
+      <CreateManifest  setActiveTab={setActiveTab}/>
     )
   }
 
   if (activeTab === "warehouse") {
     return (
       <Warehouse />
+    )
+  }
+
+  if (activeTab === "shipment-history") {
+    return (
+      <ShipmentHistory setActiveTab={setActiveTab} />
+    )
+  }
+
+  if (activeTab === "new-shipment") {
+    return (
+      <CreateShipment setActiveTab={setActiveTab} />
     )
   }
 

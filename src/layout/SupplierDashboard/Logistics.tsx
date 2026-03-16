@@ -8,6 +8,8 @@ import {
   CheckCircle2,
   BarChart3
 } from "lucide-react"
+import AssignDriverModal from "./AssignDriverModal"
+import { useState } from "react"
 
 export default function Logistics() {
 
@@ -123,6 +125,9 @@ export default function Logistics() {
     Pending: "bg-gray-200 text-gray-600"
   }
 
+    const [openAssignDriver, setOpenAssignDriver] = useState(false);
+  
+
   return (
 
     <div className="space-y-6">
@@ -148,10 +153,15 @@ export default function Logistics() {
             Schedule
           </button>
 
-          <button className="bg-[#155DFC] text-white rounded-lg px-4 py-2 flex items-center gap-2">
+          <button onClick={() => setOpenAssignDriver(true)} className="bg-[#155DFC] text-white rounded-lg px-4 py-2 flex items-center gap-2">
             <Plus size={16} />
             Assign Driver
           </button>
+
+          <AssignDriverModal
+                    open={openAssignDriver}
+                    onClose={() => setOpenAssignDriver(false)}
+                  />
 
         </div>
 

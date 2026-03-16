@@ -2,31 +2,27 @@ import {
   Wallet,
   Settings,
   LogOut,
-  Package,
-  Users,
   BarChart3,
   MessageSquare,
-  Truck,
-  LucideHouse,
+  Utensils,
   NotepadText,
   LayoutDashboard,
+  ShoppingBag,
+  Store,
 } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
 const menu = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "products", label: "Products Catalog", icon: Package },
-  { id: "orders", label: "Bulk Orders", icon: NotepadText },
-  { id: "warehouse", label: "Warehouse", icon: LucideHouse },
-  { id: "clients", label: "Clients", icon: Users },
-  { id: "logistics", label: "Logistics", icon: Truck },
-  { id: "finance", label: "Finance", icon: Wallet },
-  { id: "reports", label: "Reports", icon: BarChart3 },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "orders", label: "Orders", icon: NotepadText },
+  { id: "menu-management", label: "Menu Management", icon: Utensils },
+  { id: "finance", label: "Expenses", icon: Wallet },
+  { id: "reports", label: "Reports & Analytics", icon: BarChart3 },
   { id: "support", label: "Support", icon: MessageSquare },
+  { id: "settings", label: "Settings", icon: Settings },
 ]
 
-export default function SupplierSidebar({
+export default function RestaurantSidebar({
   activeTab,
   setActiveTab,
   setSidebarOpen
@@ -41,8 +37,8 @@ export default function SupplierSidebar({
     <div className="w-[288px] flex flex-col h-full pb-5">
 
       <div className="px-6 py-6 flex items-center gap-2 font-bold text-[21px] text-[#0F172B]">
-        <Truck size={22} className="text-[#155DFC]" />
-        Supplier Panel
+        <Store size={22} className="text-[#009966]" />
+        Restaurant Panel
       </div>
 
       <div className="flex-1 px-4 space-y-1 flex flex-col justify-between gap-1 h-full">
@@ -69,19 +65,34 @@ export default function SupplierSidebar({
                   setSidebarOpen(false)
                 }}
                 className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[15px] transition ${active
-                    ? "bg-[#EFF6FF] text-[#155DFC] font-medium"
-                    : "text-[#64748B] hover:bg-[#EFF6FF]"
+                  ? "bg-[#ECFDF5] text-[#009966] font-medium"
+                  : "text-[#64748B] hover:bg-[#ECFDF5]"
                   }`}
               >
                 <Icon
                   size={20}
-                  className={active ? "text-[#155DFC]" : "text-[#94A3B8]"}
+                  className={active ? "text-[#009966]" : "text-[#94A3B8]"}
                 />
 
                 {item.label}
               </button>
             )
           })}
+          <div className="border-t border-[#E5E7EB] my-4"></div>
+
+          <div className="px-4 text-xs font-semibold text-[#9CA3AF] tracking-wider !mt-5">
+            SHOP
+          </div>
+
+          <button onClick={() => navigate("/marketplace")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-[#6A7282] hover:bg-gray-50">
+            <ShoppingBag size={20} />
+            Marketplace
+          </button>
+
+          <button onClick={() => navigate("/restaurants")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-[#6A7282] hover:bg-gray-50">
+            <ShoppingBag size={20} />
+            Restaurant
+          </button>
         </div>
 
 

@@ -106,7 +106,7 @@ export default function ProductsTable({ setActiveTab }: { setActiveTab: (tab: st
             Import CSV
           </button>
 
-          <button onClick={() => setActiveTab("addproduct")} className="bg-[#155DFC] text-white rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm">
+          <button onClick={() => setActiveTab("add-product")} className="bg-[#155DFC] text-white rounded-lg px-4 py-2 flex items-center gap-2 shadow-sm">
             <Plus size={16} />
             Add Product
           </button>
