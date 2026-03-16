@@ -29,11 +29,15 @@ export default function RestaurantChild({ activeTab, setActiveTab }: { activeTab
 
   if (activeTab === "menu-management") {
     return (
-      <MenuManagement />
+      <div>Menu management tab</div>
+      // <MenuManagement />
     )
   }
 
-  if (activeTab === "finance") { return (<FinanceWallet />) }
+  if (activeTab === "finance") { return (
+     <div>Expenses tab</div>
+  // <FinanceWallet />
+) }
   if (activeTab === "reports") { return (<ReportsAnalytics />) }
   if (activeTab === "support") { return (<SupportCenter />) }
   if (activeTab === "settings") { return (<RestaurantSettings />) }
