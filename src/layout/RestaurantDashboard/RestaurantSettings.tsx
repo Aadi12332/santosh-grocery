@@ -1,605 +1,752 @@
-import { useState } from "react"
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
-  Building2,
   Shield,
   Bell,
   Users,
-  Upload,
-  Mail,
-  Phone,
-  MapPin,
   Save,
-  Lock, Plus, Trash2
-} from "lucide-react"
+  Settings,
+  Store,
+  MapPin,
+  Phone,
+  MoreHorizontal,
+  Plus,
+  Utensils,
+  DollarSign,
+  Lock,
+  Smartphone,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
-const options = [
-  {
-    title: "Order Updates",
-    desc: "Receive notifications when an order status changes."
-  },
-  {
-    title: "Low Stock Alerts",
-    desc: "Get notified when inventory levels drop below threshold."
-  },
-  {
-    title: "New Client Requests",
-    desc: "Alerts for new B2B partnership requests."
-  },
-  {
-    title: "Financial Reports",
-    desc: "Monthly and weekly financial summary."
-  }
-]
+const tabs = [
+  { key: "general", label: "General", icon: Settings },
+  { key: "locations", label: "Locations", icon: Store },
+  { key: "notifications", label: "Notifications", icon: Bell },
+  { key: "security", label: "Security", icon: Shield },
+  { key: "team", label: "Team", icon: Users },
+];
 
-
-const members = [
+const locations = [
   {
-    name: "Alex Morgan",
-    email: "alex@globalfoods.com",
-    role: "Owner",
-    initials: "AM",
+    name: "Downtown HQ",
+    address: "123 Main St, New York, NY",
+    phone: "+1 (555) 123-4567",
     status: "Active",
-    removable: false
   },
   {
-    name: "Sarah Connor",
-    email: "sarah@globalfoods.com",
-    role: "Logistics Manager",
-    initials: "SC",
+    name: "Westside Branch",
+    address: "456 West Ave, New York, NY",
+    phone: "+1 (555) 987-6543",
     status: "Active",
-    removable: true
   },
   {
-    name: "James Smith",
-    email: "james@globalfoods.com",
-    role: "Finance",
-    initials: "JS",
-    status: "Invited",
-    removable: true
-  }
-]
+    name: "Brooklyn Hub",
+    address: "789 Park Slope, Brooklyn, NY",
+    phone: "+1 (555) 456-7890",
+    status: "Maintenance",
+  },
+];
 
 const statusStyles: any = {
-  Active: "bg-green-100 text-green-700",
-  Invited: "bg-orange-100 text-orange-600"
-}
+  Active: "bg-[#ECFDF5] text-[#059669]",
+  Maintenance: "bg-[#FFF7ED] text-[#EA580C]",
+};
 
-export default function RestaurantSettings() {
-  const [twoFA, setTwoFA] = useState(false);
+const initialMembers = [
+  {
+    name: "John Doe",
+    role: "Owner",
+    email: "john@goldenspoon.com",
+    access: "Full Access",
+    enabled: true,
+    image: "https://randomuser.me/api/portraits/men/32.jpg",
+  },
+  {
+    name: "Sarah Smith",
+    role: "Manager",
+    email: "sarah@goldenspoon.com",
+    access: "Orders, Menu, Reports",
+    enabled: true,
+    image: "https://randomuser.me/api/portraits/women/44.jpg",
+  },
+  {
+    name: "Mike Johnson",
+    role: "Staff",
+    email: "mike@goldenspoon.com",
+    access: "Orders Only",
+    enabled: true,
+    image: "https://randomuser.me/api/portraits/men/65.jpg",
+  },
+];
 
-  const tabs = [
-    { id: "general", label: "General", icon: Building2 },
-    { id: "security", label: "Security", icon: Shield },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "team", label: "Team Members", icon: Users }
-  ]
+const roleStyles: any = {
+  Owner: "bg-[#EEF2FF] text-[#4F46E5]",
+  Manager: "bg-[#F1F5F9] text-[#64748B]",
+  Staff: "bg-[#F1F5F9] text-[#64748B]",
+};
 
-  const [settings, setSettings] = useState(
-    options.map(() => ({ email: true, sms: false }))
-  )
+export default function RestaurantSettings({
+  activeTab,
+  setActiveTab,
+}: {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}) {
+  const navigate = useNavigate();
+
+  const [show, setShow] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+
+  const [members, setMembers] = useState(initialMembers);
+
+  const toggleAccess = (index: number) => {
+    setMembers((prev) =>
+      prev.map((m, i) => (i === index ? { ...m, enabled: !m.enabled } : m)),
+    );
+  };
+
+  const [twoFA, setTwoFA] = useState(true);
+
+  const toggleShow = (field: "current" | "new" | "confirm") => {
+    setShow((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+  const [activeSettingTab, setActiveSettingTab] = useState("general");
+  const [data, setData] = useState([
+    {
+      title: "New Orders",
+      desc: "Receive alerts when a customer places a new order.",
+      icon: Utensils,
+      email: true,
+      sms: true,
+    },
+    {
+      title: "Order Updates",
+      desc: "Notifications about driver arrivals and delivery status.",
+      icon: MapPin,
+      email: true,
+      sms: true,
+    },
+    {
+      title: "Customer Reviews",
+      desc: "Get notified when you receive a new review.",
+      icon: Users,
+      email: true,
+      sms: true,
+    },
+    {
+      title: "Payouts & Finance",
+      desc: "Weekly payout summaries and invoice alerts.",
+      icon: DollarSign,
+      email: true,
+      sms: true,
+    },
+    {
+      title: "System Updates",
+      desc: "Important updates about the platform and features.",
+      icon: Settings,
+      email: true,
+      sms: true,
+    },
+  ]);
 
   const toggle = (index: number, type: "email" | "sms") => {
-    setSettings(prev => {
-      const updated = [...prev]
-      updated[index][type] = !updated[index][type]
-      return updated
-    })
-  }
+    setData((prev) =>
+      prev.map((item, i) =>
+        i === index ? { ...item, [type]: !item[type] } : item,
+      ),
+    );
+  };
+  const [days, setDays] = useState([
+    { day: "Mon", open: true, time: "09:00 - 22:00" },
+    { day: "Tue", open: true, time: "09:00 - 22:00" },
+    { day: "Wed", open: true, time: "09:00 - 22:00" },
+    { day: "Thu", open: true, time: "09:00 - 22:00" },
+    { day: "Fri", open: true, time: "09:00 - 22:00" },
+    { day: "Sat", open: true, time: "09:00 - 22:00" },
+    { day: "Sun", open: false, time: "09:00 - 22:00" },
+  ]);
 
-  const [active, setActive] = useState("general")
+  const toggleDay = (index: number) => {
+    setDays((prev) =>
+      prev.map((d, i) => (i === index ? { ...d, open: !d.open } : d)),
+    );
+  };
 
   return (
-
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl lg:text-[34px] font-playfair font-semibold">
+            Settings
+          </h1>
 
-      <div>
-
-        <h1 className="text-3xl lg:text-[34px] font-playfair font-semibold">
-          Settings
-        </h1>
-
-        <p className="text-[#64748B] mt-2">
-          Manage your account, company profile, and preferences.
-        </p>
-
-      </div>
-
-
-
-      <div className="grid lg:grid-cols-[260px_1fr] gap-6">
-
-        <div className="space-y-2">
-
-          {tabs.map((t) => {
-
-            const Icon = t.icon
-
-            return (
-
-              <button
-                key={t.id}
-                onClick={() => setActive(t.id)}
-                className={`flex items-center gap-3 w-full border border-l-[3px] border-transparent px-4 py-3 rounded-lg text-left h-[48px] ${active === t.id
-                  ? "bg-white border border-l-[3px] !border-[#155DFC] text-[#155DFC] rounded-l-none"
-                  : "text-[#64748B] hover:bg-gray-50"
-                  }`}
-              >
-
-                <Icon size={18} />
-
-                {t.label}
-
-              </button>
-
-            )
-
-          })}
-
+          <p className="text-[#64748B] mt-2">
+            Manage your restaurant profile, locations, team, and security.
+          </p>
         </div>
 
-        {active === "general" &&
-          <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-6">
-
-            <h3 className="font-playfair text-xl">
-              Company Profile
-            </h3>
-
-            <p className="text-sm text-[#64748B] mb-6">
-              Update your company information and public profile.
-            </p>
-
-
-
-            <div className="flex gap-6 mb-8">
-
-              <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center border">
-
-                <Building2 size={28} className="text-[#64748B]" />
-
-              </div>
-
-              <div>
-
-                <p className="font-medium">
-                  Company Logo
-                </p>
-
-                <p className="text-sm text-[#64748B]">
-                  Recommended size 400×400px. JPG or PNG.
-                </p>
-
-                <button className="mt-3 border border-[#E5E7EB] px-4 py-2 rounded-lg flex items-center gap-2 bg-white">
-
-                  <Upload size={16} />
-
-                  Upload New
-
-                </button>
-
-              </div>
-
-            </div>
-
-
-
-            <div className="grid md:grid-cols-2 gap-4">
-
-              <div>
-
-                <label className="text-sm text-[#374151]">
-                  Company Name
-                </label>
-
-                <input
-                  defaultValue="Global Foods Supply Co."
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 mt-1 outline-none"
-                />
-
-              </div>
-
-
-              <div>
-
-                <label className="text-sm text-[#374151]">
-                  Tax ID / EIN
-                </label>
-
-                <input
-                  placeholder="XX-XXXXXXX"
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 mt-1 outline-none"
-                />
-
-              </div>
-
-
-              <div>
-
-                <label className="text-sm text-[#374151]">
-                  Contact Email
-                </label>
-
-                <div className="flex items-center border border-[#E5E7EB] rounded-lg px-3 mt-1">
-
-                  <Mail size={16} className="text-[#64748B]" />
-
-                  <input
-                    defaultValue="contact@globalfoods.com"
-                    className="w-full px-2 py-2 outline-none"
-                  />
-
-                </div>
-
-              </div>
-
-
-              <div>
-
-                <label className="text-sm text-[#374151]">
-                  Phone Number
-                </label>
-
-                <div className="flex items-center border border-[#E5E7EB] rounded-lg px-3 mt-1">
-
-                  <Phone size={16} className="text-[#64748B]" />
-
-                  <input
-                    defaultValue="+1 (555) 123-4567"
-                    className="w-full px-2 py-2 outline-none"
-                  />
-
-                </div>
-
-              </div>
-
-            </div>
-
-
-
-            <div className="mt-4">
-
-              <label className="text-sm text-[#374151]">
-                Business Address
-              </label>
-
-              <div className="flex items-start border border-[#E5E7EB] rounded-lg px-3 mt-1">
-
-                <MapPin size={16} className="mt-3 text-[#64748B]" />
-
-                <textarea
-                  rows={3}
-                  className="w-full px-2 py-2 outline-none"
-                  placeholder="Enter your business address"
-                />
-
-              </div>
-
-            </div>
-
-
-
-            <div className="flex justify-end mt-6">
-
-              <button className="bg-[#155DFC] text-white px-5 py-2.5 rounded-lg flex items-center gap-2">
-
-                <Save size={16} />
-
-                Save Changes
-
-              </button>
-
-            </div>
-
-          </div>
-        }
-
-        {active === "security" &&
+        <button className="bg-[#009966] text-white px-4 py-2 rounded-lg flex items-center gap-2">
+          <Save size={16} />
+          Save Changes
+        </button>
+      </div>
+
+      <div className="flex gap-2 bg-[#F1F5F9] p-1 rounded-xl w-fit">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setActiveSettingTab(tab.key)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition ${
+                activeSettingTab === tab.key
+                  ? "bg-white shadow text-[#0F172A]"
+                  : "text-[#64748B] hover:text-[#0F172A]"
+              }`}
+            >
+              <Icon size={16} />
+
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {activeSettingTab == "general" && (
+        <div className="grid lg:grid-cols-[2fr_1fr] gap-5 items-start">
           <div className="space-y-5">
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm">
+              <div className="mb-6">
+                <h2 className="font-playfair text-2xl">Restaurant Details</h2>
 
-            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-6">
+                <p className="text-[#64748B] mt-1">
+                  Update your public restaurant information.
+                </p>
+              </div>
 
-              <h3 className="font-playfair text-xl">
-                Password & Authentication
-              </h3>
-
-              <p className="text-sm text-[#64748B] mb-6">
-                Manage your account security preferences.
-              </p>
-
-
-
-              <div className="space-y-5">
-
+              <div className="grid md:grid-cols-2 gap-5">
                 <div>
-                  <label className="text-sm text-[#374151]">
-                    Current Password
+                  <label className="text-sm text-[#64748B]">
+                    Restaurant Name
                   </label>
 
                   <input
-                    type="password"
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 mt-1 outline-none"
+                    defaultValue="The Golden Spoon"
+                    className="w-full mt-1 border border-[#E5E7EB] rounded-lg px-4 py-2.5 outline-none"
                   />
                 </div>
-
-
-
-                <div className="grid md:grid-cols-2 gap-4">
-
-                  <div>
-
-                    <label className="text-sm text-[#374151]">
-                      New Password
-                    </label>
-
-                    <input
-                      type="password"
-                      className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 mt-1 outline-none"
-                    />
-
-                  </div>
-
-                  <div>
-
-                    <label className="text-sm text-[#374151]">
-                      Confirm New Password
-                    </label>
-
-                    <input
-                      type="password"
-                      className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 mt-1 outline-none"
-                    />
-
-                  </div>
-
-                </div>
-
-
-
-                <div className="flex justify-end">
-
-                  <button className="border border-[#E5E7EB] bg-white px-5 py-2 rounded-lg shadow-sm">
-                    Update Password
-                  </button>
-
-                </div>
-
-              </div>
-
-
-
-              <div className="border-t mt-8 pt-6 flex items-center justify-between">
 
                 <div>
+                  <label className="text-sm text-[#64748B]">Phone Number</label>
 
-                  <p className="font-playfair text-lg">
-                    Two-Factor Authentication
-                  </p>
-
-                  <p className="text-sm text-[#64748B]">
-                    Add an extra layer of security to your account.
-                  </p>
-
-                </div>
-
-
-
-                <button
-                  onClick={() => setTwoFA(!twoFA)}
-                  className={`relative w-12 h-6 rounded-full transition ${twoFA ? "bg-[#155DFC]" : "bg-gray-300"
-                    }`}
-                >
-
-                  <span
-                    className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition ${twoFA ? "left-6" : "left-0.5"
-                      }`}
+                  <input
+                    defaultValue="+1 (555) 123-4567"
+                    className="w-full mt-1 border border-[#E5E7EB] rounded-lg px-4 py-2.5 outline-none"
                   />
-
-                </button>
-
+                </div>
               </div>
 
+              <div className="mt-5">
+                <label className="text-sm text-[#64748B]">Email Address</label>
+
+                <input
+                  defaultValue="contact@goldenspoon.com"
+                  className="w-full mt-1 border border-[#E5E7EB] rounded-lg px-4 py-2.5 outline-none"
+                />
+              </div>
+
+              <div className="mt-5">
+                <label className="text-sm text-[#64748B]">Description</label>
+
+                <textarea
+                  rows={4}
+                  className="w-full mt-1 border border-[#E5E7EB] rounded-lg px-4 py-2.5 outline-none"
+                />
+              </div>
             </div>
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm">
+              <div className="mb-6">
+                <h2 className="font-playfair text-2xl">Operational Details</h2>
 
+                <p className="text-[#64748B] mt-1">
+                  Configure cuisines, timing, and order rules.
+                </p>
+              </div>
 
+              <div className="grid md:grid-cols-2 gap-5 items-start">
+                <div>
+                  <label className="text-sm text-[#64748B]">Cuisine Type</label>
 
-            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-6">
-
-              <h3 className="font-playfair text-xl">
-                Active Sessions
-              </h3>
-
-              <p className="text-sm text-[#64748B] mb-6">
-                Devices currently logged into your account.
-              </p>
-
-
-
-              <div className="bg-[#F8FAFC] rounded-lg p-4 flex items-center justify-between">
-
-                <div className="flex items-center gap-4">
-
-                  <div className="w-12 h-12 bg-[#EEF2FF] rounded-full flex items-center justify-center">
-
-                    <Lock size={20} className="text-[#155DFC]" />
-
-                  </div>
-
-                  <div>
-
-                    <p className="font-medium">
-                      Chrome on MacBook Pro
-                    </p>
-
-                    <p className="text-sm text-[#64748B]">
-                      San Francisco, US • Current Session
-                    </p>
-
-                  </div>
-
+                  <input
+                    defaultValue="Italian, Continental, Seafood"
+                    className="w-full mt-1 border border-[#E5E7EB] rounded-lg px-4 py-2.5 outline-none"
+                  />
+                  <span className="text-sm text-[#62748E80]">
+                    Separate cuisines with commas.
+                  </span>
                 </div>
 
+                <div>
+                  <label className="text-sm text-[#64748B]">
+                    Average Cost for Two
+                  </label>
 
+                  <input
+                    defaultValue="65.00"
+                    className="w-full mt-1 border border-[#E5E7EB] rounded-lg px-4 py-2.5 outline-none"
+                  />
+                </div>
 
-                <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs">
-                  Active
-                </span>
+                <div>
+                  <label className="text-sm text-[#64748B]">
+                    Preparation Time (Avg)
+                  </label>
 
+                  <input
+                    defaultValue="30-45 mins"
+                    className="w-full mt-1 border border-[#E5E7EB] rounded-lg px-4 py-2.5 outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm text-[#64748B]">
+                    Min. Order Value
+                  </label>
+
+                  <input
+                    defaultValue="20.00"
+                    className="w-full mt-1 border border-[#E5E7EB] rounded-lg px-4 py-2.5 outline-none"
+                  />
+                </div>
               </div>
-
             </div>
-
           </div>
-        }
 
-        {active === "notifications" &&
           <div className="space-y-5">
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm">
+              <h3 className="font-playfair text-2xl mb-5">Branding</h3>
 
-            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-6">
+              <div className="flex flex-col items-center">
+                <img
+                  src="https://randomuser.me/api/portraits/women/44.jpg"
+                  className="w-32 h-32 rounded-full object-cover shadow"
+                />
 
-              <h3 className="font-playfair text-xl">
-                Notification Preferences
-              </h3>
-
-              <p className="text-sm text-[#64748B] mb-6">
-                Choose how and when you want to be notified.
-              </p>
-
-              <div className="space-y-6">
-
-                {options.map((item, i) => (
-
-                  <div key={i} className="flex items-center justify-between border-b pb-6">
-
-                    <div>
-
-                      <p className="font-medium text-[#111827]">
-                        {item.title}
-                      </p>
-
-                      <p className="text-sm text-[#64748B] mt-1">
-                        {item.desc}
-                      </p>
-
-                    </div>
-
-
-
-                    <div className="flex gap-8">
-
-                      <span className="text-sm text-[#64748B] cursor-pointer">Email</span>
-                      <span className="text-sm text-[#64748B] cursor-pointer">SMS</span>
-
-                    </div>
-
-                  </div>
-
-                ))}
-
-              </div>
-
-
-
-              <div className="flex justify-end mt-8">
-
-                <button className="bg-[#155DFC] text-white px-5 py-2.5 rounded-lg flex items-center gap-2 shadow">
-
-                  <Save size={16} />
-
-                  Save Preferences
-
+                <button className="mt-4 w-full border border-[#E5E7EB] rounded-lg py-2 text-[#0F172A]">
+                  Change Logo
                 </button>
-
               </div>
 
-            </div>
-
-          </div>
-        }
-
-        {active === "team" &&
-            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-6 space-y-5">
-            <div className="flex justify-between items-center">
+              <div className="border-t my-6"></div>
 
               <div>
+                <p className="text-sm text-[#64748B] mb-2">Cover Image</p>
 
-                <h3 className="font-playfair text-xl">
-                  Team Members
-                </h3>
+                <div className="relative rounded-xl overflow-hidden">
+                  <img
+                    src="https://images.unsplash.com/photo-1552566626-52f8b828add9?w=500"
+                    className="w-full h-40 object-cover"
+                  />
 
-                <p className="text-sm text-[#64748B]">
-                  Manage access to your supplier panel.
-                </p>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <button className="bg-white/80 px-4 py-2 rounded-lg text-sm">
+                      Upload Cover
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm max-w-md">
+              <h2 className="font-playfair text-2xl mb-6">Operating Hours</h2>
 
+              <div className="space-y-5">
+                {days.map((d, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={() => toggleDay(i)}
+                        className={`w-11 h-6 rounded-full flex items-center px-1 transition ${
+                          d.open
+                            ? "bg-green-500 justify-end"
+                            : "bg-gray-300 justify-start"
+                        }`}
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full" />
+                      </button>
+
+                      <span className="text-[#0F172A] font-medium w-10">
+                        {d.day}
+                      </span>
+                    </div>
+
+                    {d.open ? (
+                      <span className="bg-[#F1F5F9] px-4 py-1.5 rounded-md text-sm text-[#475569]">
+                        {d.time}
+                      </span>
+                    ) : (
+                      <span className="bg-[#F1F5F9] px-4 py-1.5 rounded-md text-sm text-[#64748B]">
+                        Closed
+                      </span>
+                    )}
+                  </div>
+                ))}
               </div>
 
-              <button className="bg-[#155DFC] text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-sm">
-
-                <Plus size={16} />
-
-                Add Member
-
+              <button className="mt-6 w-full bg-[#D1FAE5] text-[#059669] py-2.5 rounded-lg font-medium shadow-sm">
+                Edit Schedule
               </button>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {activeSettingTab == "locations" && (
+        <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-6">
+          {locations.map((loc, i) => (
+            <div
+              key={i}
+              className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm"
+            >
+              <div className="flex justify-between items-start mb-5">
+                <div className="w-12 h-12 rounded-lg bg-[#F1F5F9] flex items-center justify-center">
+                  <Store size={20} className="text-[#64748B]" />
+                </div>
+
+                <MoreHorizontal size={18} className="text-[#94A3B8]" />
+              </div>
+
+              <h3 className="font-playfair text-xl mb-3">{loc.name}</h3>
+
+              <div className="space-y-2 text-[#64748B] text-sm">
+                <p className="flex items-start gap-2">
+                  <MapPin size={16} className="mt-0.5" />
+                  {loc.address}
+                </p>
+
+                <p className="flex items-center gap-2">
+                  <Phone size={16} />
+                  {loc.phone}
+                </p>
+              </div>
+
+              <div className="border-t my-5"></div>
+
+              <div className="flex items-center justify-between">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${statusStyles[loc.status]}`}
+                >
+                  {loc.status}
+                </span>
+
+                <button className="border border-[#E5E7EB] px-4 py-2 rounded-lg text-[#0F172A] shadow-sm">
+                  View Dashboard
+                </button>
+              </div>
+            </div>
+          ))}
+
+          <div className="border-2 border-dashed border-[#CBD5E1] rounded-xl p-6 flex flex-col items-center justify-center text-center min-h-[260px]">
+            <div className="w-16 h-16 rounded-full bg-[#F1F5F9] flex items-center justify-center mb-4 shadow-sm">
+              <Plus size={28} className="text-[#64748B]" />
             </div>
 
-              {members.map((m, i) => (
+            <h3 className="text-lg font-medium text-[#0F172A]">
+              Add New Location
+            </h3>
 
-                <div
-                  key={i}
-                  className="flex items-center justify-between bg-[#F8FAFC] rounded-xl px-5 py-4"
-                >
+            <p className="text-[#64748B] text-sm mt-1">Expand your business</p>
+          </div>
+        </div>
+      )}
 
-                  <div className="flex items-center gap-4">
+      {activeSettingTab == "notifications" && (
+        <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="font-playfair text-2xl">Notification Preferences</h2>
 
-                    <div className="w-12 h-12 rounded-full bg-[#E2E8F0] flex items-center justify-center font-semibold text-[#155DFC]">
+            <p className="text-[#64748B] mt-1">
+              Choose how you want to be notified about important updates.
+            </p>
+          </div>
 
-                      {m.initials}
+          <div className="divide-y">
+            {data.map((item, i) => {
+              const Icon = item.icon;
 
+              return (
+                <div key={i} className="py-5 flex items-center justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-lg bg-[#F1F5F9] flex items-center justify-center">
+                      <Icon size={20} className="text-[#64748B]" />
                     </div>
 
                     <div>
+                      <h3 className="font-playfair text-lg">{item.title}</h3>
 
-                      <p className="font-medium text-[#111827]">
-                        {m.name}
-                      </p>
+                      <p className="text-[#64748B] text-sm mt-1">{item.desc}</p>
+                    </div>
+                  </div>
 
-                      <p className="text-sm text-[#64748B]">
-                        {m.email} • {m.role}
-                      </p>
+                  <div className="flex items-center gap-8">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs text-[#94A3B8]">EMAIL</span>
 
+                      <button
+                        onClick={() => toggle(i, "email")}
+                        className={`w-10 h-6 rounded-full flex items-center px-1 transition ${
+                          item.email
+                            ? "bg-green-600 justify-end"
+                            : "bg-gray-300 justify-start"
+                        }`}
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full" />
+                      </button>
                     </div>
 
-                  </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs text-[#94A3B8]">SMS</span>
 
-
-
-                  <div className="flex items-center gap-4">
-
-                    <span className={`px-3 py-1 rounded-full text-xs ${statusStyles[m.status]}`}>
-                      {m.status}
-                    </span>
-
-                    {m.removable && (
-
-                      <button className="text-red-500 hover:text-red-600">
-
-                        <Trash2 size={18} />
-
+                      <button
+                        onClick={() => toggle(i, "sms")}
+                        className={`w-10 h-6 rounded-full flex items-center px-1 transition ${
+                          item.sms
+                            ? "bg-green-600 justify-end"
+                            : "bg-gray-300 justify-start"
+                        }`}
+                      >
+                        <div className="w-4 h-4 bg-white rounded-full" />
                       </button>
-
-                    )}
-
+                    </div>
                   </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
+      {activeSettingTab == "security" && (
+        <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm">
+          <div className="mb-6">
+            <h2 className="font-playfair text-2xl">Password & Security</h2>
+
+            <p className="text-[#64748B] mt-1">
+              Manage your account security settings.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            <div>
+              <div className="flex items-center gap-2 mb-5">
+                <Lock size={18} className="text-[#059669]" />
+
+                <h3 className="font-playfair text-lg">Change Password</h3>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-[#64748B]">
+                    Current Password
+                  </label>
+
+                  <div className="relative mt-1">
+                    <input
+                      type={show.current ? "text" : "password"}
+                      className="w-full border border-[#E5E7EB] text-black rounded-lg px-4 py-2.5 pr-10 outline-none"
+                    />
+
+                    <button
+                      onClick={() => toggleShow("current")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                    >
+                      {show.current ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
                 </div>
 
-              ))}
+                <div>
+                  <label className="text-sm text-[#64748B]">New Password</label>
 
+                  <div className="relative mt-1">
+                    <input
+                      type={show.new ? "text" : "password"}
+                      className="w-full border border-[#E5E7EB] text-black rounded-lg px-4 py-2.5 pr-10 outline-none"
+                    />
+
+                    <button
+                      onClick={() => toggleShow("new")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                    >
+                      {show.new ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm text-[#64748B]">
+                    Confirm New Password
+                  </label>
+
+                  <div className="relative mt-1">
+                    <input
+                      type={show.confirm ? "text" : "password"}
+                      className="w-full border border-[#E5E7EB] text-black rounded-lg px-4 py-2.5 pr-10 outline-none"
+                    />
+
+                    <button
+                      onClick={() => toggleShow("confirm")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                    >
+                      {show.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button className="mt-5 w-full bg-[#0F172A] text-white py-3 rounded-lg font-medium shadow">
+                Update Password
+              </button>
             </div>
-        }
-      </div>
 
+            <div className="space-y-5">
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <Smartphone size={18} className="text-[#059669]" />
+
+                  <h3 className="font-playfair text-lg">
+                    Two-Factor Authentication
+                  </h3>
+                </div>
+
+                <div className="border border-[#E5E7EB] rounded-xl p-4 bg-[#F8FAFC]">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-[#0F172A]">
+                        SMS Authentication
+                      </p>
+
+                      <p className="text-sm text-[#64748B] mt-1 max-w-xs">
+                        Secure your account by requiring a code sent to your
+                        phone.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setTwoFA(!twoFA)}
+                      className={`w-11 h-6 rounded-full flex items-center px-1 ${
+                        twoFA
+                          ? "bg-green-500 justify-end"
+                          : "bg-gray-300 justify-start"
+                      }`}
+                    >
+                      <div className="w-4 h-4 bg-white rounded-full" />
+                    </button>
+                  </div>
+
+                  <div className="border-t mt-4 pt-3 text-sm text-[#64748B]">
+                    Verified Phone: +1 (555) ***-4567
+                  </div>
+                </div>
+              </div>
+
+              <div className="border border-[#E5E7EB] rounded-xl p-4 bg-[#F8FAFC] flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-[#0F172A]">Active Sessions</p>
+
+                  <p className="text-sm text-[#64748B]">
+                    You are logged in on 2 devices.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => {
+                    navigate("/sign-in");
+                    setActiveTab("");
+                  }}
+                  className="border border-red-200 text-red-600 px-4 py-2 rounded-lg bg-red-50"
+                >
+                  Log out all
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeSettingTab == "team" && (
+        <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="font-playfair text-2xl">Team Management</h2>
+
+              <p className="text-[#64748B] mt-1">
+                Control who has access to your restaurant dashboard.
+              </p>
+            </div>
+
+            <button className="flex items-center gap-2 bg-[#009966] text-white px-5 py-2.5 rounded-lg shadow">
+              <Users size={16} />
+              Invite Member
+            </button>
+          </div>
+
+          <div className="divide-y">
+            {members.map((m, i) => (
+              <div key={i} className="py-5 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <img
+                    src={m.image}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-playfair text-lg">{m.name}</p>
+
+                      <span
+                        className={`px-2 py-1 text-xs rounded-full ${roleStyles[m.role]}`}
+                      >
+                        {m.role}
+                      </span>
+                    </div>
+
+                    <p className="text-[#64748B] text-sm">{m.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                  <div className="text-right">
+                    <p className="text-sm text-[#64748B]">Access Level</p>
+
+                    <p className="text-sm text-[#0F172A]">{m.access}</p>
+                  </div>
+
+                  <button
+                    onClick={() => toggleAccess(i)}
+                    className={`w-11 h-6 rounded-full flex items-center px-1 ${
+                      m.enabled
+                        ? "bg-green-500 justify-end"
+                        : "bg-gray-300 justify-start"
+                    }`}
+                  >
+                    <div className="w-4 h-4 bg-white rounded-full" />
+                  </button>
+
+                  <Settings
+                    size={18}
+                    className="text-[#94A3B8] cursor-pointer"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
-
-  )
-
+  );
 }

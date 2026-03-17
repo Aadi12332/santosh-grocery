@@ -1,4 +1,7 @@
 import { Clock, MapPin, Star, Filter, Utensils, Wine, ChefHat, Flame } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom";
+import { useRole } from "../../layout/RoleProvider";
 
 const cuisines = [
   { name: "All Cuisines", active: true, Icon: Utensils },
@@ -102,6 +105,22 @@ const restaurants = [
 ]
 
 export default function RestaurantGrid() {
+  const navigate = useNavigate();
+const { setRole } = useRole();
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem("isLoggedIn") === "true"
+  )
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true")
+    }
+
+    window.addEventListener("storage", handleStorage)
+
+    return () => window.removeEventListener("storage", handleStorage)
+  }, [])
+
   return (
     <section className="bg-[#020618] py-16 text-white">
       <div className="max-w-[1265px] mx-auto lg:px-6 px-3">
@@ -110,11 +129,10 @@ export default function RestaurantGrid() {
           {cuisines.map((item, i) => (
             <button
               key={i}
-              className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm transition ${
-                item.active
+              className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm transition ${item.active
                   ? "bg-[#00A63E] text-white"
                   : "bg-[#0F172B] text-[#94A3B8] hover:bg-[#1E293B]"
-              }`}
+                }`}
             >
               <item.Icon size={16} />
               {item.name}
@@ -131,7 +149,15 @@ export default function RestaurantGrid() {
           {restaurants.map((item) => (
             <div
               key={item.id}
-              className="bg-[#0F172B] border border-[#1D293D] rounded-2xl overflow-hidden hover:border-[#334155] transition"
+              onClick={() => {
+                if (isLoggedIn) {
+                  navigate("/restaurant/dashboard")
+                } else {
+                  setRole("restaurant");
+                  navigate("/role-wise-sign-in?role=restaurant")
+                }
+              }}
+              className="bg-[#0F172B] cursor-pointer border border-[#1D293D] rounded-2xl overflow-hidden hover:border-[#334155] transition"
             >
 
               <div className="relative">
@@ -168,25 +194,25 @@ export default function RestaurantGrid() {
                 <div className="flex justify-between items-center mb-2">
                   <div>
                     <h3 className="font-playfair text-[22px]">
-                    {item.name}
-                  </h3>
-                  <p className="text-xs text-[#90A1B9] uppercase">
-                  {item.type}
-                </p>
+                      {item.name}
+                    </h3>
+                    <p className="text-xs text-[#90A1B9] uppercase">
+                      {item.type}
+                    </p>
                   </div>
                   <div>
                     <span className="text-lg font-medium font-playfair">
-                    {item.category}
-                  </span>
-                  <p className="text-[10px] text-[#62748E]">
-                  Min. $20
-                </p>
+                      {item.category}
+                    </span>
+                    <p className="text-[10px] text-[#62748E]">
+                      Min. $20
+                    </p>
                   </div>
                 </div>
 
                 <div className="text-sm mt-4 text-[#94A3B8] bg-[#1D293D80] px-3 py-2 rounded-lg flex items-center gap-2">
-                  <span className="text-sm text-[#CAD5E2] font-medium">{item.delivery}</span> 
-                  • 
+                  <span className="text-sm text-[#CAD5E2] font-medium">{item.delivery}</span>
+                  •
                   <span className="text-sm text-[#90A1B9]">{item.reviews}</span>
                 </div>
 

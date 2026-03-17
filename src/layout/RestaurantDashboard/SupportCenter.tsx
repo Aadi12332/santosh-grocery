@@ -1,337 +1,257 @@
-import {
-  Search,
-  MessageCircle,
-  BookOpen,
-  Users,
-  HelpCircle,
-  Phone,
-  Mail,
-  ChevronDown,
-  ChevronRight,
-  FileText,
-  Send,
-} from "lucide-react";
+import { Plus, Search, Filter, ChevronDown } from "lucide-react";
 import { useState } from "react";
+import SupportLiveChat from "./SupportLiveChat";
+
+const tickets = [
+  {
+    id: "#TCK-9921",
+    subject: "Printer connectivity issue",
+    priority: "High",
+    status: "Open",
+    updated: "2 hours ago",
+  },
+  {
+    id: "#TCK-9920",
+    subject: "Request to add new menu category",
+    priority: "Low",
+    status: "Closed",
+    updated: "2 days ago",
+  },
+  {
+    id: "#TCK-9919",
+    subject: "Payout discrepancy inquiry",
+    priority: "Medium",
+    status: "Resolved",
+    updated: "1 week ago",
+  },
+];
+
+const priorityStyles: any = {
+  High: "bg-red-100 text-red-600",
+  Medium: "bg-yellow-100 text-yellow-700",
+  Low: "bg-blue-100 text-blue-600",
+};
+
+const statusStyles: any = {
+  Open: "bg-green-100 text-green-700 border border-[#A7F3D0]",
+  Closed: "bg-[#F1F5F9] text-[#64748B] border border-[#E2E8F0]",
+  Resolved: "bg-blue-100 text-blue-700 border border-[#BFDBFE]",
+};
+
+const faqs = [
+  {
+    category: "Menu & Orders",
+    items: [
+      {
+        q: "How do I mark an item as sold out?",
+        a: "Go to Menu Management, find the item card, and toggle the switch labeled 'Available'. This updates in real-time."
+      },
+      {
+        q: "Can I cancel an order after accepting?",
+        a: "Yes, open the order details and update the shipping status from the status dropdown."
+      }
+    ]
+  },
+  {
+    category: "Payments",
+    items: [
+      {
+        q: "When are payouts processed?",
+        a: "Payouts are processed weekly. Funds usually arrive in your bank within 2-3 business days."
+      },
+      {
+        q: "How do I update bank details?",
+        a: "Commission is calculated as a percentage of the order total depending on your seller plan."
+      },
+    ]
+  },
+]
 
 export default function HelpSupport() {
-  const helpCards = [
-    {
-      title: "Documentation",
-      desc: "Read guides & API docs",
-      icon: FileText,
-    },
-    {
-      title: "Community",
-      desc: "Join the seller forum",
-      icon: MessageCircle,
-    },
-    {
-      title: "FAQs",
-      desc: "Common questions",
-      icon: HelpCircle,
-    },
-  ];
+  const [activeTab, setActiveTab] = useState("tickets");
+  const [open, setOpen] = useState<number | null>(null)
 
-  const tickets = [
-    {
-      title: "Integration Issue with API",
-      id: "TKT-2491",
-      time: "2 hours ago",
-      priority: "HIGH",
-      status: "Open",
-      dot: "bg-green-500",
-    },
-    {
-      title: "Billing Inquiry – Invoice #4501",
-      id: "TKT-2458",
-      time: "2 days ago",
-      priority: "MEDIUM",
-      status: "Resolved",
-      dot: "bg-blue-500",
-    },
-    {
-      title: "Feature Request: Bulk Export",
-      id: "TKT-2390",
-      time: "1 week ago",
-      priority: "LOW",
-      status: "Closed",
-      dot: "bg-gray-400",
-    },
-  ];
-
-  const faq = [
-    {
-      question: "How do I manage my inventory across multiple warehouses?",
-      answer:
-        "In the Inventory tab, you can use the 'Filter by Location' feature to view stock levels for specific warehouses. You can also bulk update stock by uploading a CSV file with location IDs.",
-    },
-    {
-      question: "What are the fees for bulk orders?",
-      answer:
-        "Our standard commission fee for bulk orders is 5%. However, this may vary based on your specific contract tier. You can view a detailed breakdown of fees in your Finance dashboard under 'Transaction History'.",
-    },
-    {
-      question: "How do I update my banking information for payouts?",
-      answer:
-        "You can update your banking details in the Finance section under 'Settings'. Go to Finance > Settings > Payout Methods to add or edit your bank account information securely.",
-    },
-    {
-      question: "Can I integrate my own logistics provider?",
-      answer:
-        "Yes, HUBNEPA supports third-party logistics integration. Please contact our technical support team to request API access and documentation for connecting your logistics provider.",
-    },
-    {
-      question: "How do I handle returns and refunds?",
-      answer:
-        "Returns are managed through the 'Orders' tab. Select the specific order, click on 'Manage Return', and follow the prompts to approve or reject the return request based on your policy.",
-    },
-  ];
-
-  const priorityStyles: any = {
-    HIGH: "bg-red-100 text-red-600",
-    MEDIUM: "bg-yellow-100 text-yellow-700",
-    LOW: "bg-blue-100 text-blue-700",
-  };
-
-  const statusStyles: any = {
-    Open: "bg-green-100 text-green-700",
-    Resolved: "bg-blue-100 text-blue-700",
-    Closed: "bg-gray-200 text-gray-600",
-  };
-
-  const [open, setOpen] = useState<number | null>(null);
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl lg:text-[34px] font-playfair font-semibold">
-            Help & Support
+            Support Center
           </h1>
 
           <p className="text-[#64748B] mt-2">
-            Get assistance with your account, orders, and platform features.
+            Get help with technical issues or operational questions.
           </p>
         </div>
 
-        <button className="bg-[#155DFC] text-white px-4 py-2 rounded-lg flex items-center gap-2">
-          <MessageCircle size={16} />
-          Start Live Chat
+        <button className="bg-[#009966] text-white px-4 py-2 rounded-lg flex items-center gap-2">
+          <Plus size={16} />
+          New Ticket
         </button>
       </div>
 
-      <div className="bg-[#14213D] text-white rounded-xl p-10 text-center">
-        <h2 className="text-2xl font-playfair mb-6">
-          How can we help you today?
-        </h2>
+      <div className="flex gap-2 bg-[#F1F5F9] p-1 rounded-lg w-fit">
+        <button
+          onClick={() => setActiveTab("tickets")}
+          className={`px-4 py-2 rounded-md text-sm ${activeTab === "tickets"
+              ? "bg-white shadow text-[#111827]"
+              : "text-[#6A7282]"
+            }`}
+        >
+          Support Tickets
+        </button>
 
-        <div className="flex items-center bg-white/10 rounded-lg px-4 py-3 max-w-[600px] mx-auto">
-          <Search size={18} />
+        <button
+          onClick={() => setActiveTab("chat")}
+          className={`px-4 py-2 rounded-md text-sm ${activeTab === "chat"
+              ? "bg-white shadow text-[#111827]"
+              : "text-[#6A7282]"
+            }`}
+        >
+          Live Chat
+        </button>
 
-          <input
-            placeholder="Search for articles, guides, and troubleshooting..."
-            className="bg-transparent outline-none ml-3 w-full"
-          />
-        </div>
+        <button
+          onClick={() => setActiveTab("faq")}
+          className={`px-4 py-2 rounded-md text-sm ${activeTab === "faq"
+              ? "bg-white shadow text-[#111827]"
+              : "text-[#6A7282]"
+            }`}
+        >
+          FAQs
+        </button>
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 space-y-5">
-          <div className="grid lg:grid-cols-3 gap-5">
-            {helpCards.map((c, i) => {
-              const Icon = c.icon;
+      {activeTab === "tickets" && (
+        <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-3 lg:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center border border-[#E5E7EB] rounded-lg px-3 w-full lg:w-[360px]">
+              <Search size={18} className="text-[#94A3B8]" />
 
-              return (
-                <div
-                  key={i}
-                  className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-6 text-center"
-                >
-                  <div className="bg-[#EFF6FF] w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Icon size={26} className="text-[#155DFC]" />
-                  </div>
+              <input
+                placeholder="Search tickets..."
+                className="w-full px-3 py-2 outline-none text-sm"
+              />
+            </div>
 
-                  <p className="font-semibold">{c.title}</p>
-
-                  <p className="text-sm text-[#64748B] mt-1">{c.desc}</p>
-                </div>
-              );
-            })}
+            <button className="flex items-center gap-2 text-[#64748B] font-medium">
+              <Filter size={16} />
+              Filter
+            </button>
           </div>
 
-          <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-6 shadow-sm">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="font-playfair text-lg font-semibold">
-                Your Support Tickets
-              </h3>
-              <button className="text-[#155DFC] text-sm font-medium">
-                View All
-              </button>
-            </div>
-            <div>
-              {tickets.map((t, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center justify-between py-4 ${i !== tickets.length - 1 ? "border-b border-[#E5E7EB]" : ""}`}
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className={`w-2.5 h-2.5 mt-2 rounded-full ${t.dot}`}
-                    ></span>
-                    <div>
-                      <p className="font-medium text-[#111827]">{t.title}</p>
-                      <p className="text-sm text-[#64748B] mt-1">
-                        {t.id} • {t.time}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="border-b text-sm text-[#64748B] bg-[#F8FAFC]">
+                <tr>
+                  <th className="py-4 font-medium px-2">TICKET ID</th>
+                  <th className="py-4 font-medium px-2">SUBJECT</th>
+                  <th className="py-4 font-medium px-2">PRIORITY</th>
+                  <th className="py-4 font-medium px-2">STATUS</th>
+                  <th className="py-4 font-medium px-2">LAST UPDATED</th>
+                  <th className="py-4 font-medium px-2 text-right">ACTIONS</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {tickets.map((t, i) => (
+                  <tr key={i} className="border-b last:border-none">
+                    <td className="py-6 px-2 text-[#64748B] text-sm">{t.id}</td>
+
+                    <td className="py-6 px-2">
+                      <p className="font-semibold text-[#0F172A] leading-6">
+                        {t.subject}
                       </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span
-                      className={`px-3 py-1 text-xs rounded-md ${priorityStyles[t.priority]}`}
-                    >
-                      {t.priority}
-                    </span>
-                    <span
-                      className={`px-3 py-1 text-xs rounded-full ${statusStyles[t.status]}`}
-                    >
-                      {t.status}
-                    </span>
-                    <ChevronRight size={18} className="text-[#94A3B8]" />
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </td>
+
+                    <td className="py-6 px-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${priorityStyles[t.priority]}`}
+                      >
+                        {t.priority}
+                      </span>
+                    </td>
+
+                    <td className="py-6 px-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${statusStyles[t.status]}`}
+                      >
+                        {t.status}
+                      </span>
+                    </td>
+
+                    <td className="py-6 px-2 text-[#64748B] text-sm">
+                      {t.updated}
+                    </td>
+
+                    <td className="py-6 px-2 text-right">
+                      <button className="text-[#059669] text-sm">
+                        View Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
+      )}
 
-          <div className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-6">
-            <h3 className="font-playfair text-lg font-semibold mb-10">
-              Frequently Asked Questions
-            </h3>
+      {activeTab === "chat" && (
+        <SupportLiveChat />
+      )}
 
-            <div className="space-y-5">
-              {faq.map((item, i) => (
-                <div key={i} className="border-b pb-3">
-                  <button
-                    onClick={() => setOpen(open === i ? null : i)}
-                    className="flex justify-between w-full text-left items-center"
+      {activeTab === "faq" && (
+        <div className="space-y-8">
+
+          {faqs.map((section, sIndex) => (
+
+            <div key={sIndex} className="space-y-4">
+
+              <h2 className="font-playfair text-2xl">{section.category}</h2>
+
+              {section.items.map((item, i) => {
+
+                const index = sIndex * 10 + i
+                const active = open === index
+
+                return (
+                  <div
+                    key={index}
+                    className="border border-[#E5E7EB] bg-white rounded-lg lg:rounded-xl p-4 shadow-sm cursor-pointer"
+                    onClick={() => setOpen(active ? null : index)}
                   >
-                    <span className="font-medium">{item.question}</span>
 
-                    <ChevronDown
-                      size={18}
-                      className={`transition ${open === i ? "rotate-180" : ""}`}
-                    />
-                  </button>
+                    <div className="flex items-center justify-between">
 
-                  {open === i && (
-                    <p className="text-sm text-[#64748B] mt-3 leading-relaxed">
-                      {item.answer}
-                    </p>
-                  )}
-                </div>
-              ))}
+                      <p className="font-medium text-[#111827]">
+                        {item.q}
+                      </p>
+
+                      <ChevronDown
+                        size={18}
+                        className={`transition ${active ? "rotate-180" : ""}`}
+                      />
+
+                    </div>
+
+                    {active && (
+                      <p className="text-[#6A7282] mt-3 text-sm">
+                        {item.a}
+                      </p>
+                    )}
+
+                  </div>
+                )
+              })}
+
             </div>
-          </div>
+
+          ))}
+
         </div>
-
-        <div>
-          <div className="border border-[#E5E7EB] bg-white lg:rounded-xl rounded-lg p-3 lg:p-6 shadow-sm space-y-8 mb-5">
-            <div>
-              <h3 className="font-playfair text-lg font-semibold text-[#111827]">
-                Contact Support
-              </h3>
-              <p className="text-base text-[#64748B] mt-1 leading-relaxed">
-                Direct channels for urgent issues.
-              </p>
-            </div>
-            <div className="space-y-6">
-              <div className="bg-[#EFF6FF] rounded-xl p-8 flex items-center gap-6">
-                <div className="text-[#1447E6]">
-                  <Phone size={18} className="min-w-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm tracking-widest text-[#2563EB] font-semibold">
-                    PHONE SUPPORT
-                  </p>
-                  <p className="text-lg font-bold text-[#2563EB] mt-2">
-                    +1 (800)
-                  </p>
-                  <p className="text-lg font-bold text-[#2563EB]">123-4567</p>
-                  <p className="text-sm text-[#1447E6] mt-2">
-                    Mon-Fri, 9am - 6pm EST
-                  </p>
-                </div>
-              </div>
-              <div className="bg-[#ECFDF5] rounded-xl p-8 flex items-center gap-6">
-                <div className="text-[#007A55]">
-                  <Mail size={18} className="min-w-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm tracking-widest text-[#007A55] font-semibold">
-                    EMAIL SUPPORT
-                  </p>
-                  <p className="text-sm font-bold text-[#007A55] mt-2">
-                    support@hubnepa.com
-                  </p>
-                  <p className="text-sm text-[#007A55] mt-2">
-                    Response time: &lt; 24 hrs
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="space-y-5">
-            <div className="border border-[#E5E7EB] bg-white lg:rounded-xl rounded-lg lg:p-6 p-3 shadow-sm">
-              <h3 className="font-playfair text-lg font-semibold text-[#111827]">
-                Send a Message
-              </h3>
-              <p className="text-base text-[#64748B] mt-1 leading-relaxed">
-                We'll get back to you via email.
-              </p>
-              <div className="mt-6 space-y-5">
-                <div>
-                  <label className="block text-[#334155] mb-2">Subject</label>
-                  <input
-                    placeholder="Brief description of the issue"
-                    className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none shadow-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[#334155] mb-2">Priority</label>
-                  <select className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none shadow-sm">
-                    <option>Select Priority</option> <option>High</option>
-                    <option>Medium</option> <option>Low</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[#334155] mb-2">Message</label>
-                  <textarea
-                    rows={5}
-                    placeholder="Describe your issue in detail..."
-                    className="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none shadow-sm"
-                  />
-                </div>
-                <button className="flex items-center justify-center gap-2 bg-[#0F172A] text-white w-full py-4 rounded-xl shadow-lg">
-                  <Send size={18} /> Send Ticket
-                </button>
-              </div>
-            </div>
-            <div className="border border-[#E5E7EB] bg-white rounded-xl p-6 flex items-center justify-between shadow-sm">
-              <div>
-                <h3 className="font-playfair text-xl text-[#111827]">
-                  System Status
-                </h3>
-                <p className="text-[#64748B] mt-1">
-                  All systems functioning normally.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-green-600 font-medium">
-                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
-                Operational
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

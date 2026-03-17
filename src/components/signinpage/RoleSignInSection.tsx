@@ -112,29 +112,39 @@ export default function RoleSignInSection() {
     const { role } = useRole();
     const [checked, setChecked] = useState(false);
     const [show, setShow] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(
+        localStorage.getItem("isLoggedIn") === "true"
+    )
+
     if (!role) return null;
 
     const config = roleConfig[role as RoleType];
     const Icon = config.icon;
 
+    const handleLogin = () => {
 
-const handleLogin = () => {
-  if (role === "customer") {
-    navigate("/customer/dashboard")
-  }
+        localStorage.setItem("isLoggedIn", "true")
+        localStorage.setItem("role", role)
+        setIsLoggedIn(true)
 
-  if (role === "retailer") {
-    navigate("/retailer/dashboard")
-  }
+        if (role === "customer") {
+            navigate("/customer/dashboard")
+        }
 
-  if (role === "supplier") {
-    navigate("/supplier/dashboard")
-  }
+        if (role === "retailer") {
+            navigate("/retailer/dashboard")
+        }
 
-  if (role === "restaurant") {
-    navigate("/restaurant/dashboard")
-  }
-}
+        if (role === "supplier") {
+            navigate("/supplier/dashboard")
+        }
+
+        if (role === "restaurant") {
+            navigate("/restaurant/dashboard")
+        }
+
+        setIsLoggedIn(true)
+    }
 
     return (
         <section className="bg-[#020618] text-white">
@@ -181,7 +191,7 @@ const handleLogin = () => {
                                 <button className={config.iconColor}>Forgot password?</button>
                             </div>
 
-                           <div
+                            <div
                                 className="flex items-center border border-[#1D293D] bg-[#0F172B] rounded-lg px-4 py-3 focus-within:ring-[0.5px] transition"
                                 style={{ '--focus-color': config.borderColor } as React.CSSProperties}
                             >
@@ -240,7 +250,7 @@ const handleLogin = () => {
                         {config.applyText && (
                             <div className="border border-[#1D293D] bg-[#0F172B80] rounded-xl text-sm p-5 text-center text-[#90A1B9] mt-6">
                                 <span className="text-xs mb-3 inline-block">{config.partnerText}</span>
-                                <div className={`${config.iconColor} cursor-pointer`} onClick={()=>navigate("/orderplace")}>
+                                <div className={`${config.iconColor} cursor-pointer`} onClick={() => navigate("/orderplace")}>
                                     {config.applyText}
                                 </div>
                             </div>

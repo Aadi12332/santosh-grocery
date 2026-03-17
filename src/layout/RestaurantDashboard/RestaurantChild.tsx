@@ -1,11 +1,12 @@
-// import FinanceWallet from "./FinanceWallet"
+import FinanceWallet from "./FinanceWallet"
 import Notifications from "./Notifications"
 import Orders from "./Orders"
 import ReportsAnalytics from "./ReportsAnalytics"
 import SupportCenter from "./SupportCenter"
-// import MenuManagement from "./MenuManagement"
+import MenuManagement from "./MenuManagement"
 import RestaurantDashboard from "./RestaurantDashboard"
 import RestaurantSettings from "./RestaurantSettings"
+import AddMenuItem from "./AddMenuItem"
 
 
 export default function RestaurantChild({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: string) => void }) {
@@ -29,18 +30,20 @@ export default function RestaurantChild({ activeTab, setActiveTab }: { activeTab
 
   if (activeTab === "menu-management") {
     return (
-      <div>Menu management tab</div>
-      // <MenuManagement />
+      <MenuManagement activeTab={activeTab} setActiveTab={setActiveTab}/>
     )
   }
 
-  if (activeTab === "finance") { return (
-     <div>Expenses tab</div>
-  // <FinanceWallet />
-) }
+  if (activeTab === "add-item") {
+    return (
+      <AddMenuItem activeTab={activeTab} setActiveTab={setActiveTab} />
+    )
+  }
+
+  if (activeTab === "finance") { return (<FinanceWallet />) }
   if (activeTab === "reports") { return (<ReportsAnalytics />) }
   if (activeTab === "support") { return (<SupportCenter />) }
-  if (activeTab === "settings") { return (<RestaurantSettings />) }
+  if (activeTab === "settings") { return (<RestaurantSettings activeTab={activeTab} setActiveTab={setActiveTab} />) }
 
   return null
 }

@@ -1,4 +1,7 @@
 import { Leaf, Wheat, Milk, Wine, Plus, Truck } from "lucide-react"
+import CartModal from "../../layout/CustomerDashboard/CartModal"
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const categories = [
   { name: "All Products", active: true, icon: Leaf },
@@ -69,6 +72,21 @@ const products = [
 ]
 
 export default function FeaturedProducts() {
+  const navigate = useNavigate();
+  const [openCart, setOpenCart] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(
+      localStorage.getItem("isLoggedIn") === "true"
+    )
+  
+    useEffect(() => {
+      const handleStorage = () => {
+        setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true")
+      }
+  
+      window.addEventListener("storage", handleStorage)
+  
+      return () => window.removeEventListener("storage", handleStorage)
+    }, [])
   return (
     <section className="bg-[#020618] py-20 text-white">
       <div className="max-w-[1265px] mx-auto px-3 lg:px-6 grid lg:grid-cols-[260px_1fr] gap-10">
@@ -132,9 +150,16 @@ export default function FeaturedProducts() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
               <div
-                key={product.id}
-                className="bg-[#0F172B] border border-[#1D293D] rounded-2xl overflow-hidden group"
-              >
+  key={product.id}
+  onClick={() => {
+    if (isLoggedIn) {
+      setOpenCart(true)
+    } else {
+      navigate("/sign-in")
+    }
+  }}
+  className="bg-[#0F172B] border border-[#1D293D] rounded-2xl overflow-hidden group cursor-pointer"
+>
                 <div className="relative">
                   <img
                     src={product.image}
@@ -177,6 +202,8 @@ export default function FeaturedProducts() {
               </div>
             ))}
           </div>
+
+          <CartModal selectedProduct="selected" open={openCart} onClose={() => setOpenCart(false)} />
 
           <div className="text-center mt-12">
             <button className="text-[#94A3B8] hover:text-white transition">

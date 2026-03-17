@@ -11,6 +11,7 @@ import {
   NotepadText,
   LayoutDashboard,
 } from "lucide-react"
+import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 const menu = [
@@ -36,6 +37,19 @@ export default function SupplierSidebar({
   setSidebarOpen: (open: boolean) => void
 }) {
   const navigate = useNavigate()
+  const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem("isLoggedIn") === "true"
+  )
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true")
+    }
+
+    window.addEventListener("storage", handleStorage)
+
+    return () => window.removeEventListener("storage", handleStorage)
+  }, [])
 
   return (
     <div className="w-[288px] flex flex-col h-full pb-5">
@@ -85,7 +99,10 @@ export default function SupplierSidebar({
         </div>
 
 
-        <button onClick={() => { navigate("/sign-in"); setActiveTab("") }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
+        <button onClick={() => {
+            localStorage.clear();
+          navigate("/sign-in")
+        }} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-red-500 hover:bg-red-50">
           <LogOut size={20} />
           Sign Out
         </button>
