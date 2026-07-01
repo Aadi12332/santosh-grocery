@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { User, Mail, Lock, Eye, Sparkles, Check } from "lucide-react";
 import authImg from "../../assets/images/signupbg.svg";
 import GoogleIcon from "../../assets/images/googleicon.svg";
@@ -7,7 +7,83 @@ import { useNavigate } from "react-router-dom";
 
 export default function AuthSection() {
   const [checked, setChecked] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    phone: "",
+  });
   const navigate = useNavigate();
+
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!checked) {
+      setError("Please accept terms and policy before continuing.");
+      setSuccess("");
+      return;
+    }
+
+    setError("");
+    setSuccess("");
+    setLoading(true);
+
+    try {
+      const response = await fetch(
+        "https://mr-santosh-grocery-backend.onrender.com/api/v1/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone,
+            role: "customer",
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Registration failed. Please try again.");
+      }
+
+      setSuccess("Account created successfully. Redirecting to sign in...");
+      navigate("/role-wise-sign-in?role=customer");
+      setFormData({ firstName: "", lastName: "", email: "", password: "", phone: "" });
+      setChecked(false);
+
+      window.setTimeout(() => {
+        navigate("/sign-in");
+      }, 1200);
+    } catch (fetchError) {
+      setError(
+        fetchError instanceof Error
+          ? fetchError.message
+          : "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section className="min-h-[851px] bg-[#020618] ">
       <div className="max-w-[1265px] mx-auto lg:px-6 px-3 flex">
@@ -72,7 +148,15 @@ export default function AuthSection() {
               <div className="flex-1 h-px bg-[#1D293D]" />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            {error ? (
+              <p className="mb-4 text-sm text-[#F87171]">{error}</p>
+            ) : null}
+            {success ? (
+              <p className="mb-4 text-sm text-[#34D399]">{success}</p>
+            ) : null}
+
+            <form onSubmit={handleSubmit}>
+              <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="" className="text-[#CAD5E2] text-sm">
                   First Name
@@ -83,6 +167,9 @@ export default function AuthSection() {
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]"
                   />
                   <input
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
                     type="text"
                     placeholder="John"
                     className="w-full bg-[#0F172B80] border border-[#1D293D] rounded-[12px] pl-10 pr-4 py-3 text-white placeholder-[#64748B] focus:outline-none focus:border-[#00A63E]"
@@ -96,6 +183,9 @@ export default function AuthSection() {
                 </label>
                 <div>
                   <input
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
                     type="text"
                     placeholder="Doe"
                     className="w-full bg-[#0F172B80] border border-[#1D293D] rounded-[12px] px-4 py-3 text-white placeholder-[#64748B] focus:outline-none focus:border-[#00A63E]"
@@ -113,10 +203,29 @@ export default function AuthSection() {
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]"
                 />
                 <input
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   type="email"
                   placeholder="name@example.com"
                   autoComplete="off"
                   className="w-full bg-[#0F172B80] border border-[#1D293D] rounded-[12px] pl-10 pr-4 py-3 text-white placeholder-[#64748B] focus:outline-none focus:border-[#00A63E]"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label htmlFor="" className="text-[#CAD5E2] text-sm">
+                Phone
+              </label>
+              <div className="relative">
+                <input
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  type="tel"
+                  placeholder="e.g. +919645299758"
+                  autoComplete="off"
+                  className="w-full bg-[#0F172B80] border border-[#1D293D] rounded-[12px] px-4 py-3 text-white placeholder-[#64748B] focus:outline-none focus:border-[#00A63E]"
                 />
               </div>
             </div>
@@ -130,13 +239,17 @@ export default function AuthSection() {
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]"
                 />
                 <input
-                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  type={showPassword ? "text" : "password"}
                   autoComplete="off"
                   placeholder="Create a strong password"
                   className="w-full bg-[#0F172B80] border border-[#1D293D] rounded-[12px] pl-10 pr-10 py-3 text-white placeholder-[#64748B] focus:outline-none focus:border-[#00A63E]"
                 />
                 <Eye
                   size={18}
+                  onClick={() => setShowPassword((prev) => !prev)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B] cursor-pointer"
                 />
               </div>
@@ -166,9 +279,16 @@ export default function AuthSection() {
               </p>
             </div>
 
-            <button className="mt-6 w-full bg-[#009966] text-white py-3 rounded-[12px] font-semibold shadow-[0px_10px_15px_-3px_#00A63E33] hover:opacity-90 transition">
-              Create Account
+            <button
+              type="submit"
+              disabled={loading}
+              className={`mt-6 w-full bg-[#009966] text-white py-3 rounded-[12px] font-semibold shadow-[0px_10px_15px_-3px_#00A63E33] transition ${
+                loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90"
+              }`}
+            >
+              {loading ? "Creating account..." : "Create Account"}
             </button>
+            </form>
 
             <p className="mt-6 text-center text-xs text-[#00A63E] flex gap-2 items-center justify-center">
               <img src={RestIcon} alt="" />

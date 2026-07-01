@@ -3,14 +3,53 @@ import { useState, useEffect, useRef } from "react"
 import CustomerSidebar from "./CustomerSidebar"
 import CustomerHeader from "./CustomerHeader"
 import CustomerChild from "./CustomerChild"
+import { useNavigate } from "react-router-dom"
 
 export default function CustomerLayout() {
-
+  const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(
+    localStorage.getItem("isLoggedIn") === "true",
+  );
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("activeTab") || "overview"
   })
 
-  const [sidebarOpen,setSidebarOpen] = useState(false)
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
+
+  const [sidebarOpen,setSidebarOpen] = useState(false);
+    const handleLogout = async () => {
+    setLogoutError("");
+    setLoggingOut(true);
+
+    const token = localStorage.getItem("authToken");
+
+    try {
+      await fetch(
+        "https://mr-santosh-grocery-backend.onrender.com/api/v1/auth/logout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
+        },
+      );
+    } catch (logoutErr) {
+      setLogoutError(
+        logoutErr instanceof Error
+          ? logoutErr.message
+          : "Unable to reach the logout endpoint.",
+      );
+    } finally {
+      localStorage.clear();
+      setIsLoggedIn(false);
+      setLoggingOut(false);
+      navigate("/sign-in");
+    }
+  };
 
   const sidebarRef = useRef<HTMLDivElement>(null)
 
@@ -44,8 +83,40 @@ export default function CustomerLayout() {
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
 
-        <CustomerSidebar setSidebarOpen={setSidebarOpen} activeTab={activeTab} setActiveTab={handleTabChange}/>
+        <CustomerSidebar setIsLoggedIn={setIsLoggedIn} setShowLogoutModal={setShowLogoutModal} loggingOut={loggingOut} logoutError={logoutError} setSidebarOpen={setSidebarOpen} activeTab={activeTab} setActiveTab={handleTabChange}/>
       </div>
+
+         {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-xl font-semibold text-[#111827]">Sign Out</h2>
+
+            <p className="mt-3 text-sm text-[#6B7280]">
+              Are you sure you want to sign out?
+            </p>
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="rounded-lg border border-gray-300 px-5 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  setShowLogoutModal(false);
+                  await handleLogout();
+                }}
+                disabled={loggingOut}
+                className="rounded-lg bg-red-500 px-5 py-2 text-white hover:bg-red-600 disabled:opacity-60"
+              >
+                {loggingOut ? "Signing Out..." : "Yes, Sign Out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
 
       <div className="flex flex-col flex-1 overflow-hidden">

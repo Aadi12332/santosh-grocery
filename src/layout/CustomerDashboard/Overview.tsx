@@ -43,14 +43,16 @@ const stats = [
 
 export default function Overview({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
     const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const firstName = `${user.firstName ?? ""}`.trim();
     return (
         <div className="space-y-8">
 
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
                 <div>
-                    <h1 className="lg:text-[34px] text-[24px] font-playfair font-medium text-[#0F172A]">
-                        Good Evening, Sarah
+                    <h1 className="lg:text-[34px] text-[24px] capitalize font-playfair font-medium text-[#0F172A]">
+                        Good Evening, {firstName}
                     </h1>
                     <p className="text-[#6A7282] mt-1 lg:text-lg text-base">
                         Welcome back to your personal dashboard.
