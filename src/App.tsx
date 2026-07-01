@@ -24,6 +24,7 @@ import Checkout from "./layout/CustomerDashboard/CheckoutStep/Checkout";
 import RetailerLayout from "./layout/RetailerDashboard/RetailerLayout";
 import SupplierLayout from "./layout/SupplierDashboard/SupplierLayout";
 import RestaurantLayout from "./layout/RestaurantDashboard/RestaurantLayout";
+import RestaurantBackendLayout from "./layout/RestaurantBackendDashboard/RestaurantBackendLayout";
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
         <Route path="/retailer/dashboard" element={<RetailerLayout />} />
         <Route path="/supplier/dashboard" element={<SupplierLayout />} />
         <Route path="/restaurant/dashboard" element={<RestaurantLayout />} />
+        <Route path="/restaurantbackend/dashboard" element={<RestaurantBackendLayout />} />
 
       </Routes>
     </BrowserRouter>

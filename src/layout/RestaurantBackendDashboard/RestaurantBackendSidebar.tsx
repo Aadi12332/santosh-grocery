@@ -4,26 +4,27 @@ import {
   LogOut,
   BarChart3,
   MessageSquare,
-  Utensils,
-  NotepadText,
   LayoutDashboard,
-  ShoppingBag,
   Store,
+  Users,
+  DollarSign,
+  ChefHat,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 
 const menu = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { id: "orders", label: "Orders", icon: NotepadText },
-  { id: "menu-management", label: "Menu Management", icon: Utensils },
+  { id: "inventory", label: "Inventory & Recipes", icon: ChefHat },
   { id: "finance", label: "Expenses", icon: Wallet },
   { id: "reports", label: "Reports & Analytics", icon: BarChart3 },
+  { id: "sales-management", label: "Sales & Closing", icon: DollarSign },
+  { id: "team", label: "Team Management", icon: Users },
   { id: "support", label: "Support", icon: MessageSquare },
   { id: "settings", label: "Settings", icon: Settings },
 ]
 
-export default function RestaurantSidebar({
+export default function RestaurantBackendSidebar({
   activeTab,
   setActiveTab,
   setSidebarOpen
@@ -63,9 +64,6 @@ export default function RestaurantSidebar({
 
             const tabMap: Record<string, string> = {
               "add-item": "dashboard",
-              "shipment-history": "dashboard",
-              "add-product": "products",
-              "create-manifest": "orders",
             }
 
             const active =
@@ -92,21 +90,6 @@ export default function RestaurantSidebar({
               </button>
             )
           })}
-          <div className="border-t border-[#E5E7EB] my-4"></div>
-
-          <div className="px-4 text-xs font-semibold text-[#9CA3AF] tracking-wider !mt-5">
-            SHOP
-          </div>
-
-          <button onClick={() => navigate("/marketplace")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-[#6A7282] hover:bg-gray-50">
-            <ShoppingBag size={20} />
-            Marketplace
-          </button>
-
-          <button onClick={() => navigate("/restaurants")} className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-[#6A7282] hover:bg-gray-50">
-            <ShoppingBag size={20} />
-            Restaurant
-          </button>
         </div>
 
 

@@ -143,6 +143,10 @@ export default function RoleSignInSection() {
             navigate("/restaurant/dashboard")
         }
 
+        if (role === "restaurantbackend") {
+            navigate("/restaurantbackend/dashboard")
+        }
+
         setIsLoggedIn(true)
     }
 
