@@ -45,6 +45,14 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
     const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
     const firstName = `${user.firstName ?? ""}`.trim();
+    const getGreeting = () => {
+  const hour = new Date().getHours();
+
+  if (hour < 12) return "Good Morning";
+  if (hour < 17) return "Good Afternoon";
+  if (hour < 21) return "Good Evening";
+  return "Good Night";
+};
     return (
         <div className="space-y-8">
 
@@ -52,7 +60,7 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
 
                 <div>
                     <h1 className="lg:text-[34px] text-[24px] capitalize font-playfair font-medium text-[#0F172A]">
-                        Good Evening, {firstName}
+                        {getGreeting()}, {firstName}
                     </h1>
                     <p className="text-[#6A7282] mt-1 lg:text-lg text-base">
                         Welcome back to your personal dashboard.

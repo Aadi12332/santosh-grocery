@@ -47,7 +47,7 @@ export default function CustomerLayout() {
       localStorage.clear();
       setIsLoggedIn(false);
       setLoggingOut(false);
-      navigate("/sign-in");
+      navigate("/role-wise-sign-in?role=customer");
     }
   };
 
