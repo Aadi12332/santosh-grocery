@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Gift, Loader2 } from "lucide-react";
 
 interface VoucherSectionProps {
@@ -33,6 +33,8 @@ export default function VoucherSection({
 
     setLoading(true);
     setError(null);
+
+        const authToken = localStorage.getItem("authToken");
 
     try {
       const res = await fetch(API_URL, {
@@ -72,6 +74,16 @@ export default function VoucherSection({
     setCode(voucherCode);
     applyVoucher(voucherCode);
   };
+
+    useEffect(() => {
+  if (!error) return;
+
+  const timer = setTimeout(() => {
+    setError(null);
+  }, 2000);
+
+  return () => clearTimeout(timer);
+}, [error]);
 
   return (
     <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-8 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">

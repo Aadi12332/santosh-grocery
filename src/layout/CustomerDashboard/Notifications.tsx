@@ -1,4 +1,15 @@
-import { Package, Clock, Utensils, Ticket, Info, Trash2, Bell, Loader2 } from "lucide-react";
+import {
+  Package,
+  Clock,
+  Utensils,
+  Ticket,
+  Info,
+  Trash2,
+  Bell,
+  Loader2,
+  MessageSquare,
+  PartyPopper,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 type NotificationItem = {
@@ -24,37 +35,78 @@ export default function Notifications() {
   const [hasMore, setHasMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case "order":
-        return {
-          icon: Package,
-          iconColor: "#009966",
-          iconBg: "bg-[#ECFDF5] border border-[#D0FAE5]",
-        };
+const getNotificationIcon = (type: string, title: string = "") => {
+  const t = type?.toLowerCase() || "";
+  const titleLower = title.toLowerCase();
 
-      case "offer":
-        return {
-          icon: Ticket,
-          iconColor: "#9333EA",
-          iconBg: "bg-[#FAF5FF] border border-[#F3E8FF]",
-        };
-
-      case "restaurant":
-        return {
-          icon: Utensils,
-          iconColor: "#F97316",
-          iconBg: "bg-[#FFF7ED] border border-[#FFEDD4]",
-        };
-
-      default:
-        return {
-          icon: Info,
-          iconColor: "#2563EB",
-          iconBg: "bg-[#EFF6FF] border border-[#DBEAFE]",
-        };
+  // Order related
+  if (t.includes("order") || titleLower.includes("order")) {
+    if (t.includes("driver") || t.includes("nearby") || titleLower.includes("driver") || titleLower.includes("nearby")) {
+      return {
+        icon: Clock,
+        iconColor: "#2563EB",
+        iconBg: "bg-[#EFF6FF] border border-[#DBEAFE]",
+      };
     }
+    return {
+      icon: Package,
+      iconColor: "#009966",
+      iconBg: "bg-[#ECFDF5] border border-[#D0FAE5]",
+    };
+  }
+
+  // Restaurant related
+  if (t.includes("restaurant") || titleLower.includes("restaurant")) {
+    return {
+      icon: Utensils,
+      iconColor: "#F97316",
+      iconBg: "bg-[#FFF7ED] border border-[#FFEDD4]",
+    };
+  }
+
+  // Offer / promo related
+  if (t.includes("offer") || t.includes("promo") || t.includes("discount") || titleLower.includes("offer")) {
+    return {
+      icon: Ticket,
+      iconColor: "#9333EA",
+      iconBg: "bg-[#FAF5FF] border border-[#F3E8FF]",
+    };
+  }
+
+  // Support ticket related
+  if (t.includes("ticket") || t.includes("support") || titleLower.includes("ticket") || titleLower.includes("support")) {
+    return {
+      icon: MessageSquare,
+      iconColor: "#0EA5E9",
+      iconBg: "bg-[#F0F9FF] border border-[#BAE6FD]",
+    };
+  }
+
+  // Welcome / onboarding related
+  if (t.includes("welcome") || titleLower.includes("welcome")) {
+    return {
+      icon: PartyPopper,
+      iconColor: "#EC4899",
+      iconBg: "bg-[#FDF2F8] border border-[#FBCFE8]",
+    };
+  }
+
+  // System / maintenance related
+  if (t.includes("system") || t.includes("maintenance") || titleLower.includes("maintenance")) {
+    return {
+      icon: Info,
+      iconColor: "#6A7282",
+      iconBg: "bg-[#F1F5F9] border border-[#E5E7EB]",
+    };
+  }
+
+  // Default fallback
+  return {
+    icon: Bell,
+    iconColor: "#2563EB",
+    iconBg: "bg-[#EFF6FF] border border-[#DBEAFE]",
   };
+};
 
   const fetchNotifications = useCallback(
     async (pageToFetch: number, append: boolean) => {
@@ -326,10 +378,10 @@ export default function Notifications() {
           <div className="space-y-4">
             {notifications.map((item) => {
               const {
-                icon: Icon,
-                iconBg,
-                iconColor,
-              } = getNotificationIcon(item.type);
+  icon: Icon,
+  iconBg,
+  iconColor,
+} = getNotificationIcon(item.type, item.title);
 
               return (
                 <div
@@ -346,11 +398,11 @@ export default function Notifications() {
                       : "bg-[#ECFDF54D] border-[#D0FAE5]"
                   }`}
                 >
-                  <div
-                    className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}
-                  >
-                    <Icon size={22} style={{ color: iconColor }} />
-                  </div>
+                 <div
+  className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${iconBg}`}
+>
+  <Icon size={22} style={{ color: iconColor }} />
+</div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-3 flex-wrap">

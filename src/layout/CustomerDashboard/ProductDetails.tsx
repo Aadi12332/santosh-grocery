@@ -31,7 +31,7 @@ export default function ProductDetails({ setActiveTab }: { setActiveTab: (tab: s
   return (
     <div className="">
 
-      <button onClick={() => navigate(-1)} className="mb-6 text-[#6A7282]">
+      <button onClick={() => navigate("/customer/dashboard")} className="mb-6 text-[#6A7282]">
         ← Back to Dashboard
       </button>
 

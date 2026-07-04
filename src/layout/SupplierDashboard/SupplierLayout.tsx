@@ -2,11 +2,26 @@ import { useState, useEffect, useRef } from "react"
 import SupplierSidebar from "./SupplierSidebar"
 import SupplierHeader from "./SupplierHeader"
 import SupplierChild from "./SupplierChild"
+import { useNavigate, useLocation } from "react-router-dom"
+
+const supplierTabToPath = (tab: string) => {
+  if (tab === "dashboard") return ""
+  return `/${tab}`
+}
+
+const supplierPathToTab = (pathname: string) => {
+  const parts = pathname.replace("/supplier/dashboard", "").split("/").filter(Boolean)
+  const last = parts[parts.length - 1]
+  return last || "dashboard"
+}
 
 export default function SupplierLayout() {
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("activeTab") || "dashboard"
+    const routeTab = supplierPathToTab(window.location.pathname)
+    return routeTab || localStorage.getItem("activeTab") || "dashboard"
   })
 
   const [sidebarOpen,setSidebarOpen] = useState(false)
@@ -14,9 +29,16 @@ export default function SupplierLayout() {
   const sidebarRef = useRef<HTMLDivElement>(null)
 
   const handleTabChange = (tab:string)=>{
-    setActiveTab(tab)
     localStorage.setItem("activeTab",tab)
+    navigate(`/supplier/dashboard${supplierTabToPath(tab)}`)
   }
+
+  useEffect(() => {
+    const routeTab = supplierPathToTab(location.pathname)
+    if (routeTab !== activeTab) {
+      setActiveTab(routeTab)
+    }
+  }, [location.pathname, activeTab])
 
   useEffect(()=>{
     const handleClickOutside = (e:MouseEvent)=>{

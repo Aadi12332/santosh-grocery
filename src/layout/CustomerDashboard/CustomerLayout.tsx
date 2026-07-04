@@ -3,11 +3,23 @@ import { useState, useEffect, useRef } from "react"
 import CustomerSidebar from "./CustomerSidebar"
 import CustomerHeader from "./CustomerHeader"
 import CustomerChild from "./CustomerChild"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
+
+const customerTabToPath = (tab: string) => {
+  if (tab === "overview") return ""
+  return `/${tab}`
+}
+
+const customerPathToTab = (pathname: string) => {
+  const parts = pathname.replace("/customer/dashboard", "").split("/").filter(Boolean)
+  const last = parts[parts.length - 1]
+  return last || "overview"
+}
 
 export default function CustomerLayout() {
   const navigate = useNavigate();
-    const [isLoggedIn, setIsLoggedIn] = useState(
+  const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(
     localStorage.getItem("isLoggedIn") === "true",
   );
   const [activeTab, setActiveTab] = useState(() => {
@@ -54,9 +66,16 @@ export default function CustomerLayout() {
   const sidebarRef = useRef<HTMLDivElement>(null)
 
   const handleTabChange = (tab:string)=>{
-    setActiveTab(tab)
     localStorage.setItem("activeTab",tab)
+    navigate(`/customer/dashboard${customerTabToPath(tab)}`)
   }
+
+  useEffect(() => {
+    const routeTab = customerPathToTab(location.pathname)
+    if (routeTab !== activeTab) {
+      setActiveTab(routeTab)
+    }
+  }, [location.pathname, activeTab])
 
   useEffect(()=>{
     const handleClickOutside = (e:MouseEvent)=>{

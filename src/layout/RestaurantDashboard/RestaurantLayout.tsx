@@ -2,11 +2,26 @@ import { useState, useEffect, useRef } from "react"
 import RestaurantSidebar from "./RestaurantSidebar"
 import RestaurantHeader from "./RestaurantHeader"
 import RestaurantChild from "./RestaurantChild"
+import { useNavigate, useLocation } from "react-router-dom"
+
+const restaurantTabToPath = (tab: string) => {
+  if (tab === "dashboard") return ""
+  return `/${tab}`
+}
+
+const restaurantPathToTab = (pathname: string) => {
+  const parts = pathname.replace("/restaurant/dashboard", "").split("/").filter(Boolean)
+  const last = parts[parts.length - 1]
+  return last || "dashboard"
+}
 
 export default function RestaurantLayout() {
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("activeTab") || "dashboard"
+    const routeTab = restaurantPathToTab(window.location.pathname)
+    return routeTab || localStorage.getItem("activeTab") || "dashboard"
   })
 
   const [sidebarOpen,setSidebarOpen] = useState(false)
@@ -14,9 +29,16 @@ export default function RestaurantLayout() {
   const sidebarRef = useRef<HTMLDivElement>(null)
 
   const handleTabChange = (tab:string)=>{
-    setActiveTab(tab)
     localStorage.setItem("activeTab",tab)
+    navigate(`/restaurant/dashboard${restaurantTabToPath(tab)}`)
   }
+
+  useEffect(() => {
+    const routeTab = restaurantPathToTab(location.pathname)
+    if (routeTab !== activeTab) {
+      setActiveTab(routeTab)
+    }
+  }, [location.pathname, activeTab])
 
   useEffect(()=>{
     const handleClickOutside = (e:MouseEvent)=>{

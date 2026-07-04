@@ -50,12 +50,12 @@ function App() {
         <Route path="/cookies-policy" element={<CookiesPage />} />
         <Route path="/dispute-resolution" element={<DisputePage />} />
 
-        <Route path="/customer/dashboard" element={<CustomerLayout />} />
+        <Route path="/customer/dashboard/*" element={<CustomerLayout />} />
         <Route path="/customer/dashboard/checkout" element={<Checkout />} />
-        <Route path="/retailer/dashboard" element={<RetailerLayout />} />
-        <Route path="/supplier/dashboard" element={<SupplierLayout />} />
-        <Route path="/restaurant/dashboard" element={<RestaurantLayout />} />
-        <Route path="/restaurantbackend/dashboard" element={<RestaurantBackendLayout />} />
+        <Route path="/retailer/dashboard/*" element={<RetailerLayout />} />
+        <Route path="/supplier/dashboard/*" element={<SupplierLayout />} />
+        <Route path="/restaurant/dashboard/*" element={<RestaurantLayout />} />
+        <Route path="/restaurantbackend/dashboard/*" element={<RestaurantBackendLayout />} />
 
       </Routes>
     </BrowserRouter>
