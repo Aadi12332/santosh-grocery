@@ -56,7 +56,7 @@ export default function CustomerLayout() {
           : "Unable to reach the logout endpoint.",
       );
     } finally {
-      localStorage.clear();
+      // localStorage.clear();
       setIsLoggedIn(false);
       setLoggingOut(false);
       navigate("/role-wise-sign-in?role=customer");

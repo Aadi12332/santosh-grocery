@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState, useCallback, type ChangeEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  type ChangeEvent,
+} from "react";
 import {
   User,
   Mail,
@@ -92,7 +98,8 @@ export default function AccountSettings() {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
-  const [addressForm, setAddressForm] = useState<AddressForm>(EMPTY_ADDRESS_FORM);
+  const [addressForm, setAddressForm] =
+    useState<AddressForm>(EMPTY_ADDRESS_FORM);
 
   const [preferences, setPreferences] = useState({
     language: "",
@@ -103,6 +110,10 @@ export default function AccountSettings() {
   const [preferencesLoading, setPreferencesLoading] = useState(false);
   const [preferencesError, setPreferencesError] = useState("");
   const [preferencesSuccess, setPreferencesSuccess] = useState("");
+  const [show2FADisableModal, setShow2FADisableModal] = useState(false);
+  const [disable2FACode, setDisable2FACode] = useState("");
+  const [disable2FALoading, setDisable2FALoading] = useState(false);
+  const [disable2FAError, setDisable2FAError] = useState("");
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteIndex, setDeleteIndex] = useState<number | null>(null);
@@ -113,6 +124,9 @@ export default function AccountSettings() {
   const passwordRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#^()_\-+=])[A-Za-z\d@$!%*?&#^()_\-+=]{8,}$/;
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [loading2FA, setLoading2FA] = useState(false);
 
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
@@ -126,10 +140,6 @@ export default function AccountSettings() {
   useEffect(() => {
     setProfileImage(profile.avatar || null);
   }, [profile.avatar]);
-
-  const handleRemoveImage = () => {
-    setProfileImage(null);
-  };
 
   const fetchProfile = useCallback(async () => {
     setLoadingProfile(true);
@@ -285,18 +295,6 @@ export default function AccountSettings() {
     }
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.readAsDataURL(file);
-
-      reader.onload = () => resolve(reader.result as string);
-
-      reader.onerror = reject;
-    });
-  };
-
   const uploadProfileImage = async (file: File) => {
     const token = localStorage.getItem("authToken");
 
@@ -306,17 +304,17 @@ export default function AccountSettings() {
     }
 
     try {
-      const base64 = await fileToBase64(file);
+      const formData = new FormData();
+      formData.append("avatar", file);
 
-      const response = await fetch(`${API_BASE}/users/profile/image`, {
+      const response = await fetch(`${API_BASE}/users/profile/image/upload`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          // Content-Type intentionally omitted — browser sets correct
+          // multipart/form-data boundary automatically for FormData
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          avatar: base64,
-        }),
+        body: formData,
       });
 
       const data = await response.json();
@@ -325,7 +323,7 @@ export default function AccountSettings() {
         throw new Error(data.message || "Image upload failed.");
       }
 
-      const avatar = data.data?.user?.avatar ?? data.data?.avatar ?? base64;
+      const avatar = data.data?.user?.avatar ?? data.data?.avatar ?? null;
 
       setProfile((prev) => ({
         ...prev,
@@ -350,23 +348,35 @@ export default function AccountSettings() {
     }
   };
 
+  const ALLOWED_IMAGE_TYPES = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/gif",
+  ];
+
   const handleImageChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (!file) return;
 
-    // Optional client-side validation
     if (file.size > 5 * 1024 * 1024) {
       alert("Maximum file size is 5MB.");
+      e.target.value = "";
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
-      alert("Please select a valid image.");
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      alert("Only image files are allowed (jpg, png, webp, gif).");
+      e.target.value = "";
       return;
     }
 
     await uploadProfileImage(file);
+
+    // reset input so selecting the same file again re-triggers onChange
+    e.target.value = "";
   };
 
   const handleChangePassword = async () => {
@@ -443,7 +453,11 @@ export default function AccountSettings() {
       setTimeout(() => {
         setShowPasswordSuccessModal(false);
 
-        localStorage.clear();
+        localStorage.removeItem("authToken")
+        localStorage.removeItem("isLoggedIn")
+        localStorage.removeItem("user")
+        localStorage.removeItem("activeTab")
+        localStorage.setItem("role", "customer")
 
         navigate("/role-wise-sign-in?role=customer");
       }, 2000);
@@ -486,7 +500,7 @@ export default function AccountSettings() {
         );
       }
 
-      localStorage.clear();
+    //   localStorage.clear();
 
       navigate("/role-wise-sign-in?role=customer");
     } catch (err) {
@@ -606,9 +620,7 @@ export default function AccountSettings() {
 
         if (!response.ok) {
           throw new Error(
-            data.errors?.join(", ") ||
-              data.message ||
-              "Unable to add address.",
+            data.errors?.join(", ") || data.message || "Unable to add address.",
           );
         }
 
@@ -633,6 +645,66 @@ export default function AccountSettings() {
     }
   };
 
+  const notificationItems = [
+    {
+      title: "Order Updates",
+      description: "Receive updates about your order.",
+      key: 0,
+    },
+    {
+      title: "Promotions & Offers",
+      description: "Receive promotional offers and discounts.",
+      key: 1,
+    },
+    {
+      title: "Driver Messages",
+      description: "Receive messages from delivery drivers.",
+      key: 2,
+    },
+  ];
+
+  const fetchPreferences = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/users/preferences`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch preferences.");
+      }
+
+      const prefs = data.data.preferences;
+
+      setPreferences({
+        language: prefs.language,
+        currency: prefs.currency,
+        darkMode: prefs.darkMode,
+      });
+
+      setToggles({
+        0: prefs.notifications.orderUpdates,
+        1: prefs.notifications.promotions,
+        2: prefs.notifications.push, // Driver Messages
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    void fetchProfile();
+    void fetch2FAStatus();
+    void fetchPreferences();
+  }, [fetchProfile]);
+
   const handleUpdatePreferences = async () => {
     setPreferencesError("");
     setPreferencesSuccess("");
@@ -653,7 +725,17 @@ export default function AccountSettings() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(preferences),
+        body: JSON.stringify({
+          ...preferences,
+          notifications: {
+            orderUpdates: toggles[0],
+            promotions: toggles[1],
+            push: toggles[2],
+            email: true,
+            sms: false,
+            newsletter: false,
+          },
+        }),
       });
 
       const data = await response.json();
@@ -724,6 +806,88 @@ export default function AccountSettings() {
     } finally {
       setDeleteAddressLoading(false);
     }
+  };
+
+  const fetch2FAStatus = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    setLoading2FA(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/2fa/status`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to fetch 2FA status.");
+      }
+
+      setTwoFactorEnabled(data.data.twoFactorEnabled);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading2FA(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchProfile();
+    void fetch2FAStatus();
+  }, [fetchProfile]);
+
+  const handleDisable2FA = async () => {
+    setDisable2FAError("");
+
+    if (!disable2FACode.trim()) {
+      setDisable2FAError("Please enter your 2FA code or account password.");
+      return;
+    }
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setDisable2FAError("Authentication token not found.");
+      return;
+    }
+
+    setDisable2FALoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/2fa/disable`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: disable2FACode }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data?.message || "Unable to disable 2FA.");
+      }
+
+      setTwoFactorEnabled(false);
+      setShow2FADisableModal(false);
+      setDisable2FACode("");
+    } catch (err) {
+      setDisable2FAError(
+        err instanceof Error ? err.message : "Something went wrong.",
+      );
+    } finally {
+      setDisable2FALoading(false);
+    }
+  };
+
+  const handleEnable2FAClick = () => {
+    // Enable flow API not provided yet — hook this up when available
+    //   navigate("/customer/dashboard/enable-2fa");
   };
 
   return (
@@ -802,21 +966,8 @@ export default function AccountSettings() {
               </p>
 
               <p className="text-[#6A7282] lg:text-sm text-xs">
-                JPG, GIF or PNG. Max size of 2MB.
+                Supports JPG, PNG, WEBP, and GIF files (max. 5 MB).
               </p>
-
-              <button
-                type="button"
-                onClick={handleRemoveImage}
-                disabled={!profileImage}
-                className={`mt-2 border rounded-lg px-4 py-1 text-sm transition ${
-                  profileImage
-                    ? "border-[#E5E7EB] hover:bg-gray-50 text-[#0F172A]"
-                    : "border-[#E5E7EB] text-gray-400 bg-gray-100 cursor-not-allowed"
-                }`}
-              >
-                Remove
-              </button>
             </div>
           </div>
 
@@ -1010,56 +1161,79 @@ export default function AccountSettings() {
             </div>
 
             <div className="flex items-center gap-4">
-              <span className="text-red-500 text-sm border px-3 py-1 rounded-full border-red-200">
-                Disabled
-              </span>
+              {loading2FA ? (
+                <span className="text-gray-500 text-sm">Loading...</span>
+              ) : (
+                <span
+                  className={`text-sm border px-3 py-1 rounded-full ${
+                    twoFactorEnabled
+                      ? "text-green-600 border-green-200 bg-green-50"
+                      : "text-red-500 border-red-200 bg-red-50"
+                  }`}
+                >
+                  {twoFactorEnabled ? "Enabled" : "Disabled"}
+                </span>
+              )}
             </div>
           </div>
-          <button className="border border-[#E5E7EB] px-4 py-2 rounded-lg">
-            Enable 2FA
-          </button>
+          {twoFactorEnabled ? (
+            <button
+              onClick={() => {
+                setDisable2FAError("");
+                setDisable2FACode("");
+                setShow2FADisableModal(true);
+              }}
+              className="border border-red-300 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50"
+            >
+              Disable 2FA
+            </button>
+          ) : (
+            <button
+              onClick={handleEnable2FAClick}
+              className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
+            >
+              Enable 2FA
+            </button>
+          )}
         </div>
       )}
 
       {tab === "Preferences" && (
         <div className="space-y-6">
-          <div className="border border-[#E5E7EB] rounded-lg lg:rounded-xl lg:p-8 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] space-y-6">
+          <div className="border border-[#E5E7EB] rounded-lg lg:rounded-xl lg:p-8 p-3 bg-white space-y-6">
             <div className="flex items-center gap-3">
               <Bell className="text-[#009966]" size={20} />
               <h3 className="font-playfair text-lg">Notifications</h3>
             </div>
 
-            {["Order Updates", "Promotions & Offers", "Driver Messages"].map(
-              (n, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[#0F172A]">{n}</p>
-                    <p className="text-sm text-[#6A7282]">
-                      Receive updates about your order.
-                    </p>
-                  </div>
-
-                  <button
-                    onClick={() =>
-                      setToggles((prev) => ({
-                        ...prev,
-                        [i]: !prev[i],
-                      }))
-                    }
-                    className={`w-12 p-0.5 flex items-center rounded-full transition ${
-                      toggles[i]
-                        ? "bg-[#009966] justify-end"
-                        : "bg-[#CBD5E1] justify-start"
-                    }`}
-                  >
-                    <span className="w-5 h-5 bg-white rounded-full shadow" />
-                  </button>
+            {notificationItems.map((item) => (
+              <div key={item.key} className="flex items-center justify-between">
+                <div>
+                  <p className="text-[#0F172A]">{item.title}</p>
+                  <p className="text-sm text-[#6A7282]">{item.description}</p>
                 </div>
-              ),
-            )}
-          </div>
 
-          <div className="border border-[#E5E7EB] rounded-xl lg:p-8 p-4 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+                <button
+                  onClick={() =>
+                    setToggles((prev) => ({
+                      ...prev,
+                      [item.key]: !prev[item.key],
+                    }))
+                  }
+                  className={`w-12 p-0.5 flex items-center rounded-full transition ${
+                    toggles[item.key]
+                      ? "bg-[#009966] justify-end"
+                      : "bg-[#CBD5E1] justify-start"
+                  }`}
+                >
+                  <span className="w-5 h-5 bg-white rounded-full shadow" />
+                </button>
+              </div>
+            ))}
+
+            <div className="border-t border-[#E5E7EB] my-6"></div>
+
+          <div className="">
             <div className="flex items-center gap-3 mb-6">
               <Globe className="text-blue-500" size={20} />
               <h3 className="font-playfair text-lg">Preferences</h3>
@@ -1186,6 +1360,8 @@ export default function AccountSettings() {
               </button>
             </div>
           </div>
+          </div>
+
 
           <div className="border border-red-200 bg-red-50 rounded-lg lg:rounded-xl lg:p-6 p-3">
             <div className="flex items-center gap-3 mb-5">
@@ -1306,6 +1482,54 @@ export default function AccountSettings() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {show2FADisableModal && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0">
+          <div className="bg-white rounded-xl p-6 w-full max-w-sm">
+            <h2 className="text-xl font-semibold text-[#0F172A]">
+              Disable Two-Factor Authentication
+            </h2>
+
+            <p className="mt-2 text-sm text-[#6A7282]">
+              Enter your 2FA code or account password to confirm.
+            </p>
+
+            <input
+              type="text"
+              placeholder="2FA code or account password"
+              value={disable2FACode}
+              onChange={(e) => setDisable2FACode(e.target.value)}
+              className="w-full border border-[#E5E7EB] rounded-lg p-3 mt-4 outline-none"
+            />
+
+            {disable2FAError && (
+              <p className="mt-3 text-sm text-red-500">{disable2FAError}</p>
+            )}
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => {
+                  setShow2FADisableModal(false);
+                  setDisable2FAError("");
+                  setDisable2FACode("");
+                }}
+                disabled={disable2FALoading}
+                className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleDisable2FA}
+                disabled={disable2FALoading}
+                className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg disabled:opacity-60"
+              >
+                {disable2FALoading ? "Disabling..." : "Disable 2FA"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1506,7 +1730,7 @@ export default function AccountSettings() {
             <button
               onClick={() => {
                 setShowPasswordSuccessModal(false);
-                localStorage.clear();
+                // localStorage.clear();
                 navigate("/role-wise-sign-in?role=customer");
               }}
               className="mt-6 w-full rounded-lg bg-[#009966] py-3 text-white hover:opacity-90"

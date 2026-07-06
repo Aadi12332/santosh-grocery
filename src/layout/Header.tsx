@@ -56,7 +56,7 @@ export default function Header() {
   const handleLogout = () => {
     localStorage.clear();
     setAuthToken(null);
-    setRole(null);
+    setRole("customer");
     setUser({});
     navigate("/role-wise-sign-in?role=customer");
   };
