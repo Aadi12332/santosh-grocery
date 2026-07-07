@@ -1,8 +1,28 @@
 import { useEffect, useState } from "react";
-import { Wallet, Package, TrendingUp, Clock, AlertCircle, Loader2 } from "lucide-react";
+import { Wallet, Package, TrendingUp, Clock, AlertCircle, Loader2, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
+
+interface RecommendedDeal {
+  _id: string;
+  name: string;
+  description: string;
+  category: string;
+  images: string[];
+  basePrice: number;
+  discountPrice: number;
+  isNewArrival: boolean;
+  isFeatured: boolean;
+  rating: { average: number; count: number };
+}
+
+interface SavedCard {
+  _id: string;
+  last4?: string;
+  brand?: string;
+  isDefault?: boolean;
+}
 
 interface DashboardData {
   profile: {
@@ -23,9 +43,7 @@ interface DashboardData {
     orderId: string;
     restaurant: string | null;
     orderType: string;
-    items: {
-        image: null; name: string; quantity: number 
-}[];
+    items: { image: string | null; name: string; quantity: number }[];
     total: number;
     status: string;
     estimatedDelivery: string;
@@ -37,7 +55,16 @@ interface DashboardData {
     total: number;
     status: string;
     estimatedDelivery: string;
+    deliveryPartner: any | null;
   }[];
+  wishlistCount: number;
+  unreadNotifications: number;
+  savedCards: SavedCard[];
+  defaultCard: SavedCard | null;
+  recommendedDeals: RecommendedDeal[];
+  arrivingBy: string | null;
+  pointsToGold: number;
+  goldThreshold: number;
 }
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
@@ -50,6 +77,9 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
   delivered: { bg: "#D1FAE5", color: "#009966", label: "Delivered" },
   cancelled: { bg: "#FEE2E2", color: "#DC2626", label: "Cancelled" },
 };
+
+// fallback image for products without images
+const FALLBACK_PRODUCT_IMG = "https://images.unsplash.com/photo-1542838132-92c53300491e";
 
 export default function Overview({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
   const navigate = useNavigate();
@@ -118,12 +148,32 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
 
   const activeOrder = dashboard?.activeOrders?.[0];
 
+  // ---------- Wallet subtitle: use defaultCard if present, else fallback ----------
+  const walletSubtitle = dashboard?.defaultCard?.last4
+    ? `**** ${dashboard.defaultCard.last4}`
+    : "No card added";
+
+  // ---------- Reward points subtitle: dynamic points-to-gold ----------
+  const rewardSubtitle =
+    dashboard && dashboard.pointsToGold > 0
+      ? `${dashboard.pointsToGold.toLocaleString()} points to Gold Tier`
+      : dashboard
+      ? "You've reached Gold Tier!"
+      : "150 points to Gold Tier";
+
+  // ---------- Active orders subtitle: prefer arrivingBy from API ----------
+  const activeOrdersSubtitle = dashboard?.arrivingBy
+    ? `Arriving by ${dashboard.arrivingBy}`
+    : activeOrder?.estimatedDelivery
+    ? `Arriving by ${formatEta(activeOrder.estimatedDelivery)}`
+    : "No active orders";
+
   // ---------- Stats cards (dynamic values, static styling/layout) ----------
   const stats = [
     {
       title: "Wallet Balance",
       value: dashboard ? formatMoney(dashboard.profile.walletBalance) : "$0.00",
-      subtitle: "**** 4291",
+      subtitle: walletSubtitle,
       action: "TOP UP",
       icon: Wallet,
       iconColor: "#009966",
@@ -136,9 +186,7 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
     {
       title: "Active Orders",
       value: dashboard ? `${dashboard.orderSummary.active} ${dashboard.orderSummary.active === 1 ? "Item" : "Items"}` : "0 Items",
-      subtitle: activeOrder?.estimatedDelivery
-        ? `Arriving by ${formatEta(activeOrder.estimatedDelivery)}`
-        : "No active orders",
+      subtitle: activeOrdersSubtitle,
       icon: Package,
       iconColor: "#3B82F6",
       iconBgColor: "bg-[#DBEAFE]",
@@ -157,7 +205,7 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
     {
       title: "Reward Points",
       value: dashboard ? dashboard.profile.rewardPoints.toLocaleString() : "0",
-      subtitle: "150 points to Gold Tier", 
+      subtitle: rewardSubtitle,
       icon: TrendingUp,
       iconColor: "#F97316",
       iconBgColor: "bg-[#FFEDD4]",
@@ -266,7 +314,13 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
                 )}
 
                 {card.action && (
-                  <button className="text-[#009966] font-medium">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveTab("wallet");
+                    }}
+                    className="text-[#009966] font-medium"
+                  >
                     {card.action}
                   </button>
                 )}
@@ -291,76 +345,76 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
             </div>
           )}
 
-        {dashboard?.recentOrders?.map((order) => {
-  const statusInfo = STATUS_STYLES[order.status] || {
-    bg: "#F1F5F9",
-    color: "#6A7282",
-    label: order.status,
-  };
+          {dashboard?.recentOrders?.map((order) => {
+            const statusInfo = STATUS_STYLES[order.status] || {
+              bg: "#F1F5F9",
+              color: "#6A7282",
+              label: order.status,
+            };
 
-  const itemsSummary = order.items?.map((i) => i.name).join(", ") || "No items";
-  const img = order.items?.[0]?.image || null;
-  const restaurantOrStoreName = order.restaurant || (order.orderType === "grocery" ? "Grocery Order" : "Restaurant Order");
+            const itemsSummary = order.items?.map((i) => i.name).join(", ") || "No items";
+            const img = order.items?.[0]?.image || null;
+            const restaurantOrStoreName = order.restaurant || (order.orderType === "grocery" ? "Grocery Order" : "Restaurant Order");
 
-  const dateLabel = (() => {
-    try {
-      const d = new Date(order.createdAt);
-      const today = new Date();
-      const isToday = d.toDateString() === today.toDateString();
-      const yesterday = new Date(today);
-      yesterday.setDate(today.getDate() - 1);
-      const isYesterday = d.toDateString() === yesterday.toDateString();
+            const dateLabel = (() => {
+              try {
+                const d = new Date(order.createdAt);
+                const today = new Date();
+                const isToday = d.toDateString() === today.toDateString();
+                const yesterday = new Date(today);
+                yesterday.setDate(today.getDate() - 1);
+                const isYesterday = d.toDateString() === yesterday.toDateString();
 
-      const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+                const time = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 
-      if (isToday) return `Today, ${time}`;
-      if (isYesterday) return "Yesterday";
-      return d.toLocaleDateString();
-    } catch {
-      return "";
-    }
-  })();
+                if (isToday) return `Today, ${time}`;
+                if (isYesterday) return "Yesterday";
+                return d.toLocaleDateString();
+              } catch {
+                return "";
+              }
+            })();
 
-  return (
-    <div
-      key={order._id}
-      onClick={() => setActiveTab("orders")}
-      className="cursor-pointer lg:p-4 p-2 border border-[#E5E7EB] rounded-lg lg:rounded-xl shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex items-center lg:gap-4 gap-2"
-    >
-      {img ? (
-        <img
-          src={img}
-          className="w-16 h-16 rounded-lg object-cover"
-          alt={order.items?.[0]?.name || "Order item"}
-        />
-      ) : (
-        <div className="w-16 h-16 rounded-lg bg-[#F1F5F9] flex items-center justify-center text-[#6A7282] text-xs shrink-0">
-          No Img
-        </div>
-      )}
+            return (
+              <div
+                key={order._id}
+                onClick={() => setActiveTab("orders")}
+                className="cursor-pointer lg:p-4 p-2 border border-[#E5E7EB] rounded-lg lg:rounded-xl shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex items-center lg:gap-4 gap-2"
+              >
+                {img ? (
+                  <img
+                    src={img}
+                    className="w-16 h-16 rounded-lg object-cover"
+                    alt={order.items?.[0]?.name || "Order item"}
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-lg bg-[#F1F5F9] flex items-center justify-center text-[#6A7282] text-xs shrink-0">
+                    No Img
+                  </div>
+                )}
 
-      <div className="flex md:flex-row flex-col md:items-center gap-4 flex-1">
-        <div className="flex-1">
-          <h3 className="font-bold text-lg font-playfair">{restaurantOrStoreName}</h3>
-          <p className="text-sm text-[#6A7282]">
-            {itemsSummary}
-          </p>
+                <div className="flex md:flex-row flex-col md:items-center gap-4 flex-1">
+                  <div className="flex-1">
+                    <h3 className="font-bold text-lg font-playfair">{restaurantOrStoreName}</h3>
+                    <p className="text-sm text-[#6A7282]">
+                      {itemsSummary}
+                    </p>
 
-          <p className="text-xs text-[#6A7282] mt-1">
-            {dateLabel} • {formatMoney(order.total)}
-          </p>
-        </div>
+                    <p className="text-xs text-[#6A7282] mt-1">
+                      {dateLabel} • {formatMoney(order.total)}
+                    </p>
+                  </div>
 
-        <span
-          className="text-xs px-3 py-1 rounded-full w-fit"
-          style={{ background: statusInfo.bg, color: statusInfo.color }}
-        >
-          {statusInfo.label}
-        </span>
-      </div>
-    </div>
-  );
-})}
+                  <span
+                    className="text-xs px-3 py-1 rounded-full w-fit"
+                    style={{ background: statusInfo.bg, color: statusInfo.color }}
+                  >
+                    {statusInfo.label}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
 
         </div>
 
@@ -368,26 +422,66 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
 
           <div className="flex items-center justify-between">
             <h2 className="font-bold font-playfair text-[20px]">Recommended</h2>
-            <button className="text-[#E17100] text-[16px]">View Deals</button>
+            <button onClick={() => navigate("/marketplace")} className="text-[#E17100] text-[16px]">View Deals</button>
           </div>
 
-          <div className="lg:p-6 p-3 border border-[#E5E7EB] lg:rounded-xl rounded-lg shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] bg-[#F9FAFB]">
-            <span className="text-xs bg-green-600 text-white px-3 py-1 rounded-full">
-              New Arrival
-            </span>
+          {/* Recommended deals — dynamic from recommendedDeals */}
+          {(!dashboard?.recommendedDeals || dashboard.recommendedDeals.length === 0) && (
+            <div className="text-center py-8 border border-dashed border-[#E5E7EB] rounded-xl text-[#6A7282] text-sm">
+              No recommendations yet.
+            </div>
+          )}
 
-            <h3 className=" text-[20px] font-medium font-playfair mt-3">
-              Sushi Masterclass Kit
-            </h3>
+          {dashboard?.recommendedDeals?.slice(0, 2).map((deal) => {
+            const dealImg = deal.images?.[0] || FALLBACK_PRODUCT_IMG;
+            const hasDiscount = deal.discountPrice < deal.basePrice;
 
-            <p className="text-sm text-[#6A7282] mt-1">
-              Everything you need to create premium sushi at home.
-            </p>
+            return (
+              <div
+                key={deal._id}
+                className="lg:p-6 p-3 border border-[#E5E7EB] lg:rounded-xl rounded-lg shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] bg-[#F9FAFB]"
+              >
+                <div className="flex items-center gap-2 flex-wrap">
+                  {deal.isNewArrival && (
+                    <span className="text-xs bg-green-600 text-white px-3 py-1 rounded-full">
+                      New Arrival
+                    </span>
+                  )}
+                  {deal.isFeatured && (
+                    <span className="text-xs bg-[#9810FA] text-white px-3 py-1 rounded-full">
+                      Featured
+                    </span>
+                  )}
+                </div>
 
-            <button onClick={() => navigate("/customer/dashboard/product-details")} className="mt-4 w-full border border-[#A4F4CF] shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] text-[#009966] bg-[#ECFDF5] py-2 rounded-lg">
-              View Product
-            </button>
-          </div>
+                <h3 className="text-[20px] font-medium font-playfair mt-3">
+                  {deal.name}
+                </h3>
+
+                <p className="text-sm text-[#6A7282] mt-1 line-clamp-2">
+                  {deal.description}
+                </p>
+
+                <div className="flex items-center gap-2 mt-3">
+                  <span className="text-[#009966] font-bold text-lg">
+                    ${deal.discountPrice.toFixed(2)}
+                  </span>
+                  {hasDiscount && (
+                    <span className="text-[#99A1AF] line-through text-sm">
+                      ${deal.basePrice.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => navigate(`/customer/dashboard/product-details?id=${deal._id}`)}
+                  className="mt-4 w-full border border-[#A4F4CF] shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] text-[#009966] bg-[#ECFDF5] py-2 rounded-lg"
+                >
+                  View Product
+                </button>
+              </div>
+            );
+          })}
 
           <div className="lg:p-6 p-3 border border-[#E5E7EB] lg:rounded-xl rounded-lg shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] bg-white flex items-start gap-3">
             <AlertCircle size={20} className="text-[#99A1AF] min-w-5 mt-1" />

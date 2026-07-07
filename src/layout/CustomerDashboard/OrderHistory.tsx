@@ -10,6 +10,8 @@ import {
   FileText,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 type DeliveryAddress = {
   fullName: string;
@@ -18,6 +20,42 @@ type DeliveryAddress = {
   city: string;
   state: string;
   zipCode: string;
+};
+
+type Invoice = {
+  invoiceNumber: string;
+  invoiceDate: string;
+  dueDate: string;
+  status: string;
+  orderId: string;
+  orderDate: string;
+  deliveredAt: string | null;
+  paymentMethod: string;
+  paymentStatus: string;
+  customer: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  vendor: {
+    name: string;
+    phone: string;
+    address: string;
+  };
+  items: {
+    name: string;
+    quantity: number;
+    unitPrice: number;
+    subtotal: number;
+    image: string | null;
+  }[];
+  subtotal: number;
+  deliveryFee: number;
+  tax: number;
+  discount: number;
+  total: number;
+  notes: string;
+  footer: string;
 };
 
 type OrderItem = {
@@ -138,11 +176,15 @@ export default function OrderHistory() {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [ordersError, setOrdersError] = useState("");
   const [loadingMore, setLoadingMore] = useState(false);
-const [showOrderMenu, setShowOrderMenu] = useState(false);
+  const [showOrderMenu, setShowOrderMenu] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [detailsError, setDetailsError] = useState("");
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [invoiceError, setInvoiceError] = useState("");
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
 
   const [tab, setTab] = useState("all");
   const [showFilter, setShowFilter] = useState(false);
@@ -153,6 +195,203 @@ const [showOrderMenu, setShowOrderMenu] = useState(false);
   const [tracking, setTracking] = useState<TrackingData | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [trackingError, setTrackingError] = useState("");
+
+  const fetchInvoice = async (orderId: string) => {
+    setShowInvoiceModal(true);
+    setInvoiceLoading(true);
+    setInvoiceError("");
+    setInvoice(null);
+
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      setInvoiceError("Authentication token not found.");
+      setInvoiceLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/invoices/${orderId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to fetch invoice.");
+      }
+
+      setInvoice(data.data.invoice);
+    } catch (err) {
+      setInvoiceError(
+        err instanceof Error ? err.message : "Unable to fetch invoice.",
+      );
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
+
+  const downloadInvoice = async (orderId: string) => {
+    try {
+      const token = localStorage.getItem("authToken");
+
+      const response = await fetch(`${API_BASE}/invoices/${orderId}/download`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      const invoice = data.data.invoice;
+
+      const pdf = new jsPDF();
+
+      // ---------------- Header ----------------
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(24);
+      pdf.text("INVOICE", 14, 20);
+
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+
+      pdf.text(`Invoice No: ${invoice.invoiceNumber}`, 140, 18);
+      pdf.text(
+        `Date: ${new Date(invoice.invoiceDate).toLocaleDateString()}`,
+        140,
+        24,
+      );
+      pdf.text(`Order: ${invoice.orderId}`, 140, 30);
+
+      // line
+      pdf.setDrawColor(220);
+      pdf.line(14, 36, 196, 36);
+
+      // ---------------- Vendor ----------------
+
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Vendor", 14, 46);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.text(invoice.vendor.name, 14, 52);
+      pdf.text(invoice.vendor.phone, 14, 58);
+      pdf.text(invoice.vendor.address, 14, 64);
+
+      // ---------------- Customer ----------------
+
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Bill To", 120, 46);
+
+      pdf.setFont("helvetica", "normal");
+      pdf.text(invoice.customer.name, 120, 52);
+      pdf.text(invoice.customer.email, 120, 58);
+      pdf.text(invoice.customer.phone, 120, 64);
+
+      // ---------------- Payment ----------------
+
+      pdf.roundedRect(14, 72, 182, 18, 2, 2);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Payment", 18, 80);
+
+      pdf.setFont("helvetica", "normal");
+
+      pdf.text(
+        `${invoice.paymentMethod.toUpperCase()} (${invoice.paymentStatus.toUpperCase()})`,
+        45,
+        80,
+      );
+
+      pdf.text(`Status: ${invoice.status}`, 130, 80);
+
+      // ---------------- Items ----------------
+
+      autoTable(pdf, {
+        startY: 98,
+        head: [["Item", "Qty", "Unit Price", "Subtotal"]],
+        body: invoice.items.map((item: any) => [
+          item.name,
+          item.quantity,
+          `$${item.unitPrice.toFixed(2)}`,
+          `$${item.subtotal.toFixed(2)}`,
+        ]),
+        theme: "grid",
+        headStyles: {
+          fillColor: [0, 153, 102],
+        },
+      });
+
+      const finalY = (pdf as any).lastAutoTable.finalY + 10;
+
+      // ---------------- Totals ----------------
+
+      pdf.setFont("helvetica", "normal");
+
+      pdf.text(`Subtotal`, 130, finalY);
+      pdf.text(`$${invoice.subtotal.toFixed(2)}`, 185, finalY, {
+        align: "right",
+      });
+
+      pdf.text(`Delivery Fee`, 130, finalY + 8);
+      pdf.text(`$${invoice.deliveryFee.toFixed(2)}`, 185, finalY + 8, {
+        align: "right",
+      });
+
+      pdf.text(`Tax`, 130, finalY + 16);
+      pdf.text(`$${invoice.tax.toFixed(2)}`, 185, finalY + 16, {
+        align: "right",
+      });
+
+      pdf.text(`Discount`, 130, finalY + 24);
+      pdf.text(`-$${invoice.discount.toFixed(2)}`, 185, finalY + 24, {
+        align: "right",
+      });
+
+      pdf.setDrawColor(180);
+      pdf.line(130, finalY + 28, 195, finalY + 28);
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(14);
+
+      pdf.text("Grand Total", 130, finalY + 38);
+      pdf.text(`$${invoice.total.toFixed(2)}`, 185, finalY + 38, {
+        align: "right",
+      });
+
+      // ---------------- Notes ----------------
+
+      let y = finalY + 55;
+
+      if (invoice.notes) {
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "bold");
+        pdf.text("Notes", 14, y);
+
+        pdf.setFont("helvetica", "normal");
+        pdf.text(invoice.notes, 14, y + 8);
+
+        y += 20;
+      }
+
+      // ---------------- Footer ----------------
+
+      pdf.setDrawColor(220);
+      pdf.line(14, y, 196, y);
+
+      pdf.setFontSize(10);
+      pdf.text(invoice.footer, 105, y + 10, {
+        align: "center",
+      });
+
+      pdf.save(`${invoice.invoiceNumber}.pdf`);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchOrders = async (page: number, append: boolean) => {
     const token = localStorage.getItem("authToken");
@@ -264,15 +503,12 @@ const [showOrderMenu, setShowOrderMenu] = useState(false);
     }
 
     try {
-      const response = await fetch(
-        `${API_BASE}/orders/my/${orderId}/track`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+      const response = await fetch(`${API_BASE}/orders/my/${orderId}/track`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-      );
+      });
 
       const data = await response.json();
 
@@ -405,9 +641,7 @@ const [showOrderMenu, setShowOrderMenu] = useState(false);
       <div className="grid lg:grid-cols-[1fr_340px] gap-6 items-start">
         <div className="space-y-4">
           {ordersLoading && (
-            <p className="text-[#6A7282] text-center py-6">
-              Loading orders...
-            </p>
+            <p className="text-[#6A7282] text-center py-6">Loading orders...</p>
           )}
 
           {!ordersLoading && ordersError && (
@@ -512,60 +746,60 @@ const [showOrderMenu, setShowOrderMenu] = useState(false);
           ) : selectedOrder ? (
             <div className="space-y-6">
               <div className="flex items-start justify-between relative">
-  <div>
-    <h2 className="font-playfair text-2xl text-[#0F172A]">
-      Order Details
-    </h2>
+                <div>
+                  <h2 className="font-playfair text-2xl text-[#0F172A]">
+                    Order Details
+                  </h2>
 
-    <p className="text-[#6A7282] mt-1">{selectedOrder.orderId}</p>
-  </div>
+                  <p className="text-[#6A7282] mt-1">{selectedOrder.orderId}</p>
+                </div>
 
-  <div className="relative">
-    <button
-      onClick={() => setShowOrderMenu((prev) => !prev)}
-      className="text-[#94A3B8] text-xl hover:text-[#0F172A] transition"
-    >
-      ⋮
-    </button>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowOrderMenu((prev) => !prev)}
+                    className="text-[#94A3B8] text-xl hover:text-[#0F172A] transition"
+                  >
+                    ⋮
+                  </button>
 
-    {showOrderMenu && (
-      <>
-        {/* backdrop to close on outside click */}
-        <div
-          className="fixed inset-0 z-10"
-          onClick={() => setShowOrderMenu(false)}
-        />
+                  {showOrderMenu && (
+                    <>
+                      {/* backdrop to close on outside click */}
+                      <div
+                        className="fixed inset-0 z-10"
+                        onClick={() => setShowOrderMenu(false)}
+                      />
 
-        <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-20 py-1">
-          {selectedOrder.status !== "delivered" &&
-            selectedOrder.status !== "cancelled" && (
-              <button
-                onClick={() => {
-                  setShowOrderMenu(false);
-                  fetchTracking(selectedOrder._id);
-                }}
-                className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#0F172A] hover:bg-[#F1F5F9] text-left"
-              >
-                <Truck size={15} />
-                Track Order
-              </button>
-            )}
+                      <div className="absolute right-0 top-full mt-2 w-44 bg-white border border-[#E5E7EB] rounded-lg shadow-lg z-20 py-1">
+                        {selectedOrder.status !== "delivered" &&
+                          selectedOrder.status !== "cancelled" && (
+                            <button
+                              onClick={() => {
+                                setShowOrderMenu(false);
+                                fetchTracking(selectedOrder._id);
+                              }}
+                              className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#0F172A] hover:bg-[#F1F5F9] text-left"
+                            >
+                              <Truck size={15} />
+                              Track Order
+                            </button>
+                          )}
 
-          <button
-            onClick={() => {
-              setShowOrderMenu(false);
-              // TODO: hook up invoice download/view when API is available
-            }}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#0F172A] hover:bg-[#F1F5F9] text-left"
-          >
-            <FileText size={15} />
-            Invoice
-          </button>
-        </div>
-      </>
-    )}
-  </div>
-</div>
+                        <button
+                          onClick={() => {
+                            setShowOrderMenu(false);
+                            fetchInvoice(selectedOrder._id);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-sm text-[#0F172A] hover:bg-[#F1F5F9] text-left"
+                        >
+                          <FileText size={15} />
+                          Invoice
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
 
               <div className="relative">
                 <div className="w-full h-48 rounded-xl bg-gray-100 flex items-center justify-center">
@@ -670,6 +904,274 @@ const [showOrderMenu, setShowOrderMenu] = useState(false);
           ) : null}
         </div>
       </div>
+
+   {showInvoiceModal && (
+  <div className="fixed inset-0 z-50 !mt-0 flex items-center justify-center bg-black/50 px-4">
+    <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6">
+
+      {invoiceLoading ? (
+        <div className="py-16 text-center text-[#6A7282]">
+          Loading invoice...
+        </div>
+      ) : invoiceError ? (
+        <div className="py-16 text-center text-red-500">
+          {invoiceError}
+        </div>
+      ) : (
+        invoice && (
+          <>
+            {/* Header */}
+            <div className="flex items-start justify-between border-b border-[#E5E7EB] pb-5">
+              <div>
+                <h2 className="text-3xl font-bold text-[#0F172A]">
+                  Invoice
+                </h2>
+
+                <p className="mt-1 text-sm text-[#6A7282]">
+                  {invoice.invoiceNumber}
+                </p>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="text-right">
+                  <span
+                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                      invoice.paymentStatus === "paid"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-yellow-100 text-yellow-700"
+                    }`}
+                  >
+                    {invoice.paymentStatus.toUpperCase()}
+                  </span>
+
+                  <p className="mt-2 text-sm text-[#6A7282]">
+                    {new Date(invoice.invoiceDate).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setShowInvoiceModal(false)}
+                  className="text-2xl text-[#64748B] hover:text-black"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            {/* Invoice Details */}
+            <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-5 text-sm">
+
+              <div>
+                <p className="text-[#6A7282]">Invoice Number</p>
+                <p className="font-semibold">{invoice.invoiceNumber}</p>
+              </div>
+
+              <div>
+                <p className="text-[#6A7282]">Order ID</p>
+                <p className="font-semibold">{invoice.orderId}</p>
+              </div>
+
+              <div>
+                <p className="text-[#6A7282]">Invoice Date</p>
+                <p className="font-semibold">
+                  {new Date(invoice.invoiceDate).toLocaleDateString()}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[#6A7282]">Status</p>
+                <p className="font-semibold">{invoice.status}</p>
+              </div>
+
+              <div>
+                <p className="text-[#6A7282]">Payment Method</p>
+                <p className="font-semibold capitalize">
+                  {invoice.paymentMethod}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[#6A7282]">Payment Status</p>
+                <p className="font-semibold capitalize">
+                  {invoice.paymentStatus}
+                </p>
+              </div>
+
+            </div>
+
+            {/* Vendor + Customer */}
+
+            <div className="mt-6 grid gap-5 md:grid-cols-2">
+
+              <div className="rounded-xl border border-[#E5E7EB] p-5">
+                <h3 className="mb-4 text-lg font-semibold text-[#009966]">
+                  Vendor
+                </h3>
+
+                <p className="font-semibold text-[#0F172A]">
+                  {invoice.vendor.name}
+                </p>
+
+                <p className="mt-1 text-[#6A7282]">
+                  {invoice.vendor.phone}
+                </p>
+
+                <p className="text-[#6A7282]">
+                  {invoice.vendor.address}
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[#E5E7EB] p-5">
+                <h3 className="mb-4 text-lg font-semibold text-[#009966]">
+                  Bill To
+                </h3>
+
+                <p className="font-semibold text-[#0F172A]">
+                  {invoice.customer.name}
+                </p>
+
+                <p className="mt-1 text-[#6A7282]">
+                  {invoice.customer.email}
+                </p>
+
+                <p className="text-[#6A7282]">
+                  {invoice.customer.phone}
+                </p>
+              </div>
+
+            </div>
+
+            {/* Items */}
+
+            <div className="mt-8 overflow-hidden rounded-xl border border-[#E5E7EB]">
+
+              <table className="w-full">
+
+                <thead className="bg-[#F8FAFC]">
+
+                  <tr className="text-sm">
+
+                    <th className="p-4 text-left">Item</th>
+
+                    <th className="p-4 text-center">Qty</th>
+
+                    <th className="p-4 text-center">Unit Price</th>
+
+                    <th className="p-4 text-right">Subtotal</th>
+
+                  </tr>
+
+                </thead>
+
+                <tbody>
+
+                  {invoice.items.map((item, index) => (
+                    <tr
+                      key={index}
+                      className="border-t border-[#E5E7EB]"
+                    >
+                      <td className="p-4">
+                        {item.name}
+                      </td>
+
+                      <td className="p-4 text-center">
+                        {item.quantity}
+                      </td>
+
+                      <td className="p-4 text-center">
+                        ${item.unitPrice.toFixed(2)}
+                      </td>
+
+                      <td className="p-4 text-right font-medium">
+                        ${item.subtotal.toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+            {/* Totals */}
+
+            <div className="mt-8 ml-auto w-full max-w-sm space-y-3">
+
+              <div className="flex justify-between">
+                <span>Subtotal</span>
+                <span>${invoice.subtotal.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Delivery Fee</span>
+                <span>${invoice.deliveryFee.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Tax</span>
+                <span>${invoice.tax.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between">
+                <span>Discount</span>
+                <span>${invoice.discount.toFixed(2)}</span>
+              </div>
+
+              <div className="flex justify-between border-t border-[#E5E7EB] pt-3 text-xl font-bold text-[#009966]">
+                <span>Grand Total</span>
+                <span>${invoice.total.toFixed(2)}</span>
+              </div>
+
+            </div>
+
+            {/* Notes */}
+
+            {invoice.notes && (
+              <div className="mt-8 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
+
+                <h3 className="font-semibold">
+                  Notes
+                </h3>
+
+                <p className="mt-2 text-sm text-[#6A7282]">
+                  {invoice.notes}
+                </p>
+
+              </div>
+            )}
+
+            {/* Footer */}
+
+            <div className="mt-8 border-t border-[#E5E7EB] pt-5 text-center text-sm text-[#6A7282]">
+              {invoice.footer}
+            </div>
+
+            {/* Actions */}
+
+            <div className="mt-8 flex justify-end gap-3">
+
+              <button
+                onClick={() => setShowInvoiceModal(false)}
+                className="rounded-lg border border-[#D1D5DB] px-5 py-2"
+              >
+                Close
+              </button>
+
+              <button
+                onClick={() => downloadInvoice(selectedOrder!._id)}
+                className="rounded-lg bg-[#009966] px-5 py-2 font-medium text-white hover:bg-[#007d56]"
+              >
+                Download Invoice
+              </button>
+
+            </div>
+          </>
+        )
+      )}
+    </div>
+  </div>
+)}
 
       {showTrackModal && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">

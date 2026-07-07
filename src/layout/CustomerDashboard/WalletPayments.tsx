@@ -11,6 +11,8 @@ import {
   Crown,
   Loader2,
   X,
+  Trash2,
+  Check,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import VoucherSection from "./VoucherSection";
@@ -42,14 +44,25 @@ type Pagination = {
   hasPrevPage: boolean;
 };
 
+type Card = {
+  _id: string;
+  cardNumber: string;
+  expiryMonth: string;
+  expiryYear: string;
+  cardHolder: string;
+  brand: string;
+  isDefault: boolean;
+};
+
 const API_BASE = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
 const PAGE_LIMIT = 10;
 
 const PAYMENT_METHODS = [
   { value: "card", label: "Card" },
-  { value: "upi", label: "UPI" },
-  { value: "netbanking", label: "Net Banking" },
+  { value: "bank_transfer", label: "Bank Transfer" },
 ];
+
+const BRANDS = ["Visa", "Mastercard", "Amex", "RuPay"];
 
 export default function WalletPayments() {
   const [wallet, setWallet] = useState<WalletData | null>(null);
@@ -74,6 +87,24 @@ export default function WalletPayments() {
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [withdrawLoading, setWithdrawLoading] = useState(false);
   const [withdrawError, setWithdrawError] = useState("");
+
+  // Cards state
+  const [cards, setCards] = useState<Card[]>([]);
+  const [cardsLoading, setCardsLoading] = useState(true);
+  const [cardsError, setCardsError] = useState("");
+  const [deletingCardId, setDeletingCardId] = useState<string | null>(null);
+  const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null);
+
+  // Add card modal state
+  const [showAddCardModal, setShowAddCardModal] = useState(false);
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiryMonth, setExpiryMonth] = useState("");
+  const [expiryYear, setExpiryYear] = useState("");
+  const [cardHolder, setCardHolder] = useState("");
+  const [cardBrand, setCardBrand] = useState("Visa");
+  const [cardIsDefault, setCardIsDefault] = useState(false);
+  const [addCardLoading, setAddCardLoading] = useState(false);
+  const [addCardError, setAddCardError] = useState("");
 
   const fetchWallet = async () => {
     setWalletLoading(true);
@@ -169,6 +200,48 @@ export default function WalletPayments() {
     void fetchTransactions(1, false);
   }, []);
 
+  const fetchCards = async () => {
+    setCardsLoading(true);
+    setCardsError("");
+
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      setCardsError("Authentication token not found.");
+      setCardsLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/wallet/cards`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to load cards.");
+      }
+
+      const list: Card[] = data?.data?.cards ?? data?.data ?? [];
+      setCards(Array.isArray(list) ? list : []);
+    } catch (err) {
+      setCardsError(
+        err instanceof Error ? err.message : "Unable to load cards.",
+      );
+    } finally {
+      setCardsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void fetchCards();
+  }, []);
+
   const formattedBalance = walletLoading
     ? "—"
     : `$${(wallet?.balance ?? 0).toFixed(2)}`;
@@ -188,6 +261,14 @@ export default function WalletPayments() {
       day: "numeric",
       year: "numeric",
     });
+
+    const formatCardNumber = (value: string) => {
+  return value
+    .replace(/\D/g, "")          // Only digits
+    .slice(0, 16)                // Max 16 digits
+    .replace(/(.{4})/g, "$1 ")
+    .trim();
+};
 
   const formatType = (type: string) =>
     type
@@ -325,6 +406,164 @@ export default function WalletPayments() {
     }
   };
 
+  const openAddCardModal = () => {
+    setCardNumber("");
+    setExpiryMonth("");
+    setExpiryYear("");
+    setCardHolder("");
+    setCardBrand("Visa");
+    setCardIsDefault(cards.length === 0);
+    setAddCardError("");
+    setShowAddCardModal(true);
+  };
+
+  const validateCardForm = () => {
+    if (!/^\d{13,19}$/.test(cardNumber.trim())) {
+      setAddCardError("Enter a valid card number.");
+      return false;
+    }
+
+    if (!/^(0[1-9]|1[0-2])$/.test(expiryMonth.trim())) {
+      setAddCardError("Enter a valid expiry month (01-12).");
+      return false;
+    }
+
+    if (!/^\d{4}$/.test(expiryYear.trim())) {
+      setAddCardError("Enter a valid 4-digit expiry year.");
+      return false;
+    }
+
+    if (!cardHolder.trim()) {
+      setAddCardError("Card holder name is required.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleAddCard = async () => {
+    setAddCardError("");
+
+    if (!validateCardForm()) return;
+
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      setAddCardError("Authentication token not found.");
+      return;
+    }
+
+    setAddCardLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/wallet/cards`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          cardNumber: cardNumber.trim(),
+          expiryMonth: expiryMonth.trim(),
+          expiryYear: expiryYear.trim(),
+          cardHolder: cardHolder.trim(),
+          brand: cardBrand,
+          isDefault: cardIsDefault,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.errors?.join(", ") || data.message || "Failed to add card.",
+        );
+      }
+
+      setShowAddCardModal(false);
+      await fetchCards();
+    } catch (err) {
+      setAddCardError(
+        err instanceof Error ? err.message : "Something went wrong.",
+      );
+    } finally {
+      setAddCardLoading(false);
+    }
+  };
+
+  const handleDeleteCard = async (cardId: string) => {
+    const token = localStorage.getItem("authToken");
+
+    if (!token) return;
+
+    setDeletingCardId(cardId);
+
+    const previous = cards;
+
+    // Optimistic removal
+    setCards((prev) => prev.filter((c) => c._id !== cardId));
+
+    try {
+      const response = await fetch(`${API_BASE}/wallet/cards/${cardId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || "Failed to delete card.");
+      }
+    } catch (err) {
+      console.log(err);
+      setCards(previous);
+    } finally {
+      setDeletingCardId(null);
+    }
+  };
+
+  const handleSetDefaultCard = async (cardId: string) => {
+    const token = localStorage.getItem("authToken");
+
+    if (!token) return;
+
+    setSettingDefaultId(cardId);
+
+    const previous = cards;
+
+    // Optimistic update
+    setCards((prev) =>
+      prev.map((c) => ({ ...c, isDefault: c._id === cardId })),
+    );
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/wallet/cards/${cardId}/default`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || "Failed to set default card.");
+      }
+    } catch (err) {
+      console.log(err);
+      setCards(previous);
+    } finally {
+      setSettingDefaultId(null);
+    }
+  };
+
+  const maskCardNumber = (num: string) => num.slice(-4);
+
   return (
     <div className="space-y-8">
       <div>
@@ -399,29 +638,89 @@ export default function WalletPayments() {
                 </h3>
               </div>
 
-              <div className="border border-[#D1FAE5] rounded-xl p-4 flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                    VISA
-                  </span>
-
-                  <span className="text-[#0F172A]">•••• 4291</span>
-
-                  <span className="text-xs bg-[#D1FAE5] text-[#009966] px-2 py-1 rounded-full">
-                    Primary
-                  </span>
+              {cardsLoading ? (
+                <div className="flex items-center justify-center gap-2 text-[#6A7282] py-6">
+                  <Loader2 size={16} className="animate-spin" />
+                  Loading cards...
                 </div>
-              </div>
+              ) : cardsError ? (
+                <div className="text-center py-6">
+                  <p className="text-sm text-red-500">{cardsError}</p>
+                  <button
+                    onClick={fetchCards}
+                    className="mt-2 text-sm border border-[#E5E7EB] rounded-lg px-4 py-2"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : cards.length === 0 ? (
+                <p className="text-sm text-[#94A3B8] text-center py-11">
+                  No saved cards yet.
+                </p>
+              ) : (
+                cards.map((card) => (
+                  <div
+                    key={card._id}
+                    className={`border rounded-xl p-4 flex items-center justify-between mb-3 ${
+                      card.isDefault ? "border-[#D1FAE5]" : "border-[#E5E7EB]"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                        {card.brand?.toUpperCase()}
+                      </span>
 
-              <div className="border border-[#E5E7EB] rounded-xl p-4 flex items-center gap-3 mb-4">
-                <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                  MC
-                </span>
+                      <span
+                        className={
+                          card.isDefault ? "text-[#0F172A]" : "text-[#6A7282]"
+                        }
+                      >
+                        •••• {maskCardNumber(card.cardNumber)}
+                      </span>
 
-                <span className="text-[#6A7282]">•••• 8823</span>
-              </div>
+                      {card.isDefault && (
+                        <span className="text-xs bg-[#D1FAE5] text-[#009966] px-2 py-1 rounded-full">
+                          Primary
+                        </span>
+                      )}
+                    </div>
 
-              <button className="w-full border border-[#E5E7EB] rounded-lg py-3 text-[#6A7282]">
+                    <div className="flex items-center gap-3">
+                      {!card.isDefault && (
+                        <button
+                          onClick={() => handleSetDefaultCard(card._id)}
+                          disabled={settingDefaultId === card._id}
+                          className="text-xs text-[#009966] hover:underline disabled:opacity-50"
+                        >
+                          {settingDefaultId === card._id ? (
+                            <Loader2 size={14} className="animate-spin" />
+                          ) : (
+                            "Set default"
+                          )}
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleDeleteCard(card._id)}
+                        disabled={deletingCardId === card._id}
+                        className="text-[#94A3B8] hover:text-red-500 disabled:opacity-50"
+                        aria-label="Delete card"
+                      >
+                        {deletingCardId === card._id ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={16} />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+
+              <button
+                onClick={openAddCardModal}
+                className="w-full border border-[#E5E7EB] rounded-lg py-3 text-[#6A7282] mt-1"
+              >
                 + Add New Card
               </button>
             </div>
@@ -650,6 +949,120 @@ export default function WalletPayments() {
                 className="bg-[#009966] text-white px-5 py-2 rounded-lg disabled:opacity-60"
               >
                 {withdrawLoading ? "Processing..." : "Withdraw"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAddCardModal && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-xl font-semibold text-[#0F172A]">
+                Add New Card
+              </h2>
+
+              <button
+                onClick={() => setShowAddCardModal(false)}
+                disabled={addCardLoading}
+                className="text-[#94A3B8] hover:text-[#0F172A]"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <label className="text-sm text-[#475569]">Card Number</label>
+
+<input
+  placeholder="1234 5678 9012 3456"
+  value={formatCardNumber(cardNumber)}
+  onChange={(e) =>
+    setCardNumber(
+      e.target.value.replace(/\D/g, "").slice(0, 16)
+    )
+  }
+  maxLength={19} // 16 digits + 3 spaces
+  className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 mb-4 outline-none"
+/>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <label className="text-sm text-[#475569]">Expiry Month</label>
+                <input
+                  placeholder="MM"
+                  maxLength={2}
+                  value={expiryMonth}
+                  onChange={(e) =>
+                    setExpiryMonth(e.target.value.replace(/\D/g, ""))
+                  }
+                  className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm text-[#475569]">Expiry Year</label>
+                <input
+                  placeholder="YYYY"
+                  maxLength={4}
+                  value={expiryYear}
+                  onChange={(e) =>
+                    setExpiryYear(e.target.value.replace(/\D/g, ""))
+                  }
+                  className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 outline-none"
+                />
+              </div>
+            </div>
+
+            <label className="text-sm text-[#475569]">Card Holder</label>
+            <input
+              placeholder="Full name on card"
+              value={cardHolder}
+              onChange={(e) => setCardHolder(e.target.value)}
+              className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 mb-4 outline-none"
+            />
+
+            <label className="text-sm text-[#475569]">Brand</label>
+            <select
+              value={cardBrand}
+              onChange={(e) => setCardBrand(e.target.value)}
+              className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 mb-4 outline-none"
+            >
+              {BRANDS.map((b) => (
+                <option key={b} value={b}>
+                  {b}
+                </option>
+              ))}
+            </select>
+
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={cardIsDefault}
+                onChange={(e) => setCardIsDefault(e.target.checked)}
+              />
+              Set as default card
+            </label>
+
+            {addCardError && (
+              <p className="mt-3 text-sm text-red-500">{addCardError}</p>
+            )}
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowAddCardModal(false)}
+                disabled={addCardLoading}
+                className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleAddCard}
+                disabled={addCardLoading}
+                className="bg-[#009966] text-white px-5 py-2 rounded-lg disabled:opacity-60"
+              >
+                {addCardLoading ? "Saving..." : "Add Card"}
               </button>
             </div>
           </div>
