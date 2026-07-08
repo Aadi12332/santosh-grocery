@@ -6,108 +6,301 @@ import {
   ShoppingBag,
   Truck,
   Share2,
-  Info
-} from "lucide-react"
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+  Info,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import CartModal from "./CartModal";
 
-export default function ProductDetails({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
+const API_BASE = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
+const FALLBACK_IMG =
+  "https://images.unsplash.com/photo-1553621042-f6e147245754";
+
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  images: string[];
+  basePrice: number;
+  discountPrice: number;
+  unit: string;
+  shippingClass: string;
+  isFreeShipping: boolean;
+  stockQuantity: number;
+  lowStockAlert: number;
+  isNewArrival: boolean;
+  isFeatured: boolean;
+  rating: { average: number; count: number };
+  retailer: {
+    fullName: string;
+  };
+}
+
+export default function ProductDetails({
+  setActiveTab,
+}: {
+  setActiveTab: (tab: string) => void;
+}) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const productId = searchParams.get("id");
+
   const [openCart, setOpenCart] = useState(false);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const images = [
-    "https://images.unsplash.com/photo-1553621042-f6e147245754",
-    "https://images.unsplash.com/photo-1553621042-f6e147245754",
-    "https://images.unsplash.com/photo-1553621042-f6e147245754",
-  ]
+  const [images, setImages] = useState<string[]>([
+    FALLBACK_IMG,
+    FALLBACK_IMG,
+    FALLBACK_IMG,
+  ]);
+  const [activeImg, setActiveImg] = useState(FALLBACK_IMG);
+  const [qty, setQty] = useState(1);
 
-  const [activeImg, setActiveImg] = useState(images[0])
-  const price = 89.99
-  const [qty, setQty] = useState(1)
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [cartLoading, setCartLoading] = useState(false);
+const [cartError, setCartError] = useState<string | null>(null);
 
-  const total = (price * qty).toFixed(2)
+const handleAddToCart = async () => {
+  if (!product) return;
+
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    alert("Please login to add items to your cart.");
+    return;
+  }
+
+  setCartLoading(true);
+  setCartError(null);
+
+  try {
+    const res = await fetch(`${API_BASE}/cart/add`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        itemType: "product",
+        itemId: product._id,
+        quantity: qty,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.success) {
+      throw new Error(data?.message || "Failed to add to cart.");
+    }
+
+    setOpenCart(true);
+  } catch (err: any) {
+    setCartError(err.message || "Something went wrong.");
+    alert(err.message || "Something went wrong.");
+  } finally {
+    setCartLoading(false);
+  }
+};
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!productId) {
+        setError("No product selected.");
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await fetch(`${API_BASE}/products/${productId}`, {
+          headers: { "Content-Type": "application/json" },
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data?.message || "Failed to load product.");
+        }
+
+        const fetchedProduct: Product = data?.data?.product;
+        setProduct(fetchedProduct);
+
+        const productImages = fetchedProduct?.images?.length
+          ? fetchedProduct.images
+          : [FALLBACK_IMG, FALLBACK_IMG, FALLBACK_IMG];
+
+        setImages(productImages);
+        setActiveImg(productImages[0]);
+        setQty(1);
+      } catch (err: any) {
+        setError(err.message || "Something went wrong loading the product.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  const handleAddToWishlist = async () => {
+    if (!product) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      alert("Please login to add items to your wishlist.");
+      return;
+    }
+
+    setWishlistLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/wishlist/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          itemType: "product",
+          itemId: product._id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data?.message || "Failed to add to wishlist.");
+      }
+
+      setIsWishlisted(true);
+    } catch (err: any) {
+      alert(err.message || "Something went wrong.");
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 size={28} className="animate-spin text-[#009966]" />
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center gap-3">
+        <AlertCircle size={32} className="text-red-400" />
+        <p className="text-red-500">{error || "Product not found."}</p>
+        <button
+          onClick={() => navigate("/customer/dashboard")}
+          className="mt-2 text-[#009966] font-medium"
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
+    );
+  }
+
+  const hasDiscount = product.discountPrice < product.basePrice;
+  const total = (product.discountPrice * qty).toFixed(2);
+  const isOutOfStock = product.stockQuantity <= 0;
 
   return (
     <div className="">
-
-      <button onClick={() => navigate("/customer/dashboard")} className="mb-6 text-[#6A7282]">
+      <button
+        onClick={() => navigate("/customer/dashboard")}
+        className="mb-6 text-[#6A7282]"
+      >
         ← Back to Dashboard
       </button>
 
-      <div className="grid lg:grid-cols-2 gap-10 xl:gap-24">
-
+      <div className="grid lg:grid-cols-2 gap-10 xl:gap-16">
         <div>
-
           <div className="relative">
-
             <img
               src={activeImg}
               className="w-full aspect-square rounded-2xl object-cover"
             />
 
-            <span className="absolute top-4 left-4 bg-[#009966] text-white text-sm px-3 py-1 rounded-full">
-              New Arrival
-            </span>
+            {product.isNewArrival && (
+              <span className="absolute top-4 left-4 bg-[#009966] text-white text-xs px-3 py-1 rounded-full">
+                New Arrival
+              </span>
+            )}
 
-            <button className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow">
-              <Heart size={18} />
+            <button
+              onClick={handleAddToWishlist}
+              disabled={wishlistLoading}
+              className="absolute top-4 right-4 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow disabled:opacity-60"
+            >
+              <Heart
+                size={18}
+                className={isWishlisted ? "fill-red-500 text-red-500" : ""}
+              />
             </button>
-
           </div>
 
           <div className="grid grid-cols-3 gap-4 mt-4">
-
             {images.map((img, i) => (
               <img
                 key={i}
                 src={img}
                 onClick={() => setActiveImg(img)}
-                className={`aspect-square rounded-lg object-cover cursor-pointer border ${activeImg === img
-                    ? "border-[#009966]"
-                    : "border-[#E5E7EB]"
-                  }`}
+                className={`aspect-square rounded-lg object-cover cursor-pointer border ${
+                  activeImg === img ? "border-[#009966]" : "border-[#E5E7EB]"
+                }`}
               />
             ))}
-
           </div>
-
         </div>
 
         <div>
-
-          <div className="flex items-center gap-4 text-sm mb-4">
-
+          <div className="flex items-center gap-6 text-sm mb-4">
             <div className="flex items-center gap-1 text-[#F59E0B]">
               <Star size={16} fill="#F59E0B" />
-              4.9
+              {product.rating?.average || 0}
             </div>
 
-            <span className="text-[#6A7282]">128 Reviews</span>
+            <span className="text-[#6A7282] list-disc list-item ml-0">
+              {product.rating?.count || 0} Reviews
+            </span>
 
-            <span className="text-[#009966]">In Stock</span>
-
+            <span
+              className={
+                isOutOfStock
+                  ? "text-red-500 list-disc list-item ml-0"
+                  : "text-[#009966] list-disc list-item ml-0"
+              }
+            >
+              {isOutOfStock ? "Out of Stock" : "In Stock"}
+            </span>
           </div>
 
           <h1 className="lg:text-[40px] text-[32px] font-playfair mb-6">
-            Sushi Masterclass Kit
+            {product.name}
           </h1>
 
           <p className="lg:text-[32px] text-xl text-[#101828] mb-4">
-            $89.99
+            ${product.discountPrice.toFixed(2)}
+            {hasDiscount && (
+              <span className="text-[#99A1AF] line-through text-lg ml-3">
+                ${product.basePrice.toFixed(2)}
+              </span>
+            )}
           </p>
 
           <p className="text-[#6A7282] lg:text-[20px] text-base leading-relaxed mb-10">
-            Master the art of sushi making from the comfort of your home.
-            This premium kit includes professional-grade tools, authentic
-            ingredients sourced from Japan, and step-by-step video guides
-            from master chefs.
+            {product.description}
           </p>
 
           <div className="grid grid-cols-2 gap-4 mb-16">
-
-            <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg lg:rounded-xl lg:p-5 p-2 flex gap-3 sm:flex-row flex-col">
-
+            <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg lg:rounded-xl xl:p-5 p-2 flex gap-3 sm:flex-row flex-col">
               <ShoppingBag className="text-[#009966] min-w-4" />
 
               <div>
@@ -116,11 +309,9 @@ export default function ProductDetails({ setActiveTab }: { setActiveTab: (tab: s
                   Includes bamboo mat, sashimi knife, and more
                 </p>
               </div>
-
             </div>
 
-            <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg lg:rounded-xl lg:p-5 p-2 flex gap-3 sm:flex-row flex-col">
-
+            <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg lg:rounded-xl xl:p-5 p-2 flex gap-3 sm:flex-row flex-col">
               <Truck className="text-[#2563EB] min-w-4" />
 
               <div>
@@ -129,15 +320,11 @@ export default function ProductDetails({ setActiveTab }: { setActiveTab: (tab: s
                   Arrives in premium insulated packaging
                 </p>
               </div>
-
             </div>
-
           </div>
 
           <div className="flex gap-4 mb-6 sm:flex-row flex-col">
-
             <div className="flex items-center justify-center border border-[#E5E7EB] rounded-lg">
-
               <button
                 onClick={() => setQty(Math.max(1, qty - 1))}
                 className="px-4 py-5"
@@ -147,29 +334,29 @@ export default function ProductDetails({ setActiveTab }: { setActiveTab: (tab: s
 
               <span className="text-center w-[50px]">{qty}</span>
 
-              <button
-                onClick={() => setQty(qty + 1)}
-                className="px-4 py-5"
-              >
+              <button onClick={() => setQty(qty + 1)} className="px-4 py-5">
                 <Plus size={16} />
               </button>
-
             </div>
 
             <button
-              onClick={() => setOpenCart(true)}
-              className="flex-1 bg-[#009966] text-white rounded-lg px-3 flex items-center justify-center gap-2 py-4 shadow-lg"
-            >
-              <ShoppingBag size={18} />
-              Add to Cart — ${total}
-            </button>
+  onClick={handleAddToCart}
+  disabled={cartLoading || isOutOfStock}
+  className="flex-1 bg-[#009966] text-white rounded-lg px-3 flex items-center justify-center gap-2 py-4 shadow-lg disabled:opacity-60"
+>
+  <ShoppingBag size={18} />
+  {cartLoading ? "Adding..." : isOutOfStock ? "Out of Stock" : `Add to Cart — $${total}`}
+</button>
 
-            <CartModal setActiveTab={setActiveTab} selectedProduct="selected" open={openCart} onClose={() => setOpenCart(false)} />
-
+          <CartModal
+  setActiveTab={setActiveTab}
+  selectedProduct={product._id}
+  open={openCart}
+  onClose={() => setOpenCart(false)}
+/>
           </div>
 
           <div className="flex gap-6 text-[#6A7282]">
-
             <button className="flex items-center gap-2">
               <Share2 size={18} />
               Share Product
@@ -179,13 +366,9 @@ export default function ProductDetails({ setActiveTab }: { setActiveTab: (tab: s
               <Info size={18} />
               Ask a Question
             </button>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
-  )
+  );
 }

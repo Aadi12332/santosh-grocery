@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import Logo from "../assets/images/logo.svg";
-import { LayoutGrid, LogOut } from "lucide-react";
+import { LayoutGrid, LogOut, AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 const navItems = [
@@ -30,6 +30,9 @@ export default function Header() {
     localStorage.getItem("authToken"),
   );
   const [user, setUser] = useState<StoredUser>(getStoredUser());
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState("");
 
   const isLoggedIn = !!authToken;
 
@@ -39,9 +42,6 @@ export default function Header() {
     `${user.firstName?.[0] ?? ""}${user.lastName?.[0] ?? ""}`.toUpperCase();
 
   useEffect(() => {
-    // Fires on changes made in OTHER tabs. Same-tab updates (e.g. right after
-    // login/logout in this tab) won't trigger "storage", so those call
-    // syncFromStorage() directly below.
     const handleStorage = () => {
       setAuthToken(localStorage.getItem("authToken"));
       setRole(localStorage.getItem("role"));
@@ -53,13 +53,49 @@ export default function Header() {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-  const handleLogout = () => {
+const handleLogout = async () => {
+  setLoggingOut(true);
+  setLogoutError("");
+
+  const token = localStorage.getItem("authToken");
+
+  try {
+    const response = await fetch(
+      "https://mr-santosh-grocery-backend.onrender.com/api/v1/auth/logout",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data?.message || "Logout failed.");
+    }
+
+    // Success
     localStorage.clear();
     setAuthToken(null);
     setRole("customer");
     setUser({});
+
+    // Close modal only after success
+    setShowLogoutModal(false);
+
     navigate("/role-wise-sign-in?role=customer");
-  };
+  } catch (err) {
+    setLogoutError(
+      err instanceof Error
+        ? err.message
+        : "Something went wrong logging out."
+    );
+  } finally {
+    setLoggingOut(false);
+  }
+};
 
   return (
     <header className="w-full bg-white shadow-sm h-20 flex items-center">
@@ -120,7 +156,11 @@ export default function Header() {
                 Dashboard
               </button>
 
-              <button onClick={handleLogout} className="text-red-500" title="Logout">
+              <button
+                onClick={() => setShowLogoutModal(true)}
+                className="text-red-500"
+                title="Logout"
+              >
                 <LogOut size={20} />
               </button>
             </div>
@@ -150,6 +190,41 @@ export default function Header() {
           </div>
         )}
       </div>
+
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="text-xl font-semibold text-[#111827]">Sign Out</h2>
+
+            <p className="mt-3 text-sm text-[#6B7280]">
+              Are you sure you want to sign out?
+            </p>
+
+            {logoutError && (
+  <p className="mt-4 text-sm text-red-500">
+    {logoutError}
+  </p>
+)}
+
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="rounded-lg border border-gray-300 px-5 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+
+             <button
+  onClick={handleLogout}
+  disabled={loggingOut}
+  className="rounded-lg bg-red-500 px-5 py-2 text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
+>
+  {loggingOut ? "Signing Out..." : "Yes, Sign Out"}
+</button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

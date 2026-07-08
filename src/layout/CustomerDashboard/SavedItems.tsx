@@ -11,12 +11,8 @@ import CartModal from "./CartModal";
 
 const BASE_URL = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
 
-// fallback image agar product.images empty ho
-const FALLBACK_IMG =
-  "https://images.unsplash.com/photo-1542838132-92c53300491e";
-
 interface WishlistItem {
-  _id: string; // wishlist item id -> DELETE ke liye use hoga
+  _id: string;
   itemType: string;
   addedAt: string;
   product: {
@@ -29,7 +25,6 @@ interface WishlistItem {
       average: number;
       count: number;
     };
-    // ye fields API me nahi aa rahe, static fallback rakha
     price?: string;
     oldPrice?: string;
     sale?: boolean;
@@ -39,12 +34,14 @@ interface WishlistItem {
 
 export default function SavedItems() {
   const [openCart, setOpenCart] = useState(false);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [clearing, setClearing] = useState(false);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
 
   const getToken = () =>
     (typeof window !== "undefined" && localStorage.getItem("authToken")) || "";
@@ -97,7 +94,6 @@ export default function SavedItems() {
         throw new Error(data?.message || "Failed to remove item");
       }
 
-      // optimistic UI update
       setItems((prev) => prev.filter((item) => item._id !== wishlistItemId));
     } catch (err: any) {
       setError(err.message || "Failed to remove item");
@@ -126,6 +122,40 @@ export default function SavedItems() {
       setError(err.message || "Failed to clear wishlist");
     } finally {
       setClearing(false);
+    }
+  };
+
+  // ---------- POST add to cart ----------
+  const addToCart = async (productId: string) => {
+    const token = getToken();
+    if (!token) {
+      setError("Please login to add items to your cart.");
+      return;
+    }
+
+    setAddingToCartId(productId);
+    try {
+      const res = await fetch(`${BASE_URL}/cart/add`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          itemType: "product",
+          itemId: productId,
+          quantity: 1,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data?.message || "Failed to add to cart.");
+      }
+
+      setSelectedProductId(productId);
+      setOpenCart(true);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong adding to cart.");
+    } finally {
+      setAddingToCartId(null);
     }
   };
 
@@ -237,6 +267,7 @@ export default function SavedItems() {
                 : product.stockStatus || "In Stock";
 
             const isRemoving = removingId === item._id;
+            const isAddingToCart = addingToCartId === product._id;
 
             return (
               <div
@@ -308,11 +339,18 @@ export default function SavedItems() {
                   </div>
 
                   <button
-                    onClick={() => setOpenCart(true)}
-                    className="mt-auto flex items-center justify-center gap-2 bg-[#009966] text-white py-3 rounded-lg shadow-sm"
+                    onClick={() => addToCart(product._id)}
+                    disabled={isAddingToCart}
+                    className="mt-auto flex items-center justify-center gap-2 bg-[#009966] text-white py-3 rounded-lg shadow-sm disabled:opacity-60"
                   >
-                    <ShoppingCart size={18} />
-                    Add to Cart
+                    {isAddingToCart ? (
+                      <Loader2 size={18} className="animate-spin" />
+                    ) : (
+                      <>
+                        <ShoppingCart size={18} />
+                        Add to Cart
+                      </>
+                    )}
                   </button>
                 </div>
               </div>
@@ -320,7 +358,7 @@ export default function SavedItems() {
           })}
 
           <CartModal
-            selectedProduct="selectedProduct"
+            selectedProduct={selectedProductId || undefined}
             open={openCart}
             onClose={() => setOpenCart(false)}
           />

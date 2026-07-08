@@ -1,7 +1,18 @@
 import { Leaf, MapPin, Search } from "lucide-react";
+import { useState } from "react";
 import HeroBg from "../../assets/images/marketpagebg.jpg";
 
-export default function HeroSection() {
+export default function HeroSection({
+  onSearch,
+}: {
+  onSearch: (query: string) => void;
+}) {
+  const [searchInput, setSearchInput] = useState("");
+
+  const handleSearch = () => {
+    onSearch(searchInput);
+  };
+
   return (
     <section className="relative w-full bg-cover bg-center bg-[#020618]">
       <img
@@ -28,17 +39,31 @@ export default function HeroSection() {
           goods. Delivered in 60 minutes.
         </p>
 
-                <div className="mt-8 flex flex-col sm:flex-row gap-4 max-w-[488px] bg-[#FFFFFF0D] border border-[#FFFFFF1A] shadow-[0px_25px_50px_-12px_#00000040,0px_0px_0px_1px_#FFFFFF0D] rounded-[12px] p-2">
+        <div className="mt-8 flex flex-col sm:flex-row gap-4 max-w-[488px] bg-[#FFFFFF0D] border border-[#FFFFFF1A] shadow-[0px_25px_50px_-12px_#00000040,0px_0px_0px_1px_#FFFFFF0D] rounded-[12px] p-2">
           <div className="flex items-center bg-[#0206184D] rounded-lg p-4 w-full">
             <Search className="text-[#F54900] mr-2" size={18} />
-            <input
-              type="text"
-              placeholder="Search for organic products..."
-              className="bg-transparent outline-none text-white placeholder-[#90A1B9] font-medium w-full"
-            />
+           <input
+  type="text"
+  value={searchInput}
+  onChange={(e) => {
+    const value = e.target.value;
+    setSearchInput(value);
+
+    // agar input blank ho gaya, turant results reset kar do
+    if (value.trim() === "") {
+      onSearch("");
+    }
+  }}
+  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+  placeholder="Search for organic products..."
+  className="bg-transparent outline-none text-white placeholder-[#90A1B9] font-medium w-full"
+/>
           </div>
 
-          <button className="bg-[#F54900] hover:opacity-90 transition text-white px-6 py-3 shadow-[0px_4px_6px_-4px_#00A63E33,0px_10px_15px_-3px_#00A63E33] rounded-lg font-semibold whitespace-nowrap">
+          <button
+            onClick={handleSearch}
+            className="bg-[#F54900] hover:opacity-90 transition text-white px-6 py-3 shadow-[0px_4px_6px_-4px_#00A63E33,0px_10px_15px_-3px_#00A63E33] rounded-lg font-semibold whitespace-nowrap"
+          >
             Search
           </button>
         </div>

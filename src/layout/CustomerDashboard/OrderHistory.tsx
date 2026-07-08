@@ -185,7 +185,11 @@ export default function OrderHistory() {
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [invoiceError, setInvoiceError] = useState("");
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-
+const [showRefundModal, setShowRefundModal] = useState(false);
+const [refundReason, setRefundReason] = useState("");
+const [refundSubmitting, setRefundSubmitting] = useState(false);
+const [refundError, setRefundError] = useState("");
+const [refundSuccess, setRefundSuccess] = useState(false);
   const [tab, setTab] = useState("all");
   const [showFilter, setShowFilter] = useState(false);
   const [status, setStatus] = useState("all");
@@ -195,6 +199,67 @@ export default function OrderHistory() {
   const [tracking, setTracking] = useState<TrackingData | null>(null);
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [trackingError, setTrackingError] = useState("");
+
+  const REFUND_REASONS = [
+  "Wrong item",
+  "Item damaged",
+  "Item missing",
+  "Order arrived late",
+  "Changed my mind",
+  "Other",
+];
+
+const submitRefundRequest = async () => {
+  if (!selectedOrder) return;
+  setRefundError("");
+
+  if (!refundReason.trim()) {
+    setRefundError("Please select or enter a reason.");
+    return;
+  }
+
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    setRefundError("Authentication token not found.");
+    return;
+  }
+
+  setRefundSubmitting(true);
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/orders/my/${selectedOrder._id}/refund`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason: refundReason }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.message || "Failed to submit refund request.");
+    }
+
+    setRefundSuccess(true);
+
+    setTimeout(() => {
+      setShowRefundModal(false);
+      setRefundSuccess(false);
+      setRefundReason("");
+    }, 1800);
+  } catch (err) {
+    setRefundError(
+      err instanceof Error ? err.message : "Something went wrong.",
+    );
+  } finally {
+    setRefundSubmitting(false);
+  }
+};
 
   const fetchInvoice = async (orderId: string) => {
     setShowInvoiceModal(true);
@@ -897,13 +962,143 @@ export default function OrderHistory() {
                 Invoice
               </button> */}
 
-              <p className="text-xs text-[#6A7282]">
-                Problem with order? Request Return/Refund
-              </p>
+             <button
+  onClick={() => {
+    setRefundReason("");
+    setRefundError("");
+    setRefundSuccess(false);
+    setShowRefundModal(true);
+  }}
+  className="text-xs text-[#6A7282] text-left cursor-text"
+>
+  Problem with order? <span className="text-xs text-[#6A7282] cursor-pointer hover:text-[#009966] underline text-left">Request Return/Refund</span>
+</button>
             </div>
           ) : null}
         </div>
       </div>
+
+{showRefundModal && (
+  <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">
+    <div className="bg-white rounded-xl p-6 w-full max-w-md">
+
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold text-[#0F172A]">
+          Request Return / Refund
+        </h2>
+
+        <button
+          onClick={() => setShowRefundModal(false)}
+          className="text-[#94A3B8] text-xl"
+        >
+          ×
+        </button>
+      </div>
+
+      {refundSuccess ? (
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+            <svg
+              className="h-7 w-7 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <p className="text-[#0F172A] font-medium">Request submitted!</p>
+          <p className="text-sm text-[#6A7282]">
+            We'll review your request and get back to you shortly.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-[#6A7282]">
+            Order: <span className="font-medium text-[#0F172A]">{selectedOrder?.orderId}</span>
+          </p>
+
+          <div>
+            <label className="text-sm text-[#475569] block mb-2">
+              Select a reason
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              {REFUND_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  type="button"
+                  onClick={() => setRefundReason(reason)}
+                  className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                    refundReason === reason
+                      ? "bg-[#ECFDF5] text-[#009966] border-[#009966]"
+                      : "bg-white border-[#E5E7EB] text-[#475569]"
+                  }`}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm text-[#475569] block mb-2">
+              Additional details (optional)
+            </label>
+
+            <textarea
+              value={refundReason === "Other" ? "" : ""}
+              onChange={() => {}}
+              placeholder="Add more details..."
+              rows={3}
+              className="hidden"
+            />
+
+            <textarea
+              placeholder="Describe the issue in your own words..."
+              rows={3}
+              onChange={(e) => {
+                // if user types custom text, use it as the reason directly
+                if (e.target.value.trim()) {
+                  setRefundReason(e.target.value);
+                }
+              }}
+              className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none resize-none text-sm"
+            />
+          </div>
+
+          {refundError && (
+            <p className="text-red-500 text-sm">{refundError}</p>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={() => setShowRefundModal(false)}
+              disabled={refundSubmitting}
+              className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={submitRefundRequest}
+              disabled={refundSubmitting}
+              className="bg-[#009966] text-white px-5 py-2 rounded-lg disabled:opacity-60"
+            >
+              {refundSubmitting ? "Submitting..." : "Submit Request"}
+            </button>
+          </div>
+        </div>
+      )}
+
+    </div>
+  </div>
+)}
 
    {showInvoiceModal && (
   <div className="fixed inset-0 z-50 !mt-0 flex items-center justify-center bg-black/50 px-4">

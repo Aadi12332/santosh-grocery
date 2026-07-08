@@ -1,20 +1,23 @@
-import { Search, ShoppingBag, Bell, Menu } from "lucide-react"
-import { useState, useEffect, useRef } from "react"
-import CustomerSidebar from "./CustomerSidebar"
-import CustomerHeader from "./CustomerHeader"
-import CustomerChild from "./CustomerChild"
-import { useNavigate, useLocation } from "react-router-dom"
+import { Search, ShoppingBag, Bell, Menu } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import CustomerSidebar from "./CustomerSidebar";
+import CustomerHeader from "./CustomerHeader";
+import CustomerChild from "./CustomerChild";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const customerTabToPath = (tab: string) => {
-  if (tab === "overview") return ""
-  return `/${tab}`
-}
+  if (tab === "overview") return "";
+  return `/${tab}`;
+};
 
 const customerPathToTab = (pathname: string) => {
-  const parts = pathname.replace("/customer/dashboard", "").split("/").filter(Boolean)
-  const last = parts[parts.length - 1]
-  return last || "overview"
-}
+  const parts = pathname
+    .replace("/customer/dashboard", "")
+    .split("/")
+    .filter(Boolean);
+  const last = parts[parts.length - 1];
+  return last || "overview";
+};
 
 export default function CustomerLayout() {
   const navigate = useNavigate();
@@ -23,16 +26,16 @@ export default function CustomerLayout() {
     localStorage.getItem("isLoggedIn") === "true",
   );
   const [activeTab, setActiveTab] = useState(() => {
-    return localStorage.getItem("activeTab") || "overview"
-  })
+    return localStorage.getItem("activeTab") || "overview";
+  });
 
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-    const [loggingOut, setLoggingOut] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
-  const [sidebarOpen,setSidebarOpen] = useState(false);
-    const handleLogout = async () => {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const handleLogout = async () => {
     setLogoutError("");
     setLoggingOut(true);
 
@@ -63,36 +66,39 @@ export default function CustomerLayout() {
     }
   };
 
-  const sidebarRef = useRef<HTMLDivElement>(null)
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
-  const handleTabChange = (tab:string)=>{
-    localStorage.setItem("activeTab",tab)
-    navigate(`/customer/dashboard${customerTabToPath(tab)}`)
-  }
+  const handleTabChange = (tab: string) => {
+    localStorage.setItem("activeTab", tab);
+    navigate(`/customer/dashboard${customerTabToPath(tab)}`);
+  };
 
   useEffect(() => {
-    const routeTab = customerPathToTab(location.pathname)
+    const routeTab = customerPathToTab(location.pathname);
     if (routeTab !== activeTab) {
-      setActiveTab(routeTab)
+      setActiveTab(routeTab);
     }
-  }, [location.pathname, activeTab])
+  }, [location.pathname, activeTab]);
 
-  useEffect(()=>{
-    const handleClickOutside = (e:MouseEvent)=>{
-      if(sidebarRef.current && !sidebarRef.current.contains(e.target as Node)){
-        setSidebarOpen(false)
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target as Node)
+      ) {
+        setSidebarOpen(false);
       }
-    }
+    };
 
-    document.addEventListener("mousedown",handleClickOutside)
-    return ()=> document.removeEventListener("mousedown",handleClickOutside)
-  },[])
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <div className="flex h-screen bg-[#F8FAFC] relative">
       {sidebarOpen && (
         <div
-          onClick={()=>setSidebarOpen(false)}
+          onClick={() => setSidebarOpen(false)}
           className="fixed inset-0 bg-black/40 z-30 lg:hidden"
         />
       )}
@@ -101,11 +107,18 @@ export default function CustomerLayout() {
         className={`fixed lg:static z-40 h-full min-h-svh bg-white border-r border-[#E5E7EB] transition-transform duration-300
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
-
-        <CustomerSidebar setIsLoggedIn={setIsLoggedIn} setShowLogoutModal={setShowLogoutModal} loggingOut={loggingOut} logoutError={logoutError} setSidebarOpen={setSidebarOpen} activeTab={activeTab} setActiveTab={handleTabChange}/>
+        <CustomerSidebar
+          setIsLoggedIn={setIsLoggedIn}
+          setShowLogoutModal={setShowLogoutModal}
+          loggingOut={loggingOut}
+          logoutError={logoutError}
+          setSidebarOpen={setSidebarOpen}
+          activeTab={activeTab}
+          setActiveTab={handleTabChange}
+        />
       </div>
 
-         {showLogoutModal && (
+      {showLogoutModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
             <h2 className="text-xl font-semibold text-[#111827]">Sign Out</h2>
@@ -137,21 +150,17 @@ export default function CustomerLayout() {
         </div>
       )}
 
-
       <div className="flex flex-col flex-1 overflow-hidden">
-
         <CustomerHeader
           activeTab={activeTab}
           setActiveTab={handleTabChange}
-          openSidebar={()=>setSidebarOpen(true)}
+          openSidebar={() => setSidebarOpen(true)}
         />
 
         <div className="flex-1 overflow-y-auto scroll-hide lg:p-8 p-4">
-          <CustomerChild setActiveTab={handleTabChange} activeTab={activeTab}/>
+          <CustomerChild setActiveTab={handleTabChange} activeTab={activeTab} />
         </div>
-
       </div>
-
     </div>
-  )
+  );
 }
