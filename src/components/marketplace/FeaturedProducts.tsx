@@ -1,7 +1,17 @@
-import { Leaf, Wheat, Milk, Wine, Plus, Truck, Loader2, ImageOff } from "lucide-react"
-import CartModal from "../../layout/CustomerDashboard/CartModal"
+import {
+  Leaf,
+  Wheat,
+  Milk,
+  Wine,
+  Plus,
+  Truck,
+  Loader2,
+  ImageOff,
+} from "lucide-react";
+import CartModal from "../../layout/CustomerDashboard/CartModal";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useRole } from "../../layout/RoleProvider";
 
 const API_BASE = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
 const PAGE_LIMIT = 12;
@@ -32,14 +42,19 @@ interface FeaturedProductsProps {
   searchQuery?: string;
 }
 
-export default function FeaturedProducts({ searchQuery = "" }: FeaturedProductsProps) {
+export default function FeaturedProducts({
+  searchQuery = "",
+}: FeaturedProductsProps) {
   const navigate = useNavigate();
   const [openCart, setOpenCart] = useState(false);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    null,
+  );
 
   const [isLoggedIn, setIsLoggedIn] = useState(
-    localStorage.getItem("isLoggedIn") === "true"
+    localStorage.getItem("isLoggedIn") === "true",
   );
+  const { setRole } = useRole();
 
   const [activeCategory, setActiveCategory] = useState("");
   const [sortBy, setSortBy] = useState("newest");
@@ -117,6 +132,7 @@ export default function FeaturedProducts({ searchQuery = "" }: FeaturedProductsP
 
   const handleProductClick = (productId: string) => {
     if (isLoggedIn) {
+      setRole("customer");
       navigate(`/customer/dashboard/product-details?id=${productId}`);
     } else {
       navigate("/role-wise-sign-in?role=customer");
@@ -179,9 +195,10 @@ export default function FeaturedProducts({ searchQuery = "" }: FeaturedProductsP
   return (
     <section className="bg-[#020618] py-20 text-white">
       <div className="max-w-[1265px] mx-auto px-3 lg:px-6 grid lg:grid-cols-[260px_1fr] gap-10">
-
         <div className="space-y-6">
-          <h3 className="text-[22px] font-medium text-[#CAD5E2] font-playfair">Categories</h3>
+          <h3 className="text-[22px] font-medium text-[#CAD5E2] font-playfair">
+            Categories
+          </h3>
 
           <div className="space-y-3">
             {categories.map((cat, i) => {
@@ -213,7 +230,9 @@ export default function FeaturedProducts({ searchQuery = "" }: FeaturedProductsP
               <Truck size={20} />
             </div>
 
-            <h4 className="font-bold text-[20px] font-playfair">Free Delivery</h4>
+            <h4 className="font-bold text-[20px] font-playfair">
+              Free Delivery
+            </h4>
 
             <p className="text-base text-[#90A1B9]">
               On all orders above $ 50.00
@@ -227,7 +246,9 @@ export default function FeaturedProducts({ searchQuery = "" }: FeaturedProductsP
 
         <div>
           <div className="flex items-center justify-between mb-8 gap-3 flex-wrap">
-            <h2 className="font-playfair font-medium text-[28px]">Featured Products</h2>
+            <h2 className="font-playfair font-medium text-[28px]">
+              Featured Products
+            </h2>
             <div className="flex gap-3 items-center">
               <span className="text-sm text-[#94A3B8]">Sort by:</span>
               <select
@@ -316,7 +337,9 @@ export default function FeaturedProducts({ searchQuery = "" }: FeaturedProductsP
                       <div className="flex items-center justify-between mt-3">
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="font-bold text-lg">${product.discountPrice.toFixed(2)}</p>
+                            <p className="font-bold text-lg">
+                              ${product.discountPrice.toFixed(2)}
+                            </p>
                             {hasDiscount && (
                               <p className="text-sm text-[#62748E] line-through">
                                 ${product.basePrice.toFixed(2)}
@@ -367,5 +390,5 @@ export default function FeaturedProducts({ searchQuery = "" }: FeaturedProductsP
         </div>
       </div>
     </section>
-  )
+  );
 }

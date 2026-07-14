@@ -4,6 +4,7 @@ import CustomerSidebar from "./CustomerSidebar";
 import CustomerHeader from "./CustomerHeader";
 import CustomerChild from "./CustomerChild";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useRole } from "../RoleProvider";
 
 const customerTabToPath = (tab: string) => {
   if (tab === "overview") return "";
@@ -19,6 +20,20 @@ const customerPathToTab = (pathname: string) => {
   return last || "overview";
 };
 
+type StoredUser = {
+  firstName?: string;
+  lastName?: string;
+  avatar?: string | null;
+};
+
+const getStoredUser = (): StoredUser => {
+  try {
+    return JSON.parse(localStorage.getItem("user") || "{}");
+  } catch {
+    return {};
+  }
+};
+
 export default function CustomerLayout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,6 +44,10 @@ export default function CustomerLayout() {
     return localStorage.getItem("activeTab") || "overview";
   });
 
+const { setRole } = useRole();
+    const [authToken, setAuthToken] = useState(localStorage.getItem("authToken"));
+    const [user, setUser] = useState<StoredUser>(getStoredUser());
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const [loggingOut, setLoggingOut] = useState(false);
@@ -36,13 +55,13 @@ export default function CustomerLayout() {
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const handleLogout = async () => {
-    setLogoutError("");
     setLoggingOut(true);
+    setLogoutError("");
 
     const token = localStorage.getItem("authToken");
 
     try {
-      await fetch(
+      const response = await fetch(
         "https://mr-santosh-grocery-backend.onrender.com/api/v1/auth/logout",
         {
           method: "POST",
@@ -52,17 +71,28 @@ export default function CustomerLayout() {
           },
         },
       );
-    } catch (logoutErr) {
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data?.message || "Logout failed.");
+      }
+
+      // Success
+      localStorage.clear();
+      setAuthToken(null);
+      setRole("customer");
+      setUser({});
+      setShowLogoutModal(false);
+
+      navigate("/role-wise-sign-in?role=customer");
+    } catch (err) {
       setLogoutError(
-        logoutErr instanceof Error
-          ? logoutErr.message
-          : "Unable to reach the logout endpoint.",
+        err instanceof Error
+          ? err.message
+          : "Something went wrong logging out.",
       );
     } finally {
-      // localStorage.clear();
-      setIsLoggedIn(false);
       setLoggingOut(false);
-      navigate("/role-wise-sign-in?role=customer");
     }
   };
 

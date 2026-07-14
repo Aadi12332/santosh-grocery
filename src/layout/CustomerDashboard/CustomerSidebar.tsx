@@ -7,6 +7,7 @@ import {
   HelpCircle,
   ShoppingBag,
   LogOut,
+  Utensils,
 } from "lucide-react";
 import Logo from "../../assets/images/logo.svg";
 import { useNavigate } from "react-router-dom";
@@ -124,6 +125,13 @@ export default function CustomerSidebar({
           >
             <ShoppingBag size={20} />
             Marketplace
+          </button>
+          <button
+            onClick={() => navigate("/restaurants")}
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm text-[#6A7282] hover:bg-gray-50"
+          >
+            <Utensils size={20} />
+            Restaurants
           </button>
         </div>
 

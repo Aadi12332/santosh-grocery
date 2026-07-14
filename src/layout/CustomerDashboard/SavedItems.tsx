@@ -6,29 +6,38 @@ import {
   ShoppingBag,
   Loader2,
   PackageX,
+  AlertTriangle,
 } from "lucide-react";
 import CartModal from "./CartModal";
 
 const BASE_URL = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
 
+interface ProductApi {
+  _id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  category?: string;
+  images: string[];
+  primaryImage: string | null;
+  basePrice: number;
+  discountPrice: number;
+  salePrice?: number;
+  originalPrice?: number;
+  discount?: number;
+  stockStatus: string;
+  inStock?: boolean;
+  rating: {
+    average: number;
+    count: number;
+  };
+}
+
 interface WishlistItem {
   _id: string;
   itemType: string;
   addedAt: string;
-  product: {
-    _id: string;
-    name: string;
-    slug: string;
-    images: string[];
-    stockStatus: string;
-    rating: {
-      average: number;
-      count: number;
-    };
-    price?: string;
-    oldPrice?: string;
-    sale?: boolean;
-  } | null;
+  product: ProductApi | null;
   restaurant: any;
 }
 
@@ -159,6 +168,9 @@ export default function SavedItems() {
     }
   };
 
+  const validItems = items.filter((item) => item.product !== null);
+  const unavailableCount = items.length - validItems.length;
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
@@ -201,6 +213,15 @@ export default function SavedItems() {
           {error}
         </div>
       )}
+
+      {/* stale/unavailable items notice */}
+      {/* {!loading && unavailableCount > 0 && (
+        <div className="bg-[#FFF7ED] border border-[#FDBA74] text-[#9A3412] text-sm rounded-lg px-4 py-3 flex items-center gap-2">
+          <AlertTriangle size={16} className="shrink-0" />
+          {unavailableCount} saved item{unavailableCount > 1 ? "s are" : " is"}{" "}
+          no longer available and won't be shown below.
+        </div>
+      )} */}
 
       {/* clear all confirm popover/banner */}
       {showClearConfirm && (
@@ -247,22 +268,39 @@ export default function SavedItems() {
         </div>
       )}
 
+      {/* all items stale, none renderable */}
+      {!loading && items.length > 0 && validItems.length === 0 && !error && (
+        <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+          <PackageX size={40} className="text-[#99A1AF]" />
+          <h3 className="text-lg font-playfair text-[#0F172A]">
+            These items are no longer available
+          </h3>
+          <p className="text-[#6A7282] text-sm">
+            Clear your saved list and start fresh.
+          </p>
+        </div>
+      )}
+
       {/* items grid */}
-      {!loading && items.length > 0 && (
+      {!loading && validItems.length > 0 && (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {items.map((item) => {
-            const product = item.product;
+          {validItems.map((item) => {
+            const product = item.product as ProductApi;
 
-            if (!product) return null;
-
-            const img = product.images?.[0];
+            const img = product.primaryImage || product.images?.[0];
             const averageRating = product.rating?.average ?? 0;
             const ratingCount = product.rating?.count ?? 0;
-            const price = product.price || "$0.00";
-            const oldPrice = product.oldPrice;
+
+            const basePrice = product.basePrice ?? 0;
+            const discountPrice = product.discountPrice ?? basePrice;
+            const hasDiscount = discountPrice < basePrice;
+
             const isLowStock = product.stockStatus === "Low Stock";
-            const stockLabel =
-              product.stockStatus === "Active"
+            const isOutOfStock =
+              product.inStock === false || product.stockStatus === "Out of Stock";
+            const stockLabel = isOutOfStock
+              ? "Out of Stock"
+              : product.stockStatus === "Active"
                 ? "In Stock"
                 : product.stockStatus || "In Stock";
 
@@ -283,9 +321,9 @@ export default function SavedItems() {
                     </div>
                   )}
 
-                  {product.sale && (
+                  {hasDiscount && (
                     <span className="absolute top-3 left-3 bg-red-500 text-white text-xs px-2 py-1 rounded">
-                      SALE
+                      {product.discount ? `${product.discount}% OFF` : "SALE"}
                     </span>
                   )}
 
@@ -303,18 +341,25 @@ export default function SavedItems() {
                 </div>
 
                 <div className="lg:p-5 p-2 flex flex-col gap-3 flex-1">
-                  <h3 className="font-playfair text-lg text-[#0F172A]">
-                    {product.name}
-                  </h3>
+                  <div>
+                    <h3 className="font-playfair text-lg text-[#0F172A]">
+                      {product.name}
+                    </h3>
+                    {product.category && (
+                      <p className="text-xs text-[#94A3B8] uppercase mt-0.5">
+                        {product.category}
+                      </p>
+                    )}
+                  </div>
 
                   <div className="flex items-center gap-3">
                     <span className="text-[#009966] text-xl font-bold">
-                      {price}
+                      ${discountPrice.toFixed(2)}
                     </span>
 
-                    {oldPrice && (
+                    {hasDiscount && (
                       <span className="text-[#99A1AF] line-through">
-                        {oldPrice}
+                        ${basePrice.toFixed(2)}
                       </span>
                     )}
                   </div>
@@ -322,9 +367,11 @@ export default function SavedItems() {
                   <div className="flex items-center justify-between text-sm">
                     <span
                       className={`px-3 py-1 font-semibold text-sm rounded-full ${
-                        isLowStock
-                          ? "bg-[#FFF7ED] text-[#F54900]"
-                          : "bg-[#ECFDF5] text-[#009966]"
+                        isOutOfStock
+                          ? "bg-[#FEF2F2] text-[#DC2626]"
+                          : isLowStock
+                            ? "bg-[#FFF7ED] text-[#F54900]"
+                            : "bg-[#ECFDF5] text-[#009966]"
                       }`}
                     >
                       {stockLabel}
@@ -340,11 +387,13 @@ export default function SavedItems() {
 
                   <button
                     onClick={() => addToCart(product._id)}
-                    disabled={isAddingToCart}
+                    disabled={isAddingToCart || isOutOfStock}
                     className="mt-auto flex items-center justify-center gap-2 bg-[#009966] text-white py-3 rounded-lg shadow-sm disabled:opacity-60"
                   >
                     {isAddingToCart ? (
                       <Loader2 size={18} className="animate-spin" />
+                    ) : isOutOfStock ? (
+                      "Out of Stock"
                     ) : (
                       <>
                         <ShoppingCart size={18} />
@@ -356,14 +405,14 @@ export default function SavedItems() {
               </div>
             );
           })}
-
-          <CartModal
-            selectedProduct={selectedProductId || undefined}
-            open={openCart}
-            onClose={() => setOpenCart(false)}
-          />
         </div>
       )}
+
+      <CartModal
+        selectedProduct={selectedProductId || undefined}
+        open={openCart}
+        onClose={() => setOpenCart(false)}
+      />
     </div>
   );
 }

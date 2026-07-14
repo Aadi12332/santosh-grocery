@@ -46,11 +46,12 @@ type Pagination = {
 
 type Card = {
   _id: string;
-  cardNumber: string;
+  cardId: string;
   expiryMonth: string;
   expiryYear: string;
   cardHolder: string;
   brand: string;
+  last4: string;
   isDefault: boolean;
 };
 
@@ -501,7 +502,7 @@ export default function WalletPayments() {
     const previous = cards;
 
     // Optimistic removal
-    setCards((prev) => prev.filter((c) => c._id !== cardId));
+    setCards((prev) => prev.filter((c) => c.cardId !== cardId));
 
     try {
       const response = await fetch(`${API_BASE}/wallet/cards/${cardId}`, {
@@ -535,8 +536,11 @@ export default function WalletPayments() {
 
     // Optimistic update
     setCards((prev) =>
-      prev.map((c) => ({ ...c, isDefault: c._id === cardId })),
-    );
+  prev.map((c) => ({
+    ...c,
+    isDefault: c.cardId === cardId,
+  })),
+);
 
     try {
       const response = await fetch(
@@ -561,8 +565,6 @@ export default function WalletPayments() {
       setSettingDefaultId(null);
     }
   };
-
-  const maskCardNumber = (num: string) => num.slice(-4);
 
   return (
     <div className="space-y-8">
@@ -675,7 +677,7 @@ export default function WalletPayments() {
                           card.isDefault ? "text-[#0F172A]" : "text-[#6A7282]"
                         }
                       >
-                        •••• {maskCardNumber(card.cardNumber)}
+                        •••• {card.last4}
                       </span>
 
                       {card.isDefault && (
@@ -688,8 +690,8 @@ export default function WalletPayments() {
                     <div className="flex items-center gap-3">
                       {!card.isDefault && (
                         <button
-                          onClick={() => handleSetDefaultCard(card._id)}
-                          disabled={settingDefaultId === card._id}
+                        onClick={() => handleSetDefaultCard(card.cardId)}
+disabled={settingDefaultId === card.cardId}
                           className="text-xs text-[#009966] hover:underline disabled:opacity-50"
                         >
                           {settingDefaultId === card._id ? (
@@ -701,8 +703,8 @@ export default function WalletPayments() {
                       )}
 
                       <button
-                        onClick={() => handleDeleteCard(card._id)}
-                        disabled={deletingCardId === card._id}
+                        onClick={() => handleDeleteCard(card.cardId)}
+disabled={deletingCardId === card.cardId}
                         className="text-[#94A3B8] hover:text-red-500 disabled:opacity-50"
                         aria-label="Delete card"
                       >

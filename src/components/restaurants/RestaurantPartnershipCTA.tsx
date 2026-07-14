@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom"
+
 export default function RestaurantPartnershipCTA() {
+  const navigate = useNavigate();
+  
   return (
     <section className="w-full bg-[#020618] py-20">
       <div className="max-w-[1265px] mx-auto lg:px-6 px-3">
@@ -16,7 +20,7 @@ export default function RestaurantPartnershipCTA() {
             </p>
           </div>
 
-          <button className="px-8 h-[48px] bg-white text-[#00C950] text-base rounded-lg hover:bg-gray-100 transition">
+          <button onClick={()=>navigate("/role-wise-sign-in?role=restaurantbackend")} className="px-8 h-[48px] bg-white text-[#00C950] text-base rounded-lg hover:bg-gray-100 transition">
             Apply for Partnership
           </button>
 

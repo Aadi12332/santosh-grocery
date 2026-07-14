@@ -197,7 +197,7 @@ const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-center items-center"
+      className="fixed inset-0 z-50 flex justify-center items-center !mt-0"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/40" />

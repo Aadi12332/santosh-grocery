@@ -57,9 +57,13 @@ export default function CustomerHeader({
       <div className="sm:flex items-center gap-3 text-sm ml-3 hidden">
         <span className="text-[#64748B]">HubNepa</span>
         <span className="text-[#94A3B8]">›</span>
-        <span className="font-semibold text-[#0F172A]">
-          {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}
-        </span>
+       <span className="font-semibold text-[#0F172A]">
+  {activeTab
+    .replace(/-/g, " ")
+    .split(" ")
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")}
+</span>
       </div>
 
       <div className="flex items-center sm:gap-4 gap-1 flex-1 justify-end">

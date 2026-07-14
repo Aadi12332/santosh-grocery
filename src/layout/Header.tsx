@@ -26,9 +26,7 @@ const getStoredUser = (): StoredUser => {
 export default function Header() {
   const navigate = useNavigate();
   const [role, setRole] = useState(localStorage.getItem("role"));
-  const [authToken, setAuthToken] = useState(
-    localStorage.getItem("authToken"),
-  );
+  const [authToken, setAuthToken] = useState(localStorage.getItem("authToken"));
   const [user, setUser] = useState<StoredUser>(getStoredUser());
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -53,49 +51,47 @@ export default function Header() {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
-const handleLogout = async () => {
-  setLoggingOut(true);
-  setLogoutError("");
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    setLogoutError("");
 
-  const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("authToken");
 
-  try {
-    const response = await fetch(
-      "https://mr-santosh-grocery-backend.onrender.com/api/v1/auth/logout",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
+    try {
+      const response = await fetch(
+        "https://mr-santosh-grocery-backend.onrender.com/api/v1/auth/logout",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token ? `Bearer ${token}` : "",
+          },
         },
+      );
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data?.message || "Logout failed.");
       }
-    );
 
-    if (!response.ok) {
-      const data = await response.json();
-      throw new Error(data?.message || "Logout failed.");
+      // Success
+      localStorage.clear();
+      setAuthToken(null);
+      setRole("customer");
+      setUser({});
+      setShowLogoutModal(false);
+
+      navigate("/role-wise-sign-in?role=customer");
+    } catch (err) {
+      setLogoutError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong logging out.",
+      );
+    } finally {
+      setLoggingOut(false);
     }
-
-    // Success
-    localStorage.clear();
-    setAuthToken(null);
-    setRole("customer");
-    setUser({});
-
-    // Close modal only after success
-    setShowLogoutModal(false);
-
-    navigate("/role-wise-sign-in?role=customer");
-  } catch (err) {
-    setLogoutError(
-      err instanceof Error
-        ? err.message
-        : "Something went wrong logging out."
-    );
-  } finally {
-    setLoggingOut(false);
-  }
-};
+  };
 
   return (
     <header className="w-full bg-white shadow-sm h-20 flex items-center">
@@ -201,10 +197,8 @@ const handleLogout = async () => {
             </p>
 
             {logoutError && (
-  <p className="mt-4 text-sm text-red-500">
-    {logoutError}
-  </p>
-)}
+              <p className="mt-4 text-sm text-red-500">{logoutError}</p>
+            )}
 
             <div className="mt-6 flex justify-end gap-3">
               <button
@@ -214,13 +208,13 @@ const handleLogout = async () => {
                 Cancel
               </button>
 
-             <button
-  onClick={handleLogout}
-  disabled={loggingOut}
-  className="rounded-lg bg-red-500 px-5 py-2 text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
->
-  {loggingOut ? "Signing Out..." : "Yes, Sign Out"}
-</button>
+              <button
+                onClick={handleLogout}
+                disabled={loggingOut}
+                className="rounded-lg bg-red-500 px-5 py-2 text-white hover:bg-red-600 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {loggingOut ? "Signing Out..." : "Yes, Sign Out"}
+              </button>
             </div>
           </div>
         </div>
