@@ -18,6 +18,45 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import LegalInfoModal from "./LegalInfoModal";
+
+const LEGAL_CONTENT = {
+  terms: {
+    title: "Terms of Service",
+    subtitle:
+      "Please read these Terms carefully before using HubNepa. By accessing our services, you agree to comply with the following conditions.",
+
+    content: [
+      "Users must create and maintain accurate account information. You are responsible for protecting your account credentials and all activities performed under your account.",
+
+      "Orders placed through HubNepa are subject to restaurant acceptance, availability, pricing and operational hours. Restaurants may cancel or modify orders based on inventory or operational reasons.",
+
+      "Payments are securely processed using third-party payment providers. Refunds, cancellations and disputes are handled according to our refund policy and applicable regulations.",
+
+      "Any misuse of the platform, fraudulent activity, abusive behavior or attempts to compromise platform security may result in immediate suspension or permanent account termination.",
+
+      "HubNepa reserves the right to update these Terms of Service at any time. Continued use of the platform after changes are published constitutes acceptance of the revised terms."
+    ]
+  },
+
+  privacy: {
+    title: "Privacy Policy",
+    subtitle:
+      "Your privacy matters to us. This policy explains how your information is collected, stored and protected while using HubNepa.",
+
+    content: [
+      "We collect information such as your name, email address, phone number and delivery address to provide our services and improve your overall experience.",
+
+      "Payment details are processed securely by trusted payment gateways. HubNepa never stores your complete debit or credit card information on our servers.",
+
+      "Anonymous analytics and usage statistics may be collected to improve application performance, fix issues and enhance platform features.",
+
+      "We do not sell or rent your personal information to third parties. Information may only be shared when legally required or necessary to complete your orders.",
+
+      "You may request access, correction or deletion of your personal information by contacting our support team. We are committed to protecting your privacy and complying with applicable data protection regulations."
+    ]
+  }
+};
 
 const BASE_URL = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
 
@@ -161,7 +200,9 @@ export default function HelpCenter() {
   const [ticketsHasNext, setTicketsHasNext] = useState(false);
 
   // Ticket detail modal
-  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(
+    null,
+  );
   const [replyMessage, setReplyMessage] = useState("");
   const [replySubmitting, setReplySubmitting] = useState(false);
   const [replyError, setReplyError] = useState<string | null>(null);
@@ -266,7 +307,12 @@ export default function HelpCenter() {
   });
 
   const faqCategories = Array.from(new Set(faqs.map((f) => f.category)));
-
+const [legalModal, setLegalModal] = useState({
+  open: false,
+  title: "",
+  subtitle: "",
+  content: [] as string[],
+});
   // ---------- Submit contact form ----------
   const submitContactForm = async () => {
     setContactError(null);
@@ -394,7 +440,7 @@ export default function HelpCenter() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ message: replyMessage }),
-        }
+        },
       );
       const data = await res.json();
 
@@ -403,26 +449,25 @@ export default function HelpCenter() {
       }
 
       // append new message locally (optimistic) using returned ticket if provided, else construct
-      const updatedTicket: SupportTicket =
-        data?.data?.ticket || {
-          ...selectedTicket,
-          messages: [
-            ...selectedTicket.messages,
-            {
-              _id: `temp-${Date.now()}`,
-              sender: "me",
-              senderRole: "user",
-              message: replyMessage,
-              attachments: [],
-              isRead: false,
-              createdAt: new Date().toISOString(),
-            },
-          ],
-        };
+      const updatedTicket: SupportTicket = data?.data?.ticket || {
+        ...selectedTicket,
+        messages: [
+          ...selectedTicket.messages,
+          {
+            _id: `temp-${Date.now()}`,
+            sender: "me",
+            senderRole: "user",
+            message: replyMessage,
+            attachments: [],
+            isRead: false,
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      };
 
       setSelectedTicket(updatedTicket);
       setTickets((prev) =>
-        prev.map((t) => (t._id === updatedTicket._id ? updatedTicket : t))
+        prev.map((t) => (t._id === updatedTicket._id ? updatedTicket : t)),
       );
       setReplyMessage("");
     } catch (err: any) {
@@ -454,7 +499,7 @@ export default function HelpCenter() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ rating, comment: ratingComment }),
-        }
+        },
       );
       const data = await res.json();
 
@@ -463,10 +508,14 @@ export default function HelpCenter() {
       }
 
       setRatingSuccess(true);
-      const updatedTicket = { ...selectedTicket, rating, comment: ratingComment };
+      const updatedTicket = {
+        ...selectedTicket,
+        rating,
+        comment: ratingComment,
+      };
       setSelectedTicket(updatedTicket);
       setTickets((prev) =>
-        prev.map((t) => (t._id === updatedTicket._id ? updatedTicket : t))
+        prev.map((t) => (t._id === updatedTicket._id ? updatedTicket : t)),
       );
     } catch (err: any) {
       setRatingError(err.message || "Something went wrong");
@@ -490,7 +539,8 @@ export default function HelpCenter() {
 
   const canRate =
     selectedTicket &&
-    (selectedTicket.status === "Resolved" || selectedTicket.status === "Closed");
+    (selectedTicket.status === "Resolved" ||
+      selectedTicket.status === "Closed");
 
   return (
     <div className="space-y-12">
@@ -610,14 +660,18 @@ export default function HelpCenter() {
                     </span>
                     <span
                       className={`px-2 py-1 rounded-full ${
-                        PRIORITY_STYLES[t.priority] || "bg-gray-100 text-gray-600"
+                        PRIORITY_STYLES[t.priority] ||
+                        "bg-gray-100 text-gray-600"
                       }`}
                     >
                       {t.priority} Priority
                     </span>
                     {t.rating && (
                       <span className="flex items-center gap-1 px-2 py-1 rounded-full bg-yellow-50 text-yellow-600">
-                        <Star size={12} className="fill-yellow-500 text-yellow-500" />
+                        <Star
+                          size={12}
+                          className="fill-yellow-500 text-yellow-500"
+                        />
                         {t.rating}
                       </span>
                     )}
@@ -631,26 +685,27 @@ export default function HelpCenter() {
               ))}
             </div>
 
-{
-  ticketsPage > 1 &&
-            <div className="flex items-center justify-center gap-3 mt-6">
-              <button
-                onClick={() => fetchTickets(ticketsPage - 1)}
-                disabled={ticketsPage <= 1}
-                className="px-4 py-2 text-sm border border-[#E5E7EB] rounded-lg disabled:opacity-40"
-              >
-                Previous
-              </button>
-              <span className="text-sm text-[#6A7282]">Page {ticketsPage}</span>
-              <button
-                onClick={() => fetchTickets(ticketsPage + 1)}
-                disabled={!ticketsHasNext}
-                className="px-4 py-2 text-sm border border-[#E5E7EB] rounded-lg disabled:opacity-40"
-              >
-                Next
-              </button>
-            </div>
-}
+            {ticketsPage > 1 && (
+              <div className="flex items-center justify-center gap-3 mt-6">
+                <button
+                  onClick={() => fetchTickets(ticketsPage - 1)}
+                  disabled={ticketsPage <= 1}
+                  className="px-4 py-2 text-sm border border-[#E5E7EB] rounded-lg disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-[#6A7282]">
+                  Page {ticketsPage}
+                </span>
+                <button
+                  onClick={() => fetchTickets(ticketsPage + 1)}
+                  disabled={!ticketsHasNext}
+                  className="px-4 py-2 text-sm border border-[#E5E7EB] rounded-lg disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -807,36 +862,73 @@ export default function HelpCenter() {
             </div>
 
             <div className="flex flex-col gap-2 text-[#009966] text-sm">
-              <button className="text-left">Terms of Service</button>
+  <button
+    className="text-left hover:underline"
+    onClick={() =>
+     setLegalModal({
+  open: true,
+  title: LEGAL_CONTENT.terms.title,
+  subtitle: LEGAL_CONTENT.terms.subtitle,
+  content: LEGAL_CONTENT.terms.content,
+})
+    }
+  >
+    Terms of Service
+  </button>
 
-              <button className="text-left">Privacy Policy</button>
-            </div>
+  <button
+    className="text-left hover:underline"
+    onClick={() =>
+     setLegalModal({
+  open: true,
+  title: LEGAL_CONTENT.privacy.title,
+  subtitle: LEGAL_CONTENT.privacy.subtitle,
+  content: LEGAL_CONTENT.privacy.content,
+})
+    }
+  >
+    Privacy Policy
+  </button>
+</div>
           </div>
         </div>
       </div>
 
+<LegalInfoModal
+  open={legalModal.open}
+  title={legalModal.title}
+  subtitle={legalModal.subtitle}
+  content={legalModal.content}
+  onClose={() =>
+    setLegalModal((prev) => ({
+      ...prev,
+      open: false,
+    }))
+  }
+/>
+
       {/* ---------- Contact Form Modal ---------- */}
       {showContactForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 !mt-0">
-          <div className="bg-white rounded-xl w-full max-w-md p-6 relative">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 !mt-0">
+          <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl w-full max-w-md p-6 relative">
             <button
               onClick={() => setShowContactForm(false)}
-              className="absolute top-4 right-4 text-[#6A7282]"
+              className="absolute top-4 right-4 text-[#94A3B8] hover:text-white"
             >
               <X size={20} />
             </button>
 
-            <h3 className="font-playfair text-xl text-[#0F172A] mb-4">
+            <h3 className="font-playfair text-xl text-white mb-4">
               Send us a Message
             </h3>
 
             {contactSuccess ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <CheckCircle2 size={40} className="text-[#009966]" />
-                <p className="text-[#0F172A] font-medium">
+                <p className="text-white font-medium">
                   Message sent successfully!
                 </p>
-                <p className="text-sm text-[#6A7282]">
+                <p className="text-sm text-[#94A3B8]">
                   We'll get back to you soon.
                 </p>
               </div>
@@ -848,7 +940,7 @@ export default function HelpCenter() {
                   onChange={(e) =>
                     setContactForm({ ...contactForm, name: e.target.value })
                   }
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none"
+                  className="w-full bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
                 />
 
                 <input
@@ -858,7 +950,7 @@ export default function HelpCenter() {
                   onChange={(e) =>
                     setContactForm({ ...contactForm, email: e.target.value })
                   }
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none"
+                  className="w-full bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
                 />
 
                 <input
@@ -867,7 +959,7 @@ export default function HelpCenter() {
                   onChange={(e) =>
                     setContactForm({ ...contactForm, subject: e.target.value })
                   }
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none"
+                  className="w-full bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
                 />
 
                 <textarea
@@ -877,17 +969,17 @@ export default function HelpCenter() {
                   onChange={(e) =>
                     setContactForm({ ...contactForm, message: e.target.value })
                   }
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none resize-none"
+                  className="w-full bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-3 text-white placeholder:text-[#64748B] outline-none resize-none focus:border-[#009966]"
                 />
 
                 {contactError && (
-                  <p className="text-red-500 text-sm">{contactError}</p>
+                  <p className="text-red-400 text-sm">{contactError}</p>
                 )}
 
                 <button
                   onClick={submitContactForm}
                   disabled={contactSubmitting}
-                  className="w-full bg-[#009966] text-white py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full bg-[#009966] hover:bg-[#00b377] text-white py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {contactSubmitting ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -903,16 +995,16 @@ export default function HelpCenter() {
 
       {/* ---------- Raise Ticket Modal ---------- */}
       {showTicketForm && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 !mt-0">
-          <div className="bg-white rounded-xl w-full max-w-md p-6 relative">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 !mt-0">
+          <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl w-full max-w-md p-6 relative">
             <button
               onClick={() => setShowTicketForm(false)}
-              className="absolute top-4 right-4 text-[#6A7282]"
+              className="absolute top-4 right-4 text-[#94A3B8] hover:text-white"
             >
               <X size={20} />
             </button>
 
-            <h3 className="font-playfair text-xl text-[#0F172A] mb-4 flex items-center gap-2">
+            <h3 className="font-playfair text-xl text-white mb-4 flex items-center gap-2">
               <Ticket size={20} className="text-[#009966]" />
               Raise a Support Ticket
             </h3>
@@ -920,10 +1012,10 @@ export default function HelpCenter() {
             {ticketSuccess ? (
               <div className="flex flex-col items-center gap-2 py-8 text-center">
                 <CheckCircle2 size={40} className="text-[#009966]" />
-                <p className="text-[#0F172A] font-medium">
+                <p className="text-white font-medium">
                   Ticket raised successfully!
                 </p>
-                <p className="text-sm text-[#6A7282]">
+                <p className="text-sm text-[#94A3B8]">
                   Our team will get back to you shortly.
                 </p>
               </div>
@@ -935,7 +1027,7 @@ export default function HelpCenter() {
                   onChange={(e) =>
                     setTicketForm({ ...ticketForm, subject: e.target.value })
                   }
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none"
+                  className="w-full bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
                 />
 
                 <div className="grid grid-cols-2 gap-3">
@@ -944,10 +1036,14 @@ export default function HelpCenter() {
                     onChange={(e) =>
                       setTicketForm({ ...ticketForm, category: e.target.value })
                     }
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none bg-white"
+                    className="w-full bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-3 text-white outline-none focus:border-[#009966]"
                   >
                     {TICKET_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>
+                      <option
+                        key={c}
+                        value={c}
+                        className="bg-[#020618] text-white"
+                      >
                         {c}
                       </option>
                     ))}
@@ -958,10 +1054,14 @@ export default function HelpCenter() {
                     onChange={(e) =>
                       setTicketForm({ ...ticketForm, priority: e.target.value })
                     }
-                    className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none bg-white"
+                    className="w-full bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-3 text-white outline-none focus:border-[#009966]"
                   >
                     {TICKET_PRIORITIES.map((p) => (
-                      <option key={p} value={p}>
+                      <option
+                        key={p}
+                        value={p}
+                        className="bg-[#020618] text-white"
+                      >
                         {p} Priority
                       </option>
                     ))}
@@ -975,17 +1075,17 @@ export default function HelpCenter() {
                   onChange={(e) =>
                     setTicketForm({ ...ticketForm, message: e.target.value })
                   }
-                  className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none resize-none"
+                  className="w-full bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-3 text-white placeholder:text-[#64748B] outline-none resize-none focus:border-[#009966]"
                 />
 
                 {ticketError && (
-                  <p className="text-red-500 text-sm">{ticketError}</p>
+                  <p className="text-red-400 text-sm">{ticketError}</p>
                 )}
 
                 <button
                   onClick={submitTicketForm}
                   disabled={ticketSubmitting}
-                  className="w-full bg-[#0F172A] text-white py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-60"
+                  className="w-full bg-[#009966] hover:bg-[#00b377] text-white py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   {ticketSubmitting ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -1001,29 +1101,37 @@ export default function HelpCenter() {
 
       {/* ---------- Ticket Detail Modal ---------- */}
       {selectedTicket && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4 !mt-0">
-          <div className="bg-white rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col relative">
-
-            <div className="flex items-start justify-between p-5 border-b">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4 !mt-0">
+          <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col relative">
+            {/* Header */}
+            <div className="flex items-start justify-between p-5 border-b border-[#1E293B]">
               <div>
-                <p className="text-xs text-[#99A1AF] mb-1">{selectedTicket.ticketId}</p>
-                <h3 className="font-playfair text-lg text-[#0F172A]">
+                <p className="text-xs text-[#94A3B8] mb-1">
+                  {selectedTicket.ticketId}
+                </p>
+
+                <h3 className="font-playfair text-lg text-white">
                   {selectedTicket.subject}
                 </h3>
+
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <span
                     className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      STATUS_STYLES[selectedTicket.status] || "bg-gray-100 text-gray-600"
+                      STATUS_STYLES[selectedTicket.status] ||
+                      "bg-gray-700 text-gray-200"
                     }`}
                   >
                     {selectedTicket.status}
                   </span>
-                  <span className="text-xs px-2 py-1 rounded-full bg-[#F1F5F9] text-[#6A7282]">
+
+                  <span className="text-xs px-2 py-1 rounded-full bg-[#1E293B] text-[#94A3B8]">
                     {selectedTicket.category}
                   </span>
+
                   <span
                     className={`text-xs px-2 py-1 rounded-full ${
-                      PRIORITY_STYLES[selectedTicket.priority] || "bg-gray-100 text-gray-600"
+                      PRIORITY_STYLES[selectedTicket.priority] ||
+                      "bg-gray-700 text-gray-200"
                     }`}
                   >
                     {selectedTicket.priority} Priority
@@ -1033,13 +1141,13 @@ export default function HelpCenter() {
 
               <button
                 onClick={() => setSelectedTicket(null)}
-                className="text-[#6A7282] shrink-0"
+                className="text-[#94A3B8] hover:text-white shrink-0"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Messages thread */}
+            {/* Messages */}
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               {selectedTicket.messages.map((m) => (
                 <div
@@ -1047,13 +1155,16 @@ export default function HelpCenter() {
                   className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                     m.senderRole === "user"
                       ? "ml-auto bg-[#009966] text-white"
-                      : "bg-[#F1F5F9] text-[#0F172A]"
+                      : "bg-[#1E293B] text-white"
                   }`}
                 >
                   <p>{m.message}</p>
+
                   <p
                     className={`text-[10px] mt-1 ${
-                      m.senderRole === "user" ? "text-white/70" : "text-[#99A1AF]"
+                      m.senderRole === "user"
+                        ? "text-white/70"
+                        : "text-[#94A3B8]"
                     }`}
                   >
                     {formatDate(m.createdAt)}
@@ -1062,20 +1173,21 @@ export default function HelpCenter() {
               ))}
             </div>
 
-            {/* Reply box */}
-            <div className="p-4 border-t">
+            {/* Reply */}
+            <div className="p-4 border-t border-[#1E293B]">
               <div className="flex items-center gap-2">
                 <input
                   value={replyMessage}
                   onChange={(e) => setReplyMessage(e.target.value)}
                   placeholder="Type your reply..."
-                  className="flex-1 border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none text-sm"
+                  className="flex-1 bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-2 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
                   onKeyDown={(e) => e.key === "Enter" && submitReply()}
                 />
+
                 <button
                   onClick={submitReply}
                   disabled={replySubmitting}
-                  className="bg-[#0F172A] text-white w-10 h-10 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-60"
+                  className="bg-[#009966] hover:bg-[#00b377] text-white w-10 h-10 rounded-lg flex items-center justify-center shrink-0 disabled:opacity-60"
                 >
                   {replySubmitting ? (
                     <Loader2 size={16} className="animate-spin" />
@@ -1084,16 +1196,18 @@ export default function HelpCenter() {
                   )}
                 </button>
               </div>
+
               {replyError && (
-                <p className="text-red-500 text-xs mt-2">{replyError}</p>
+                <p className="text-red-400 text-xs mt-2">{replyError}</p>
               )}
 
-              {/* Rate & comment — only for resolved/closed tickets */}
+              {/* Rating */}
               {canRate && (
-                <div className="mt-4 pt-4 border-t">
+                <div className="mt-4 pt-4 border-t border-[#1E293B]">
                   {selectedTicket.rating && !ratingSuccess ? (
-                    <div className="flex items-center gap-2 text-sm text-[#6A7282]">
+                    <div className="flex items-center gap-2 text-sm text-[#94A3B8]">
                       <span>You rated this:</span>
+
                       <div className="flex items-center gap-0.5">
                         {[1, 2, 3, 4, 5].map((n) => (
                           <Star
@@ -1102,7 +1216,7 @@ export default function HelpCenter() {
                             className={
                               n <= (selectedTicket.rating || 0)
                                 ? "fill-yellow-500 text-yellow-500"
-                                : "text-gray-300"
+                                : "text-gray-500"
                             }
                           />
                         ))}
@@ -1110,7 +1224,7 @@ export default function HelpCenter() {
                     </div>
                   ) : (
                     <>
-                      <p className="text-sm text-[#0F172A] font-medium mb-2">
+                      <p className="text-sm text-white font-medium mb-2">
                         Rate this support experience
                       </p>
 
@@ -1122,7 +1236,7 @@ export default function HelpCenter() {
                               className={
                                 n <= rating
                                   ? "fill-yellow-500 text-yellow-500"
-                                  : "text-gray-300"
+                                  : "text-gray-500"
                               }
                             />
                           </button>
@@ -1134,22 +1248,26 @@ export default function HelpCenter() {
                         onChange={(e) => setRatingComment(e.target.value)}
                         placeholder="Add a comment (optional)"
                         rows={2}
-                        className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none text-sm resize-none mb-2"
+                        className="w-full bg-[#020618] border border-[#1E293B] rounded-lg px-3 py-2 text-white placeholder:text-[#64748B] outline-none resize-none mb-2 focus:border-[#009966]"
                       />
 
                       {ratingError && (
-                        <p className="text-red-500 text-xs mb-2">{ratingError}</p>
+                        <p className="text-red-400 text-xs mb-2">
+                          {ratingError}
+                        </p>
                       )}
+
                       {ratingSuccess && (
                         <p className="text-[#009966] text-xs mb-2 flex items-center gap-1">
-                          <CheckCircle2 size={14} /> Thanks for your feedback!
+                          <CheckCircle2 size={14} />
+                          Thanks for your feedback!
                         </p>
                       )}
 
                       <button
                         onClick={submitRating}
                         disabled={ratingSubmitting}
-                        className="bg-[#009966] text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 disabled:opacity-60"
+                        className="bg-[#009966] hover:bg-[#00b377] text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 disabled:opacity-60"
                       >
                         {ratingSubmitting ? (
                           <Loader2 size={14} className="animate-spin" />
@@ -1162,7 +1280,6 @@ export default function HelpCenter() {
                 </div>
               )}
             </div>
-
           </div>
         </div>
       )}

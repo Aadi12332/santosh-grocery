@@ -9,6 +9,10 @@ import {
   Info,
   Loader2,
   AlertCircle,
+  MessageCircle,
+  Facebook,
+  Twitter,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -46,12 +50,13 @@ export default function ProductDetails({
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const productId = searchParams.get("id");
-
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [question, setQuestion] = useState("");
   const [openCart, setOpenCart] = useState(false);
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [wishlistError, setWishlistError] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([
     FALLBACK_IMG,
     FALLBACK_IMG,
@@ -63,48 +68,84 @@ export default function ProductDetails({
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [cartLoading, setCartLoading] = useState(false);
-const [cartError, setCartError] = useState<string | null>(null);
+  const [cartError, setCartError] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-const handleAddToCart = async () => {
-  if (!product) return;
+  const shareUrl = typeof window !== "undefined" ? window.location.href : "";
 
-  const token = localStorage.getItem("authToken");
-  if (!token) {
-    alert("Please login to add items to your cart.");
-    return;
-  }
+  const shareText = product
+    ? `Check out ${product.name} on HubNepa!`
+    : "Check out this product on HubNepa!";
 
-  setCartLoading(true);
-  setCartError(null);
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
-  try {
-    const res = await fetch(`${API_BASE}/cart/add`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        itemType: "product",
-        itemId: product._id,
-        quantity: qty,
-      }),
-    });
+  const shareMore = async () => {
+    if (!shareUrl) return;
 
-    const data = await res.json();
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product?.name,
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch {
+        // user cancelled
+      }
+    } else {
+      await handleCopyLink();
+    }
+  };
 
-    if (!res.ok || !data.success) {
-      throw new Error(data?.message || "Failed to add to cart.");
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      alert("Please login to add items to your cart.");
+      return;
     }
 
-    setOpenCart(true);
-  } catch (err: any) {
-    setCartError(err.message || "Something went wrong.");
-    alert(err.message || "Something went wrong.");
-  } finally {
-    setCartLoading(false);
-  }
-};
+    setCartLoading(true);
+    setCartError(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          itemType: "product",
+          itemId: product._id,
+          quantity: qty,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data?.message || "Failed to add to cart.");
+      }
+
+      setOpenCart(true);
+    } catch (err: any) {
+      setCartError(err.message || "Something went wrong.");
+      alert(err.message || "Something went wrong.");
+    } finally {
+      setCartLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -150,13 +191,22 @@ const handleAddToCart = async () => {
   const handleAddToWishlist = async () => {
     if (!product) return;
 
+    setWishlistError(null);
+
     const token = localStorage.getItem("authToken");
+
     if (!token) {
-      alert("Please login to add items to your wishlist.");
+      setWishlistError("Please login to add items to your wishlist.");
+
+      setTimeout(() => {
+        setWishlistError(null);
+      }, 3000);
+
       return;
     }
 
     setWishlistLoading(true);
+
     try {
       const res = await fetch(`${API_BASE}/wishlist/add`, {
         method: "POST",
@@ -177,8 +227,13 @@ const handleAddToCart = async () => {
       }
 
       setIsWishlisted(true);
+      setWishlistError(null);
     } catch (err: any) {
-      alert(err.message || "Something went wrong.");
+      setWishlistError(err.message || "Something went wrong.");
+
+      setTimeout(() => {
+        setWishlistError(null);
+      }, 3000);
     } finally {
       setWishlistLoading(false);
     }
@@ -215,12 +270,18 @@ const handleAddToCart = async () => {
     <div className="">
       <button
         onClick={() => navigate("/customer/dashboard")}
-        className="mb-6 text-[#6A7282]"
+        className="mb-3 text-[#6A7282]"
       >
         ← Back to Dashboard
       </button>
+      {wishlistError && (
+        <div className="flex items-center gap-2 w-full rounded-lg border-red-500 bg-red-200 p-3">
+          <AlertCircle size={16} className="text-red-500" />
+          <p className="text-sm text-red-500">{wishlistError}</p>
+        </div>
+      )}
 
-      <div className="grid lg:grid-cols-2 gap-10 xl:gap-16">
+      <div className="grid lg:grid-cols-2 gap-10 xl:gap-16 pt-3">
         <div>
           <div className="relative">
             <img
@@ -340,35 +401,211 @@ const handleAddToCart = async () => {
             </div>
 
             <button
-  onClick={handleAddToCart}
-  disabled={cartLoading || isOutOfStock}
-  className="flex-1 bg-[#009966] text-white rounded-lg px-3 flex items-center justify-center gap-2 py-4 shadow-lg disabled:opacity-60"
->
-  <ShoppingBag size={18} />
-  {cartLoading ? "Adding..." : isOutOfStock ? "Out of Stock" : `Add to Cart — $${total}`}
-</button>
+              onClick={handleAddToCart}
+              disabled={cartLoading || isOutOfStock}
+              className="flex-1 bg-[#009966] text-white rounded-lg px-3 flex items-center justify-center gap-2 py-4 shadow-lg disabled:opacity-60"
+            >
+              <ShoppingBag size={18} />
+              {cartLoading
+                ? "Adding..."
+                : isOutOfStock
+                  ? "Out of Stock"
+                  : `Add to Cart — $${total}`}
+            </button>
 
-          <CartModal
-  setActiveTab={setActiveTab}
-  selectedProduct={product._id}
-  open={openCart}
-  onClose={() => setOpenCart(false)}
-/>
+            <CartModal
+              setActiveTab={setActiveTab}
+              selectedProduct={product._id}
+              open={openCart}
+              onClose={() => setOpenCart(false)}
+            />
           </div>
 
           <div className="flex gap-6 text-[#6A7282]">
-            <button className="flex items-center gap-2">
+            <button
+              onClick={() => setShowShareModal(true)}
+              className="flex items-center gap-2"
+            >
               <Share2 size={18} />
               Share Product
             </button>
 
-            <button className="flex items-center gap-2">
+            <button
+              onClick={() => setShowQuestionModal(true)}
+              className="flex items-center gap-2"
+            >
               <Info size={18} />
               Ask a Question
             </button>
           </div>
         </div>
       </div>
+      {showQuestionModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setShowQuestionModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#0F172A] border border-[#1E293B] rounded-2xl max-w-lg w-full"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-[#1E293B] p-5">
+              <div>
+                <h3 className="font-playfair text-2xl text-white">
+                  Ask a Question
+                </h3>
+
+                <p className="text-sm text-[#94A3B8] mt-1">
+                  Ask anything about this product.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowQuestionModal(false)}
+                className="w-8 h-8 rounded-full hover:bg-[#1E293B] flex items-center justify-center text-[#94A3B8]"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5">
+              <p className="text-sm font-medium text-white mb-3">
+                Frequently Asked
+              </p>
+
+              <div className="flex flex-wrap gap-2 mb-5">
+                {[
+                  "Is this product fresh?",
+                  "What is the delivery time?",
+                  "Is cash on delivery available?",
+                  "Do you offer bulk discounts?",
+                ].map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => setQuestion(item)}
+                    className="px-4 py-2 rounded-full border border-[#1E293B] text-sm text-[#CBD5E1] hover:bg-[#1E293B]"
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+
+              <label className="text-sm font-medium text-white">
+                Your Question
+              </label>
+
+              <textarea
+                rows={5}
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="Write your question..."
+                className="mt-2 w-full bg-[#020618] border border-[#1E293B] rounded-xl p-4 text-white placeholder:text-[#64748B] resize-none outline-none focus:border-[#009966]"
+              />
+
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowQuestionModal(false)}
+                  className="px-5 py-2 border border-[#1E293B] text-[#CBD5E1] rounded-lg hover:bg-[#1E293B]"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() => {
+                    alert("Question submitted successfully!");
+                    setQuestion("");
+                    setShowQuestionModal(false);
+                  }}
+                  disabled={!question.trim()}
+                  className="px-6 py-2 bg-[#009966] hover:bg-[#00b377] text-white rounded-lg disabled:opacity-50"
+                >
+                  Submit Question
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showShareModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4"
+          onClick={() => setShowShareModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-[#0F172A] border border-[#1E293B] rounded-2xl max-w-sm w-full"
+          >
+            <div className="flex items-center justify-between p-5 border-b border-[#1E293B]">
+              <h3 className="font-playfair text-xl font-semibold text-white">
+                Share {product?.name}
+              </h3>
+
+              <button
+                onClick={() => setShowShareModal(false)}
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#1E293B] text-[#94A3B8]"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-5 grid grid-cols-2 gap-3">
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  `${shareText} ${shareUrl}`,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[#1E293B] hover:bg-[#1E293B]"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#DCFCE7] flex items-center justify-center">
+                  <MessageCircle size={18} className="text-[#25D366]" />
+                </div>
+                <span className="text-xs text-[#CBD5E1]">WhatsApp</span>
+              </a>
+
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                  shareUrl,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[#1E293B] hover:bg-[#1E293B]"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#EFF6FF] flex items-center justify-center">
+                  <Facebook size={18} className="text-[#1877F2]" />
+                </div>
+                <span className="text-xs text-[#CBD5E1]">Facebook</span>
+              </a>
+
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                  shareText,
+                )}&url=${encodeURIComponent(shareUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[#1E293B] hover:bg-[#1E293B]"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#334155] flex items-center justify-center">
+                  <Twitter size={18} className="text-white" />
+                </div>
+                <span className="text-xs text-[#CBD5E1]">X / Twitter</span>
+              </a>
+
+              <button
+                onClick={shareMore}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[#1E293B] hover:bg-[#1E293B]"
+              >
+                <div className="w-10 h-10 rounded-full bg-[#334155] flex items-center justify-center">
+                  <Share2 size={18} className="text-[#CBD5E1]" />
+                </div>
+                <span className="text-xs text-[#CBD5E1]">More</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

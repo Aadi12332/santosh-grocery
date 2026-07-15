@@ -55,7 +55,7 @@ export default function FeaturedProducts({
     localStorage.getItem("isLoggedIn") === "true",
   );
   const { setRole } = useRole();
-
+  const [showDeliveryInfo, setShowDeliveryInfo] = useState(false);
   const [activeCategory, setActiveCategory] = useState("");
   const [sortBy, setSortBy] = useState("newest");
 
@@ -67,7 +67,7 @@ export default function FeaturedProducts({
   const [hasMore, setHasMore] = useState(false);
 
   const [addingToCartId, setAddingToCartId] = useState<string | null>(null);
-
+  const [featuredOnly, setFeaturedOnly] = useState(false);
   useEffect(() => {
     const handleStorage = () => {
       setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
@@ -184,13 +184,29 @@ export default function FeaturedProducts({
     }
   };
 
-  // client-side sort (API doesn't support sort param per given endpoints)
-  const sortedProducts = [...products].sort((a, b) => {
-    if (sortBy === "price-low") return a.discountPrice - b.discountPrice;
-    if (sortBy === "price-high") return b.discountPrice - a.discountPrice;
-    if (sortBy === "popular") return 0; // no popularity field available
-    return 0; // "newest" — API already returns in default order
-  });
+  const sortedProducts = [...products]
+    .filter((product) => {
+      if (featuredOnly && !product.isFeatured) {
+        return false;
+      }
+
+      if (sortBy === "new-arrival") {
+        return product.isNewArrival;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "price-low") {
+        return a.discountPrice - b.discountPrice;
+      }
+
+      if (sortBy === "price-high") {
+        return b.discountPrice - a.discountPrice;
+      }
+
+      return 0;
+    });
 
   return (
     <section className="bg-[#020618] py-20 text-white">
@@ -225,7 +241,7 @@ export default function FeaturedProducts({
             })}
           </div>
 
-          <div className="bg-[#0F172B] border border-[#1D293D] rounded-2xl p-6 text-center space-y-4">
+          <div className="bg-[#0F172B] border border-[#1D293D] rounded-2xl p-6 text-center space-y-4 lg:block hidden">
             <div className="w-12 h-12 mx-auto flex items-center justify-center rounded-full bg-orange-500">
               <Truck size={20} />
             </div>
@@ -238,29 +254,60 @@ export default function FeaturedProducts({
               On all orders above $ 50.00
             </p>
 
-            <button className="bg-[#FFFFFF1A] text-base font-medium px-4 py-2 rounded-lg w-full">
-              Learn More
+            <button
+              onClick={() => setShowDeliveryInfo(!showDeliveryInfo)}
+              className="bg-[#FFFFFF1A] text-base font-medium px-4 py-2 rounded-lg w-full transition"
+            >
+              {showDeliveryInfo ? "Show Less" : "Learn More"}
             </button>
+
+            <div
+              className={`overflow-hidden transition-all duration-300 ${
+                showDeliveryInfo ? "max-h-[220px] mt-4" : "max-h-0"
+              }`}
+            >
+              <div className="space-y-3 text-left text-sm text-[#CBD5E1] border-t border-[#1D293D] pt-4">
+                <div>
+                  <h5 className="font-semibold text-white">🚚 Free Delivery</h5>
+                  <p>
+                    Enjoy free delivery on all orders above{" "}
+                    <span className="text-orange-400">$50</span>.
+                  </p>
+                </div>
+
+                <div>
+                  <h5 className="font-semibold text-white">⏱ Delivery Time</h5>
+                  <p>Orders are usually delivered within 30–45 minutes.</p>
+                </div>
+
+                <div>
+                  <h5 className="font-semibold text-white">📍 Delivery Area</h5>
+                  <p>Available within our supported delivery zones.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-8 gap-3 flex-wrap">
+          <div className="flex gap-3 items-center justify-between mb-5">
             <h2 className="font-playfair font-medium text-[28px]">
               Featured Products
             </h2>
-            <div className="flex gap-3 items-center">
+
+            <div className="flex items-center gap-2">
               <span className="text-sm text-[#94A3B8]">Sort by:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-[#0F172B] text-sm px-2 py-2 rounded-lg outline-none"
-              >
-                <option value="newest">Newest</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="popular">Most Popular</option>
-              </select>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-[#0F172B] text-sm px-2 py-2 rounded-lg outline-none cursor-pointer"
+            >
+              <option value="newest">Newest</option>
+              <option value="new-arrival">New Arrival</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+            </select>
             </div>
           </div>
 
@@ -387,6 +434,51 @@ export default function FeaturedProducts({
               </button>
             </div>
           )}
+        </div>
+
+        <div className="bg-[#0F172B] border border-[#1D293D] rounded-2xl p-6 text-center space-y-4 lg:hidden">
+          <div className="w-12 h-12 mx-auto flex items-center justify-center rounded-full bg-orange-500">
+            <Truck size={20} />
+          </div>
+
+          <h4 className="font-bold text-[20px] font-playfair">Free Delivery</h4>
+
+          <p className="text-base text-[#90A1B9]">
+            On all orders above $ 50.00
+          </p>
+
+          <button
+            onClick={() => setShowDeliveryInfo(!showDeliveryInfo)}
+            className="bg-[#FFFFFF1A] text-base font-medium px-4 py-2 rounded-lg w-full transition"
+          >
+            {showDeliveryInfo ? "Show Less" : "Learn More"}
+          </button>
+
+          <div
+            className={`overflow-hidden transition-all duration-300 ${
+              showDeliveryInfo ? "max-h-[220px] mt-4" : "max-h-0"
+            }`}
+          >
+            <div className="space-y-3 text-left text-sm text-[#CBD5E1] border-t border-[#1D293D] pt-4">
+              <div>
+                <h5 className="font-semibold text-white">🚚 Free Delivery</h5>
+                <p>
+                  Enjoy free delivery on all orders above{" "}
+                  <span className="text-orange-400">$50</span>.
+                </p>
+              </div>
+
+              <div>
+                <h5 className="font-semibold text-white">⏱ Delivery Time</h5>
+                <p>Orders are usually delivered within 30–45 minutes.</p>
+              </div>
+
+              <div>
+                <h5 className="font-semibold text-white">📍 Delivery Area</h5>
+                <p>Available within our supported delivery zones.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

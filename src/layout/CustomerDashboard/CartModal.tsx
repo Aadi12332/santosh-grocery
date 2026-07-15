@@ -1,9 +1,17 @@
-import { ShoppingBag, X, Minus, Plus, Trash2, ArrowRight, Loader2 } from "lucide-react";
+import {
+  ShoppingBag,
+  X,
+  Minus,
+  Plus,
+  Trash2,
+  ArrowRight,
+  Loader2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
-
+const CART_STORAGE_KEY = "checkout_cart";
 interface CartItem {
   _id: string;
   itemType: string;
@@ -43,61 +51,81 @@ export default function CartModal({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => {
-  if (newQuantity < 1) return;
-
-  const token = localStorage.getItem("authToken");
-  if (!token) return;
-
-  setUpdatingId(cartItemId);
-
-  const previousCart = cart;
-
-  // optimistic update
-  setCart((prev) => {
-    if (!prev) return prev;
-    const updatedItems = prev.items.map((i) =>
-      i._id === cartItemId
-        ? { ...i, quantity: newQuantity, subtotal: i.price * newQuantity }
-        : i
-    );
-    const updatedSubtotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
-    const updatedCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
-    return {
-      ...prev,
-      items: updatedItems,
-      subtotal: updatedSubtotal,
-      itemCount: updatedCount,
-    };
-  });
-
-  try {
-    const res = await fetch(`${API_BASE}/cart/items/${cartItemId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ quantity: newQuantity }),
-    });
-    const data = await res.json();
-
-    if (!res.ok || !data.success) {
-      throw new Error(data?.message || "Failed to update quantity.");
-    }
-
-    // sync with server response if it returns the updated cart
-    if (data?.data?.cart) {
-      setCart(data.data.cart);
-    }
-  } catch (err: any) {
-    // revert on failure
-    setCart(previousCart);
-    alert(err.message || "Something went wrong updating quantity.");
-  } finally {
-    setUpdatingId(null);
+  const saveCartToStorage = (cartData: Cart | null) => {
+  if (!cartData) {
+    localStorage.removeItem(CART_STORAGE_KEY);
+    return;
   }
+  localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartData));
 };
+
+  const handleUpdateQuantity = async (
+    cartItemId: string,
+    newQuantity: number,
+  ) => {
+    if (newQuantity < 1) return;
+
+    const token = localStorage.getItem("authToken");
+    if (!token) return;
+
+    setUpdatingId(cartItemId);
+
+    const previousCart = cart;
+
+    // optimistic update
+    setCart((prev) => {
+      if (!prev) return prev;
+      const updatedItems = prev.items.map((i) =>
+        i._id === cartItemId
+          ? { ...i, quantity: newQuantity, subtotal: i.price * newQuantity }
+          : i,
+      );
+      const updatedSubtotal = updatedItems.reduce(
+        (sum, i) => sum + i.subtotal,
+        0,
+      );
+      const updatedCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
+      return {
+        ...prev,
+        items: updatedItems,
+        subtotal: updatedSubtotal,
+        itemCount: updatedCount,
+      };
+    });
+
+    try {
+      const res = await fetch(`${API_BASE}/cart/items/${cartItemId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ quantity: newQuantity }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data?.message || "Failed to update quantity.");
+      }
+
+       if (data?.data?.cart) {
+        setCart(data.data.cart);
+        saveCartToStorage(data.data.cart); 
+      } else {
+        setCart((prev) => {
+          saveCartToStorage(prev);     
+          return prev;
+        });
+      }
+    } catch (err: any) {
+      // revert on failure
+      setCart(previousCart);
+      saveCartToStorage(previousCart);  
+      alert(err.message || "Something went wrong updating quantity.");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const fetchCart = async () => {
     const token = localStorage.getItem("authToken");
@@ -112,18 +140,20 @@ const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => 
 
     try {
       const res = await fetch(`${API_BASE}/cart`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+});
       const data = await res.json();
 
       if (!res.ok || !data.success) {
         throw new Error(data?.message || "Failed to load cart.");
       }
 
-      setCart(data?.data?.cart || null);
+      const fetchedCart = data?.data?.cart || null;
+      setCart(fetchedCart);
+      saveCartToStorage(fetchedCart);          // 👈 add
     } catch (err: any) {
       setError(err.message || "Something went wrong loading your cart.");
     } finally {
@@ -135,7 +165,6 @@ const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => 
     if (open) {
       fetchCart();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   const handleDeleteItem = async (cartItemId: string) => {
@@ -150,7 +179,10 @@ const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => 
     setCart((prev) => {
       if (!prev) return prev;
       const updatedItems = prev.items.filter((i) => i._id !== cartItemId);
-      const updatedSubtotal = updatedItems.reduce((sum, i) => sum + i.subtotal, 0);
+      const updatedSubtotal = updatedItems.reduce(
+        (sum, i) => sum + i.subtotal,
+        0,
+      );
       const updatedCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
       return {
         ...prev,
@@ -160,27 +192,32 @@ const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => 
       };
     });
 
-    try {
+   try {
       const res = await fetch(`${API_BASE}/cart/items/${cartItemId}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+  method: "DELETE",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  },
+});
       const data = await res.json();
 
       if (!res.ok || !data.success) {
         throw new Error(data?.message || "Failed to remove item.");
       }
 
-      // if backend returns the updated cart, sync with it (more accurate than optimistic calc)
       if (data?.data?.cart) {
         setCart(data.data.cart);
+        saveCartToStorage(data.data.cart);     // 👈 add
+      } else {
+        setCart((prev) => {
+          saveCartToStorage(prev);             // 👈 add
+          return prev;
+        });
       }
     } catch (err: any) {
-      // revert on failure
       setCart(previousCart);
+      saveCartToStorage(previousCart);         // 👈 add
       alert(err.message || "Something went wrong removing the item.");
     } finally {
       setDeletingId(null);
@@ -191,7 +228,7 @@ const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => 
 
   const items = cart?.items || [];
   const subtotal = cart?.subtotal || 0;
-  const delivery = items.length > 0 ? 5.99 : 0;
+  const delivery = items.length > 0 ? 0 : 0;
   const tax = +(subtotal * 0.08).toFixed(2);
   const total = subtotal + delivery + tax;
 
@@ -209,7 +246,10 @@ const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => 
         <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
           <div className="flex items-center gap-2 text-lg font-medium font-playfair">
             <ShoppingBag size={20} className="text-[#00BC7D]" />
-            Your Cart <span className="text-[#62748E] text-sm">({cart?.itemCount || 0})</span>
+            Your Cart{" "}
+            <span className="text-[#62748E] text-sm">
+              ({cart?.itemCount || 0})
+            </span>
           </div>
 
           <button onClick={onClose}>
@@ -244,61 +284,72 @@ const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => 
                     </div>
                   )}
 
-                <div className="flex-1 min-w-0">
-  <div className="flex justify-between items-start gap-2">
-    <div className="min-w-0">
-      <h3 className="font-playfair text-lg text-white truncate">
-        {item.name}
-      </h3>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start gap-2">
+                      <div className="min-w-0">
+                        <h3 className="font-playfair text-lg text-white truncate">
+                          {item.name}
+                        </h3>
 
-      <p className="text-[#94A3B8] text-sm mt-1">${item.price.toFixed(2)} each</p>
-    </div>
+                        <p className="text-[#94A3B8] text-sm mt-1">
+                          ${item.price.toFixed(2)} each
+                        </p>
+                      </div>
 
-    <button
-      onClick={() => handleDeleteItem(item._id)}
-      disabled={deletingId === item._id}
-      className="text-[#94A3B8] hover:text-red-500 disabled:opacity-50 shrink-0"
-    >
-      {deletingId === item._id ? (
-        <Loader2 size={16} className="animate-spin" />
-      ) : (
-        <Trash2 size={18} />
-      )}
-    </button>
-  </div>
+                      <button
+                        onClick={() => handleDeleteItem(item._id)}
+                        disabled={deletingId === item._id}
+                        className="text-[#94A3B8] hover:text-red-500 disabled:opacity-50 shrink-0"
+                      >
+                        {deletingId === item._id ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Trash2 size={18} />
+                        )}
+                      </button>
+                    </div>
 
-  <div className="flex justify-between items-center mt-4">
-    <p className="text-[#00BC7D] font-medium">
-      ${item.subtotal.toFixed(2)}
-    </p>
+                    <div className="flex justify-between items-center mt-4">
+                      <p className="text-[#00BC7D] font-medium">
+                        ${item.subtotal.toFixed(2)}
+                      </p>
 
-    <div className="flex items-center border border-[#1E293B] rounded-lg overflow-hidden">
-      <button
-        onClick={() => handleUpdateQuantity(item._id, item.quantity - 1)}
-        disabled={updatingId === item._id || item.quantity <= 1}
-        className="px-3 py-2 text-[#94A3B8] disabled:opacity-40"
-      >
-        <Minus size={14} />
-      </button>
+                      <div className="flex items-center border border-[#1E293B] rounded-lg overflow-hidden">
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(item._id, item.quantity - 1)
+                          }
+                          disabled={
+                            updatingId === item._id || item.quantity <= 1
+                          }
+                          className="px-3 py-2 text-[#94A3B8] disabled:opacity-40"
+                        >
+                          <Minus size={14} />
+                        </button>
 
-      <span className="px-4 text-white min-w-[32px] text-center">
-        {updatingId === item._id ? (
-          <Loader2 size={14} className="animate-spin mx-auto" />
-        ) : (
-          item.quantity
-        )}
-      </span>
+                        <span className="px-4 text-white min-w-[32px] text-center">
+                          {updatingId === item._id ? (
+                            <Loader2
+                              size={14}
+                              className="animate-spin mx-auto"
+                            />
+                          ) : (
+                            item.quantity
+                          )}
+                        </span>
 
-      <button
-        onClick={() => handleUpdateQuantity(item._id, item.quantity + 1)}
-        disabled={updatingId === item._id}
-        className="px-3 py-2 text-[#94A3B8] disabled:opacity-40"
-      >
-        <Plus size={14} />
-      </button>
-    </div>
-  </div>
-</div>
+                        <button
+                          onClick={() =>
+                            handleUpdateQuantity(item._id, item.quantity + 1)
+                          }
+                          disabled={updatingId === item._id}
+                          className="px-3 py-2 text-[#94A3B8] disabled:opacity-40"
+                        >
+                          <Plus size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -330,7 +381,19 @@ const handleUpdateQuantity = async (cartItemId: string, newQuantity: number) => 
               </div>
 
               <button
-                onClick={() => navigate("/customer/dashboard/checkout")}
+                onClick={() => {
+                  localStorage.setItem(
+                    "checkoutSummary",
+                    JSON.stringify({
+                      subtotal,
+                      deliveryFee: delivery,
+                      tax,
+                      total,
+                    }),
+                  );
+
+                  navigate("/customer/dashboard/checkout");
+                }}
                 className="mt-6 w-full bg-[#009966] py-4 rounded-lg text-white font-medium flex items-center justify-center gap-2"
               >
                 Checkout

@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import VoucherSection from "./VoucherSection";
+import AddCardModal from "./AddCardModal";
 
 type WalletData = {
   balance: number;
@@ -263,13 +264,13 @@ export default function WalletPayments() {
       year: "numeric",
     });
 
-    const formatCardNumber = (value: string) => {
-  return value
-    .replace(/\D/g, "")          // Only digits
-    .slice(0, 16)                // Max 16 digits
-    .replace(/(.{4})/g, "$1 ")
-    .trim();
-};
+  const formatCardNumber = (value: string) => {
+    return value
+      .replace(/\D/g, "") // Only digits
+      .slice(0, 16) // Max 16 digits
+      .replace(/(.{4})/g, "$1 ")
+      .trim();
+  };
 
   const formatType = (type: string) =>
     type
@@ -536,11 +537,11 @@ export default function WalletPayments() {
 
     // Optimistic update
     setCards((prev) =>
-  prev.map((c) => ({
-    ...c,
-    isDefault: c.cardId === cardId,
-  })),
-);
+      prev.map((c) => ({
+        ...c,
+        isDefault: c.cardId === cardId,
+      })),
+    );
 
     try {
       const response = await fetch(
@@ -598,12 +599,16 @@ export default function WalletPayments() {
               <div className="flex items-center gap-4 mt-3 flex-wrap">
                 <span className="flex items-center gap-1.5 text-sm text-[#6A7282]">
                   <Star size={14} className="text-[#F59E0B]" />
-                  {walletLoading ? "—" : wallet?.rewardPoints ?? 0} reward points
+                  {walletLoading ? "—" : (wallet?.rewardPoints ?? 0)} reward
+                  points
                 </span>
 
                 <span className="flex items-center gap-1.5 text-sm text-[#6A7282]">
                   <Crown size={14} className="text-[#009966]" />
-                  {walletLoading ? "—" : wallet?.membershipTier ?? "Free"} tier
+                  {walletLoading
+                    ? "—"
+                    : (wallet?.membershipTier ?? "Free")}{" "}
+                  tier
                 </span>
               </div>
 
@@ -690,8 +695,8 @@ export default function WalletPayments() {
                     <div className="flex items-center gap-3">
                       {!card.isDefault && (
                         <button
-                        onClick={() => handleSetDefaultCard(card.cardId)}
-disabled={settingDefaultId === card.cardId}
+                          onClick={() => handleSetDefaultCard(card.cardId)}
+                          disabled={settingDefaultId === card.cardId}
                           className="text-xs text-[#009966] hover:underline disabled:opacity-50"
                         >
                           {settingDefaultId === card._id ? (
@@ -704,7 +709,7 @@ disabled={settingDefaultId === card.cardId}
 
                       <button
                         onClick={() => handleDeleteCard(card.cardId)}
-disabled={deletingCardId === card.cardId}
+                        disabled={deletingCardId === card.cardId}
                         className="text-[#94A3B8] hover:text-red-500 disabled:opacity-50"
                         aria-label="Delete card"
                       >
@@ -821,255 +826,180 @@ disabled={deletingCardId === card.cardId}
         </div>
       </div>
 
-      {showTopUpModal && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-semibold text-[#0F172A]">
-                Top Up Wallet
-              </h2>
+{showTopUpModal && (
+  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 !mt-0 px-4">
+    <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 w-full max-w-md">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="font-playfair text-xl text-white">
+          Top Up Wallet
+        </h2>
 
-              <button
-                onClick={() => setShowTopUpModal(false)}
-                disabled={topUpLoading}
-                className="text-[#94A3B8] hover:text-[#0F172A]"
-              >
-                <X size={20} />
-              </button>
-            </div>
+        <button
+          onClick={() => setShowTopUpModal(false)}
+          disabled={topUpLoading}
+          className="text-[#94A3B8] hover:text-white"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
-            <label className="text-sm text-[#475569]">Amount</label>
-            <div className="mt-1 mb-4 relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">
-                $
-              </span>
-              <input
-                type="number"
-                min="1"
-                step="0.01"
-                placeholder="0.00"
-                value={topUpAmount}
-                onChange={(e) => setTopUpAmount(e.target.value)}
-                className="w-full border border-[#E5E7EB] rounded-lg pl-8 pr-4 py-3 outline-none"
-              />
-            </div>
+      <label className="text-sm text-[#94A3B8]">Amount</label>
 
-            <label className="text-sm text-[#475569]">Payment Method</label>
-            <select
-              value={topUpMethod}
-              onChange={(e) => setTopUpMethod(e.target.value)}
-              className="mt-1 w-full border border-[#E5E7EB] rounded-lg px-4 py-3 outline-none"
-            >
-              {PAYMENT_METHODS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
+      <div className="mt-1 mb-4 relative">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">
+          $
+        </span>
 
-            {topUpError && (
-              <p className="mt-3 text-sm text-red-500">{topUpError}</p>
-            )}
+        <input
+          type="number"
+          min="1"
+          step="0.01"
+          placeholder="0.00"
+          value={topUpAmount}
+          onChange={(e) => setTopUpAmount(e.target.value)}
+          className="w-full bg-[#020618] border border-[#1E293B] rounded-lg pl-8 pr-4 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
+        />
+      </div>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowTopUpModal(false)}
-                disabled={topUpLoading}
-                className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
+      <label className="text-sm text-[#94A3B8]">
+        Payment Method
+      </label>
 
-              <button
-                onClick={handleTopUp}
-                disabled={topUpLoading}
-                className="bg-[#009966] text-white px-5 py-2 rounded-lg disabled:opacity-60"
-              >
-                {topUpLoading ? "Processing..." : "Top Up"}
-              </button>
-            </div>
-          </div>
-        </div>
+      <select
+        value={topUpMethod}
+        onChange={(e) => setTopUpMethod(e.target.value)}
+        className="mt-1 w-full bg-[#020618] border border-[#1E293B] rounded-lg px-4 py-3 text-white outline-none focus:border-[#009966]"
+      >
+        {PAYMENT_METHODS.map((m) => (
+          <option
+            key={m.value}
+            value={m.value}
+            className="bg-[#020618]"
+          >
+            {m.label}
+          </option>
+        ))}
+      </select>
+
+      {topUpError && (
+        <p className="mt-3 text-sm text-red-400">
+          {topUpError}
+        </p>
       )}
 
-      {showWithdrawModal && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-semibold text-[#0F172A]">
-                Withdraw Funds
-              </h2>
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setShowTopUpModal(false)}
+          disabled={topUpLoading}
+          className="border border-[#1E293B] text-[#94A3B8] hover:bg-[#1E293B] px-4 py-2 rounded-lg"
+        >
+          Cancel
+        </button>
 
-              <button
-                onClick={() => setShowWithdrawModal(false)}
-                disabled={withdrawLoading}
-                className="text-[#94A3B8] hover:text-[#0F172A]"
-              >
-                <X size={20} />
-              </button>
-            </div>
+        <button
+          onClick={handleTopUp}
+          disabled={topUpLoading}
+          className="bg-[#009966] hover:bg-[#00b377] text-white px-5 py-2 rounded-lg disabled:opacity-60"
+        >
+          {topUpLoading ? "Processing..." : "Top Up"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
-            <p className="text-sm text-[#6A7282] mb-4">
-              Available balance:{" "}
-              <span className="font-medium text-[#0F172A]">
-                {formattedBalance}
-              </span>
-            </p>
+{showWithdrawModal && (
+  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 !mt-0 px-4">
+    <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 w-full max-w-md">
+      <div className="flex items-center justify-between mb-5">
+        <h2 className="font-playfair text-xl text-white">
+          Withdraw Funds
+        </h2>
 
-            <label className="text-sm text-[#475569]">Amount</label>
-            <div className="mt-1 mb-2 relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">
-                $
-              </span>
-              <input
-                type="number"
-                min="1"
-                step="0.01"
-                placeholder="0.00"
-                value={withdrawAmount}
-                onChange={(e) => setWithdrawAmount(e.target.value)}
-                className="w-full border border-[#E5E7EB] rounded-lg pl-8 pr-4 py-3 outline-none"
-              />
-            </div>
+        <button
+          onClick={() => setShowWithdrawModal(false)}
+          disabled={withdrawLoading}
+          className="text-[#94A3B8] hover:text-white"
+        >
+          <X size={20} />
+        </button>
+      </div>
 
-            {withdrawError && (
-              <p className="mt-3 text-sm text-red-500">{withdrawError}</p>
-            )}
+      <p className="text-sm text-[#94A3B8] mb-4">
+        Available balance:{" "}
+        <span className="font-medium text-white">
+          {formattedBalance}
+        </span>
+      </p>
 
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowWithdrawModal(false)}
-                disabled={withdrawLoading}
-                className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
+      <label className="text-sm text-[#94A3B8]">
+        Amount
+      </label>
 
-              <button
-                onClick={handleWithdraw}
-                disabled={withdrawLoading}
-                className="bg-[#009966] text-white px-5 py-2 rounded-lg disabled:opacity-60"
-              >
-                {withdrawLoading ? "Processing..." : "Withdraw"}
-              </button>
-            </div>
-          </div>
-        </div>
+      <div className="mt-1 mb-2 relative">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">
+          $
+        </span>
+
+        <input
+          type="number"
+          min="1"
+          step="0.01"
+          placeholder="0.00"
+          value={withdrawAmount}
+          onChange={(e) => setWithdrawAmount(e.target.value)}
+          className="w-full bg-[#020618] border border-[#1E293B] rounded-lg pl-8 pr-4 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
+        />
+      </div>
+
+      {withdrawError && (
+        <p className="mt-3 text-sm text-red-400">
+          {withdrawError}
+        </p>
       )}
 
-      {showAddCardModal && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-xl font-semibold text-[#0F172A]">
-                Add New Card
-              </h2>
+      <div className="flex justify-end gap-3 mt-6">
+        <button
+          onClick={() => setShowWithdrawModal(false)}
+          disabled={withdrawLoading}
+          className="border border-[#1E293B] text-[#94A3B8] hover:bg-[#1E293B] px-4 py-2 rounded-lg"
+        >
+          Cancel
+        </button>
 
-              <button
-                onClick={() => setShowAddCardModal(false)}
-                disabled={addCardLoading}
-                className="text-[#94A3B8] hover:text-[#0F172A]"
-              >
-                <X size={20} />
-              </button>
-            </div>
+        <button
+          onClick={handleWithdraw}
+          disabled={withdrawLoading}
+          className="bg-[#009966] hover:bg-[#00b377] text-white px-5 py-2 rounded-lg disabled:opacity-60"
+        >
+          {withdrawLoading ? "Processing..." : "Withdraw"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
-            <label className="text-sm text-[#475569]">Card Number</label>
-
-<input
-  placeholder="1234 5678 9012 3456"
-  value={formatCardNumber(cardNumber)}
-  onChange={(e) =>
-    setCardNumber(
-      e.target.value.replace(/\D/g, "").slice(0, 16)
-    )
-  }
-  maxLength={19} // 16 digits + 3 spaces
-  className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 mb-4 outline-none"
+     <AddCardModal
+  open={showAddCardModal}
+  onClose={() => setShowAddCardModal(false)}
+  cardNumber={cardNumber}
+  setCardNumber={setCardNumber}
+  expiryMonth={expiryMonth}
+  setExpiryMonth={setExpiryMonth}
+  expiryYear={expiryYear}
+  setExpiryYear={setExpiryYear}
+  cardHolder={cardHolder}
+  setCardHolder={setCardHolder}
+  cardBrand={cardBrand}
+  setCardBrand={setCardBrand}
+  cardIsDefault={cardIsDefault}
+  setCardIsDefault={setCardIsDefault}
+  brands={BRANDS}
+  loading={addCardLoading}
+  error={addCardError}
+  formatCardNumber={formatCardNumber}
+  onSubmit={handleAddCard}
 />
-
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="text-sm text-[#475569]">Expiry Month</label>
-                <input
-                  placeholder="MM"
-                  maxLength={2}
-                  value={expiryMonth}
-                  onChange={(e) =>
-                    setExpiryMonth(e.target.value.replace(/\D/g, ""))
-                  }
-                  className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm text-[#475569]">Expiry Year</label>
-                <input
-                  placeholder="YYYY"
-                  maxLength={4}
-                  value={expiryYear}
-                  onChange={(e) =>
-                    setExpiryYear(e.target.value.replace(/\D/g, ""))
-                  }
-                  className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 outline-none"
-                />
-              </div>
-            </div>
-
-            <label className="text-sm text-[#475569]">Card Holder</label>
-            <input
-              placeholder="Full name on card"
-              value={cardHolder}
-              onChange={(e) => setCardHolder(e.target.value)}
-              className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 mb-4 outline-none"
-            />
-
-            <label className="text-sm text-[#475569]">Brand</label>
-            <select
-              value={cardBrand}
-              onChange={(e) => setCardBrand(e.target.value)}
-              className="w-full border border-[#E5E7EB] rounded-lg px-4 py-3 mt-1 mb-4 outline-none"
-            >
-              {BRANDS.map((b) => (
-                <option key={b} value={b}>
-                  {b}
-                </option>
-              ))}
-            </select>
-
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={cardIsDefault}
-                onChange={(e) => setCardIsDefault(e.target.checked)}
-              />
-              Set as default card
-            </label>
-
-            {addCardError && (
-              <p className="mt-3 text-sm text-red-500">{addCardError}</p>
-            )}
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => setShowAddCardModal(false)}
-                disabled={addCardLoading}
-                className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleAddCard}
-                disabled={addCardLoading}
-                className="bg-[#009966] text-white px-5 py-2 rounded-lg disabled:opacity-60"
-              >
-                {addCardLoading ? "Saving..." : "Add Card"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

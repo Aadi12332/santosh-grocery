@@ -9,6 +9,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import CartModal from "./CartModal";
+import { useNavigate } from "react-router-dom";
 
 const BASE_URL = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
 
@@ -43,6 +44,7 @@ interface WishlistItem {
 
 export default function SavedItems() {
   const [openCart, setOpenCart] = useState(false);
+  const navigate = useNavigate();
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [items, setItems] = useState<WishlistItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -200,7 +202,7 @@ export default function SavedItems() {
             </button>
           )}
 
-          <button className="flex items-center gap-2 border border-[#E5E7EB] rounded-lg w-fit lg:rounded-xl px-4 py-2 bg-white shadow-sm">
+          <button onClick={()=>navigate("/customer/dashboard")} className="flex items-center gap-2 border border-[#E5E7EB] rounded-lg w-fit lg:rounded-xl px-4 py-2 bg-white shadow-sm">
             <ShoppingBag size={18} />
             Continue Shopping
           </button>

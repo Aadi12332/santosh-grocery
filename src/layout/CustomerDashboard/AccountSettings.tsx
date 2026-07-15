@@ -21,6 +21,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import AddressModal from "./AddressModal";
 
 type UserProfile = {
   firstName: string;
@@ -231,7 +232,10 @@ export default function AccountSettings() {
     const token = localStorage.getItem("authToken");
 
     if (!token) {
-      alert("Authentication token not found.");
+      setMessage({
+        type: "error",
+        text: "Authentication token not found.",
+      });
       return;
     }
 
@@ -289,9 +293,15 @@ export default function AccountSettings() {
 
       setIsEditing(false);
 
-      alert(data.message || "Profile updated successfully.");
+      setMessage({
+        type: "success",
+        text: data.message || "Profile updated successfully.",
+      });
     } catch (error) {
-      alert(error instanceof Error ? error.message : "Something went wrong.");
+      setMessage({
+        type: "error",
+        text: error instanceof Error ? error.message : "Something went wrong.",
+      });
     }
   };
 
@@ -342,9 +352,15 @@ export default function AccountSettings() {
         }),
       );
 
-      alert(data.message || "Profile image updated.");
+      setMessage({
+        type: "success",
+        text: data.message || "Profile image updated.",
+      });
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Something went wrong.");
+      setMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Something went wrong.",
+      });
     }
   };
 
@@ -362,13 +378,19 @@ export default function AccountSettings() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("Maximum file size is 5MB.");
+      setMessage({
+        type: "error",
+        text: "Maximum file size is 5MB.",
+      });
       e.target.value = "";
       return;
     }
 
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      alert("Only image files are allowed (jpg, png, webp, gif).");
+      setMessage({
+        type: "error",
+        text: "Only image files are allowed (jpg, png, webp, gif).",
+      });
       e.target.value = "";
       return;
     }
@@ -453,11 +475,11 @@ export default function AccountSettings() {
       setTimeout(() => {
         setShowPasswordSuccessModal(false);
 
-        localStorage.removeItem("authToken")
-        localStorage.removeItem("isLoggedIn")
-        localStorage.removeItem("user")
-        localStorage.removeItem("activeTab")
-        localStorage.setItem("role", "customer")
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("user");
+        localStorage.removeItem("activeTab");
+        localStorage.setItem("role", "customer");
 
         navigate("/role-wise-sign-in?role=customer");
       }, 2000);
@@ -500,7 +522,7 @@ export default function AccountSettings() {
         );
       }
 
-    //   localStorage.clear();
+      //   localStorage.clear();
 
       navigate("/role-wise-sign-in?role=customer");
     } catch (err) {
@@ -698,6 +720,24 @@ export default function AccountSettings() {
       console.error(err);
     }
   };
+
+  const [message, setMessage] = useState({
+    type: "",
+    text: "",
+  });
+
+  useEffect(() => {
+  if (!message.text) return;
+
+  const timer = setTimeout(() => {
+    setMessage({
+      type: "",
+      text: "",
+    });
+  }, 3000);
+
+  return () => clearTimeout(timer);
+}, [message]);
 
   useEffect(() => {
     void fetchProfile();
@@ -914,6 +954,18 @@ export default function AccountSettings() {
           </button>
         ))}
       </div>
+
+      {message.text && (
+        <p
+          className={`text-sm p-3 w-full rounded-lg ${
+            message.type === "success"
+              ? "text-green-600 bg-green-200"
+              : "text-red-500 bg-red-200"
+          }`}
+        >
+          {message.text}
+        </p>
+      )}
 
       {tab === "Profile" && (
         <div className="border border-[#E5E7EB] lg:rounded-xl rounded-lg lg:p-8 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] space-y-8">
@@ -1233,135 +1285,134 @@ export default function AccountSettings() {
 
             <div className="border-t border-[#E5E7EB] my-6"></div>
 
-          <div className="">
-            <div className="flex items-center gap-3 mb-6">
-              <Globe className="text-blue-500" size={20} />
-              <h3 className="font-playfair text-lg">Preferences</h3>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <label className="text-sm text-[#475569]">Language</label>
-
-                <select
-                  value={preferences.language}
-                  onChange={(e) =>
-                    setPreferences((prev) => ({
-                      ...prev,
-                      language: e.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full border border-[#E5E7EB] rounded-lg px-4 py-3 outline-none"
-                >
-                  <option value="en">English</option>
-                  <option value="hi">Hindi</option>
-                </select>
+            <div className="">
+              <div className="flex items-center gap-3 mb-6">
+                <Globe className="text-blue-500" size={20} />
+                <h3 className="font-playfair text-lg">Preferences</h3>
               </div>
 
-              <div>
-                <label className="text-sm text-[#475569]">Currency</label>
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm text-[#475569]">Language</label>
 
-                <select
-                  value={preferences.currency}
-                  onChange={(e) =>
-                    setPreferences((prev) => ({
-                      ...prev,
-                      currency: e.target.value,
-                    }))
-                  }
-                  className="mt-2 w-full border border-[#E5E7EB] rounded-lg px-4 py-3 outline-none"
+                  <select
+                    value={preferences.language}
+                    onChange={(e) =>
+                      setPreferences((prev) => ({
+                        ...prev,
+                        language: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full border border-[#E5E7EB] rounded-lg px-4 py-3 outline-none"
+                  >
+                    <option value="en">English</option>
+                    <option value="hi">Hindi</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-sm text-[#475569]">Currency</label>
+
+                  <select
+                    value={preferences.currency}
+                    onChange={(e) =>
+                      setPreferences((prev) => ({
+                        ...prev,
+                        currency: e.target.value,
+                      }))
+                    }
+                    className="mt-2 w-full border border-[#E5E7EB] rounded-lg px-4 py-3 outline-none"
+                  >
+                    <option value="USD">USD</option>
+                    <option value="INR">INR</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="border-t border-[#E5E7EB] my-6"></div>
+
+              <div className="flex items-center gap-3">
+                <Moon className="text-purple-500" />
+                <h3 className="font-playfair text-lg">Appearance</h3>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6 mt-5">
+                <label
+                  className={`border-2 rounded-lg lg:rounded-xl p-6 text-center cursor-pointer transition ${
+                    preferences.darkMode
+                      ? "border-[#009966] bg-[#F0FDF4]"
+                      : "border-[#E5E7EB]"
+                  }`}
                 >
-                  <option value="USD">USD</option>
-                  <option value="INR">INR</option>
-                  <option value="EUR">EUR</option>
-                </select>
+                  <input
+                    type="radio"
+                    name="theme"
+                    checked={preferences.darkMode}
+                    onChange={() =>
+                      setPreferences((prev) => ({
+                        ...prev,
+                        darkMode: true,
+                      }))
+                    }
+                    className="hidden"
+                  />
+                  <Moon
+                    className={`mx-auto mb-2 ${
+                      preferences.darkMode ? "text-[#009966]" : ""
+                    }`}
+                  />
+                  Dark Mode
+                </label>
+                <label
+                  className={`border-2 rounded-lg lg:rounded-xl p-6 text-center cursor-pointer transition ${
+                    !preferences.darkMode
+                      ? "border-[#009966] bg-[#F0FDF4]"
+                      : "border-[#E5E7EB]"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="theme"
+                    checked={!preferences.darkMode}
+                    onChange={() =>
+                      setPreferences((prev) => ({
+                        ...prev,
+                        darkMode: false,
+                      }))
+                    }
+                    className="hidden"
+                  />
+                  <Smartphone
+                    className={`mx-auto mb-2 ${
+                      !preferences.darkMode ? "text-[#009966]" : ""
+                    }`}
+                  />
+                  Light Mode
+                </label>
+              </div>
+
+              {preferencesError && (
+                <p className="text-red-500 text-sm mt-5">{preferencesError}</p>
+              )}
+
+              {preferencesSuccess && (
+                <p className="text-green-600 text-sm mt-5">
+                  {preferencesSuccess}
+                </p>
+              )}
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={handleUpdatePreferences}
+                  disabled={preferencesLoading}
+                  className="bg-[#009966] text-white px-6 py-3 rounded-lg disabled:opacity-60"
+                >
+                  {preferencesLoading ? "Updating..." : "Update Preferences"}
+                </button>
               </div>
             </div>
-
-            <div className="border-t border-[#E5E7EB] my-6"></div>
-
-            <div className="flex items-center gap-3">
-              <Moon className="text-purple-500" />
-              <h3 className="font-playfair text-lg">Appearance</h3>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6 mt-5">
-              <label
-                className={`border-2 rounded-lg lg:rounded-xl p-6 text-center cursor-pointer transition ${
-                  preferences.darkMode
-                    ? "border-[#009966] bg-[#F0FDF4]"
-                    : "border-[#E5E7EB]"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="theme"
-                  checked={preferences.darkMode}
-                  onChange={() =>
-                    setPreferences((prev) => ({
-                      ...prev,
-                      darkMode: true,
-                    }))
-                  }
-                  className="hidden"
-                />
-                <Moon
-                  className={`mx-auto mb-2 ${
-                    preferences.darkMode ? "text-[#009966]" : ""
-                  }`}
-                />
-                Dark Mode
-              </label>
-              <label
-                className={`border-2 rounded-lg lg:rounded-xl p-6 text-center cursor-pointer transition ${
-                  !preferences.darkMode
-                    ? "border-[#009966] bg-[#F0FDF4]"
-                    : "border-[#E5E7EB]"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="theme"
-                  checked={!preferences.darkMode}
-                  onChange={() =>
-                    setPreferences((prev) => ({
-                      ...prev,
-                      darkMode: false,
-                    }))
-                  }
-                  className="hidden"
-                />
-                <Smartphone
-                  className={`mx-auto mb-2 ${
-                    !preferences.darkMode ? "text-[#009966]" : ""
-                  }`}
-                />
-                Light Mode
-              </label>
-            </div>
-
-            {preferencesError && (
-              <p className="text-red-500 text-sm mt-5">{preferencesError}</p>
-            )}
-
-            {preferencesSuccess && (
-              <p className="text-green-600 text-sm mt-5">
-                {preferencesSuccess}
-              </p>
-            )}
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={handleUpdatePreferences}
-                disabled={preferencesLoading}
-                className="bg-[#009966] text-white px-6 py-3 rounded-lg disabled:opacity-60"
-              >
-                {preferencesLoading ? "Updating..." : "Update Preferences"}
-              </button>
-            </div>
           </div>
-          </div>
-
 
           <div className="border border-red-200 bg-red-50 rounded-lg lg:rounded-xl lg:p-6 p-3">
             <div className="flex items-center gap-3 mb-5">
@@ -1533,133 +1584,22 @@ export default function AccountSettings() {
         </div>
       )}
 
-      {showAddressModal && (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-5">
-              {isEditingAddress ? "Edit Address" : "Add Address"}
-            </h2>
-
-            <input
-              placeholder="Label (Home/Office)"
-              value={addressForm.label}
-              onChange={(e) =>
-                setAddressForm((prev) => ({ ...prev, label: e.target.value }))
-              }
-              className="w-full border rounded-lg p-3 mb-2.5"
-            />
-
-            <input
-              placeholder="Full Name"
-              value={addressForm.fullName}
-              onChange={(e) =>
-                setAddressForm((prev) => ({
-                  ...prev,
-                  fullName: e.target.value,
-                }))
-              }
-              className="w-full border rounded-lg p-3 mb-2.5"
-            />
-
-            <input
-              placeholder="Phone"
-              value={addressForm.phone}
-              onChange={(e) =>
-                setAddressForm((prev) => ({ ...prev, phone: e.target.value }))
-              }
-              className="w-full border rounded-lg p-3 mb-2.5"
-            />
-
-            <input
-              placeholder="Street"
-              value={addressForm.street}
-              onChange={(e) =>
-                setAddressForm((prev) => ({ ...prev, street: e.target.value }))
-              }
-              className="w-full border rounded-lg p-3 !text-black mb-2.5"
-            />
-
-            <input
-              placeholder="City"
-              value={addressForm.city}
-              onChange={(e) =>
-                setAddressForm((prev) => ({ ...prev, city: e.target.value }))
-              }
-              className="w-full border rounded-lg p-3 !text-black mb-2.5"
-            />
-
-            <input
-              placeholder="zipCode"
-              value={addressForm.zipCode}
-              onChange={(e) =>
-                setAddressForm((prev) => ({ ...prev, zipCode: e.target.value }))
-              }
-              className="w-full border rounded-lg p-3 !text-black mb-2.5"
-            />
-
-            <input
-              placeholder="State"
-              value={addressForm.state}
-              onChange={(e) =>
-                setAddressForm((prev) => ({ ...prev, state: e.target.value }))
-              }
-              className="w-full border rounded-lg p-3 mb-2.5"
-            />
-
-            <input
-              placeholder="Country"
-              value={addressForm.country}
-              onChange={(e) =>
-                setAddressForm((prev) => ({ ...prev, country: e.target.value }))
-              }
-              className="w-full border rounded-lg p-3 mb-2.5"
-            />
-
-            <label className="flex items-center gap-2 mt-2">
-              <input
-                type="checkbox"
-                checked={addressForm.isDefault}
-                className="w-4 h-4 accent-[#009966]"
-                onChange={(e) =>
-                  setAddressForm((prev) => ({
-                    ...prev,
-                    isDefault: e.target.checked,
-                  }))
-                }
-              />
-              Set as default address
-            </label>
-
-            {addressError && (
-              <p className="mt-3 text-sm text-red-500">{addressError}</p>
-            )}
-
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowAddressModal(false);
-                  setAddressError("");
-                  setEditingIndex(null);
-                  setIsEditingAddress(false);
-                  setAddressForm(EMPTY_ADDRESS_FORM);
-                }}
-                className="border px-4 py-2 rounded-lg"
-                disabled={addressSaving}
-              >
-                Cancel
-              </button>
-
-              <button
-                onClick={handleSaveAddress}
-                disabled={addressSaving}
-                className="bg-[#009966] text-white px-5 py-2 rounded-lg disabled:opacity-60"
-              >
-                {addressSaving ? "Saving..." : "Save"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+     <AddressModal
+  open={showAddressModal}
+  isEditing={isEditingAddress}
+  form={addressForm}
+  setForm={setAddressForm}
+  error={addressError}
+  loading={addressSaving}
+  onClose={() => {
+    setShowAddressModal(false);
+    setAddressError("");
+    setEditingIndex(null);
+    setIsEditingAddress(false);
+    setAddressForm(EMPTY_ADDRESS_FORM);
+  }}
+  onSave={handleSaveAddress}
+/>
 
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0">

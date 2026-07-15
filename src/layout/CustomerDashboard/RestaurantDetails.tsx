@@ -14,11 +14,9 @@ import {
   MapPin,
   Phone,
   Truck,
-  Link2,
   MessageCircle,
   Facebook,
   Twitter,
-  Copy,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -115,7 +113,9 @@ export default function RestaurantMenuDetails() {
   const [addedItemId, setAddedItemId] = useState<string | null>(null);
   const [cartError, setCartError] = useState<string | null>(null);
   const [openCart, setOpenCart] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<MenuItemApi | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<MenuItemApi | null>(
+    null,
+  );
 
   // Wishlist state
   const [isWishlisting, setIsWishlisting] = useState(false);
@@ -220,7 +220,7 @@ export default function RestaurantMenuDetails() {
       setOpenCart(true);
     } catch (err: unknown) {
       setCartError(
-        err instanceof Error ? err.message : "Unable to add item to cart."
+        err instanceof Error ? err.message : "Unable to add item to cart.",
       );
     } finally {
       setAddingItemId(null);
@@ -248,7 +248,7 @@ export default function RestaurantMenuDetails() {
         },
         body: JSON.stringify({
           // Note: Adjust itemType to "restaurant" if your backend expects that for this specific button
-          itemType: "product", 
+          itemType: "product",
           itemId: restaurantId,
         }),
       });
@@ -262,7 +262,7 @@ export default function RestaurantMenuDetails() {
       setIsWishlisted(true);
     } catch (err: unknown) {
       setCartError(
-        err instanceof Error ? err.message : "Unable to add to wishlist."
+        err instanceof Error ? err.message : "Unable to add to wishlist.",
       );
     } finally {
       setIsWishlisting(false);
@@ -312,6 +312,24 @@ export default function RestaurantMenuDetails() {
   const items = menuByCategory[activeTab] || [];
   const heroImage = restaurant.banner || restaurant.logo || FALLBACK_HERO_IMAGE;
 
+  const shareMore = async () => {
+    if (!shareUrl) return;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "You're invited!",
+          text: shareText,
+          url: shareUrl,
+        });
+      } catch {
+        // User cancelled
+      }
+    } else {
+      await handleCopyLink();
+    }
+  };
+
   return (
     <div className="bg-[#F8FAFC] min-h-screen">
       {/* Hero */}
@@ -339,9 +357,9 @@ export default function RestaurantMenuDetails() {
             >
               <Share2 size={16} />
             </button>
-            
+
             {/* UPDATED WISHLIST BUTTON */}
-            <button 
+            <button
               onClick={handleAddToWishlist}
               disabled={isWishlisting}
               className="w-10 h-10 rounded-full bg-[#00000066] flex items-center justify-center text-white hover:bg-[#00000099] transition disabled:opacity-70"
@@ -349,9 +367,9 @@ export default function RestaurantMenuDetails() {
               {isWishlisting ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : (
-                <Heart 
-                  size={16} 
-                  className={isWishlisted ? "fill-red-500 text-red-500" : ""} 
+                <Heart
+                  size={16}
+                  className={isWishlisted ? "fill-red-500 text-red-500" : ""}
                 />
               )}
             </button>
@@ -586,7 +604,10 @@ export default function RestaurantMenuDetails() {
 
               {restaurant.address && (
                 <div className="flex gap-3">
-                  <MapPin size={18} className="text-[#00A63E] shrink-0 mt-0.5" />
+                  <MapPin
+                    size={18}
+                    className="text-[#00A63E] shrink-0 mt-0.5"
+                  />
                   <div>
                     <p className="text-sm font-medium text-[#0F172A]">
                       Address
@@ -729,35 +750,16 @@ export default function RestaurantMenuDetails() {
               </a>
 
               <button
-                onClick={handleCopyLink}
-                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[#E5E7EB] hover:bg-[#F8FAFC] transition"
+                onClick={shareMore}
+                disabled={loading || !shareUrl}
+                className="flex flex-col items-center gap-2 p-4 rounded-xl border border-[#E5E7EB] hover:bg-[#F8FAFC] transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <div className="w-10 h-10 rounded-full bg-[#FEF9C3] flex items-center justify-center">
-                  {copied ? (
-                    <Check size={18} className="text-[#00A63E]" />
-                  ) : (
-                    <Copy size={18} className="text-[#CA8A04]" />
-                  )}
+                <div className="w-10 h-10 rounded-full bg-[#F1F5F9] flex items-center justify-center">
+                  <Share2 size={18} className="text-[#6A7282]" />
                 </div>
-                <span className="text-xs text-[#4A5565]">
-                  {copied ? "Copied!" : "Copy Link"}
-                </span>
-              </button>
-            </div>
 
-            <div className="px-5 pb-5">
-              <div className="flex items-center gap-2 bg-[#F1F5F9] rounded-lg px-3 py-2.5">
-                <Link2 size={14} className="text-[#94A3B8] shrink-0" />
-                <span className="text-xs text-[#6A7282] truncate flex-1">
-                  {shareUrl}
-                </span>
-                <button
-                  onClick={handleCopyLink}
-                  className="text-xs font-medium text-[#00A63E] shrink-0"
-                >
-                  Copy
-                </button>
-              </div>
+                <span className="text-xs text-[#4A5565]">More</span>
+              </button>
             </div>
           </div>
         </div>
