@@ -71,6 +71,8 @@ type OrderItem = {
 
 type OrderParty = {
   _id: string;
+  name?: string;
+  logo?: string | null;
   firstName?: string;
   lastName?: string;
   fullName?: string;
@@ -185,11 +187,11 @@ export default function OrderHistory() {
   const [invoiceLoading, setInvoiceLoading] = useState(false);
   const [invoiceError, setInvoiceError] = useState("");
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-const [showRefundModal, setShowRefundModal] = useState(false);
-const [refundReason, setRefundReason] = useState("");
-const [refundSubmitting, setRefundSubmitting] = useState(false);
-const [refundError, setRefundError] = useState("");
-const [refundSuccess, setRefundSuccess] = useState(false);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [refundReason, setRefundReason] = useState("");
+  const [refundSubmitting, setRefundSubmitting] = useState(false);
+  const [refundError, setRefundError] = useState("");
+  const [refundSuccess, setRefundSuccess] = useState(false);
   const [tab, setTab] = useState("all");
   const [showFilter, setShowFilter] = useState(false);
   const [status, setStatus] = useState("all");
@@ -201,65 +203,65 @@ const [refundSuccess, setRefundSuccess] = useState(false);
   const [trackingError, setTrackingError] = useState("");
 
   const REFUND_REASONS = [
-  "Wrong item",
-  "Item damaged",
-  "Item missing",
-  "Order arrived late",
-  "Changed my mind",
-  "Other",
-];
+    "Wrong item",
+    "Item damaged",
+    "Item missing",
+    "Order arrived late",
+    "Changed my mind",
+    "Other",
+  ];
 
-const submitRefundRequest = async () => {
-  if (!selectedOrder) return;
-  setRefundError("");
+  const submitRefundRequest = async () => {
+    if (!selectedOrder) return;
+    setRefundError("");
 
-  if (!refundReason.trim()) {
-    setRefundError("Please select or enter a reason.");
-    return;
-  }
-
-  const token = localStorage.getItem("authToken");
-  if (!token) {
-    setRefundError("Authentication token not found.");
-    return;
-  }
-
-  setRefundSubmitting(true);
-
-  try {
-    const response = await fetch(
-      `${API_BASE}/orders/my/${selectedOrder._id}/refund`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ reason: refundReason }),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data?.message || "Failed to submit refund request.");
+    if (!refundReason.trim()) {
+      setRefundError("Please select or enter a reason.");
+      return;
     }
 
-    setRefundSuccess(true);
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setRefundError("Authentication token not found.");
+      return;
+    }
 
-    setTimeout(() => {
-      setShowRefundModal(false);
-      setRefundSuccess(false);
-      setRefundReason("");
-    }, 1800);
-  } catch (err) {
-    setRefundError(
-      err instanceof Error ? err.message : "Something went wrong.",
-    );
-  } finally {
-    setRefundSubmitting(false);
-  }
-};
+    setRefundSubmitting(true);
+
+    try {
+      const response = await fetch(
+        `${API_BASE}/orders/my/${selectedOrder._id}/refund`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ reason: refundReason }),
+        },
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to submit refund request.");
+      }
+
+      setRefundSuccess(true);
+
+      setTimeout(() => {
+        setShowRefundModal(false);
+        setRefundSuccess(false);
+        setRefundReason("");
+      }, 1800);
+    } catch (err) {
+      setRefundError(
+        err instanceof Error ? err.message : "Something went wrong.",
+      );
+    } finally {
+      setRefundSubmitting(false);
+    }
+  };
 
   const fetchInvoice = async (orderId: string) => {
     setShowInvoiceModal(true);
@@ -729,54 +731,86 @@ const submitRefundRequest = async () => {
                 <div
                   key={o._id}
                   onClick={() => fetchOrderDetails(o._id)}
-                  className={`flex justify-between border border-[#E5E7EB] lg:rounded-xl rounded-lg lg:p-4 p-2 bg-white cursor-pointer transition
-                            shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]
-                            ${selectedOrderId === o._id ? "ring-2 ring-[#009966]" : ""}
-                            `}
+                  className={`border border-[#E5E7EB] rounded-xl bg-white p-4 cursor-pointer hover:shadow-md transition
+  ${selectedOrderId === o._id ? "ring-2 ring-[#009966]" : ""}`}
                 >
-                  <div className="flex gap-4">
-                    <div className="relative w-20 h-20">
-                      <div className="w-20 h-20 min-w-20 rounded-lg bg-gray-100 flex items-center justify-center">
-                        {o.orderType === "food" ? (
-                          <Utensils size={24} className="text-[#94A3B8]" />
-                        ) : (
-                          <ShoppingBag size={24} className="text-[#94A3B8]" />
-                        )}
-                      </div>
-
-                      <div className="absolute top-1 left-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm">
-                        {o.orderType === "food" ? (
-                          <Utensils size={12} className="text-[#009966]" />
-                        ) : (
-                          <ShoppingBag size={12} className="text-[#F97316]" />
-                        )}
-                      </div>
-                    </div>
+                  {/* Header */}
+                  <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-playfair text-lg text-[#0F172A]">
-                        {partnerName}
-                      </h3>
-
-                      <p className="text-[#6A7282] text-sm mt-1">
-                        {itemsSummary}
+                      <p className="text-xs text-[#94A3B8] uppercase">
+                        {o.orderType} Order
                       </p>
 
-                      <span
-                        className={`inline-block mt-2 text-xs px-3 py-1 rounded-full ${statusStyles[o.status] || "bg-[#F1F5F9] text-[#475569]"}`}
-                      >
-                        {formatStatusLabel(o.status)}
-                      </span>
+                      <h3 className="font-semibold text-[#0F172A]">
+                        {o.orderId}
+                      </h3>
                     </div>
+
+                    <span
+                      className={`text-xs px-3 py-1 rounded-full ${
+                        statusStyles[o.status] || "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {formatStatusLabel(o.status)}
+                    </span>
                   </div>
 
-                  <div className="text-right flex flex-col gap-3 justify-between">
-                    <p className="text-sm text-[#6A7282]">
-                      {formatTime(o.createdAt)}
+                  {/* Restaurant / Retailer */}
+                  <div className="mt-4">
+                    <p className="text-sm text-[#94A3B8]">Store</p>
+
+                    <p className="font-medium text-[#0F172A]">
+                      {o.restaurant?.name ||
+                        o.retailer?.fullName ||
+                        "Grocery Store"}
+                    </p>
+                  </div>
+
+                  {/* Items */}
+                  <div className="mt-4">
+                    <p className="text-sm text-[#94A3B8]">
+                      Items ({o.items.length})
                     </p>
 
-                    <p className="font-semibold text-lg text-[#0F172A]">
-                      ${o.total.toFixed(2)}
-                    </p>
+                    {o.items.slice(0, 2).map((item) => (
+                      <div
+                        key={item._id}
+                        className="flex justify-between text-sm mt-1"
+                      >
+                        <span>
+                          {item.name} × {item.quantity}
+                        </span>
+
+                        <span>${item.subtotal.toFixed(2)}</span>
+                      </div>
+                    ))}
+
+                    {o.items.length > 2 && (
+                      <p className="text-xs text-[#009966] mt-1">
+                        +{o.items.length - 2} more items
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="flex justify-between items-center mt-5 pt-4 border-t">
+                    <div>
+                      <p className="text-xs text-[#94A3B8]">Payment</p>
+
+                      <p className="text-sm capitalize">
+                        {o.paymentMethod} • {o.paymentStatus}
+                      </p>
+                    </div>
+
+                    <div className="text-right">
+                      <p className="font-bold text-[#009966]">
+                        ${o.total.toFixed(2)}
+                      </p>
+
+                      <p className="text-xs text-[#94A3B8]">
+                        {formatTime(o.createdAt)}
+                      </p>
+                    </div>
                   </div>
                 </div>
               );
@@ -918,6 +952,60 @@ const submitRefundRequest = async () => {
 
               <div className="border-t border-[#E5E7EB]" />
 
+              <div className="mt-5">
+                <h3 className="font-semibold text-[#0F172A] mb-4">
+                  Order Items ({selectedOrder.items.length})
+                </h3>
+
+                <div className="space-y-3">
+                  {selectedOrder.items.map((item) => (
+                    <div
+                      key={item._id}
+                      className="flex justify-between items-center border border-[#E5E7EB] rounded-lg p-3 bg-white"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-lg bg-[#F8FAFC] flex items-center justify-center">
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-[#F8FAFC] flex items-center justify-center border border-[#E5E7EB]">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : selectedOrder.orderType === "food" ? (
+                              <Utensils size={20} className="text-[#009966]" />
+                            ) : (
+                              <ShoppingBag
+                                size={20}
+                                className="text-[#F97316]"
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <p className="font-medium text-[#0F172A]">
+                            {item.name}
+                          </p>
+
+                          <p className="text-sm text-[#6A7282]">
+                            ${item.price.toFixed(2)} × {item.quantity}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <p className="font-semibold text-[#009966]">
+                          ${item.subtotal.toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-[#E5E7EB] mt-5" />
+
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-[#6A7282]">
                   <span>Subtotal</span>
@@ -962,411 +1050,381 @@ const submitRefundRequest = async () => {
                 Invoice
               </button> */}
 
-             <button
-  onClick={() => {
-    setRefundReason("");
-    setRefundError("");
-    setRefundSuccess(false);
-    setShowRefundModal(true);
-  }}
-  className="text-xs text-[#6A7282] text-left cursor-text"
->
-  Problem with order? <span className="text-xs text-[#6A7282] cursor-pointer hover:text-[#009966] underline text-left">Request Return/Refund</span>
-</button>
+              <button
+                onClick={() => {
+                  setRefundReason("");
+                  setRefundError("");
+                  setRefundSuccess(false);
+                  setShowRefundModal(true);
+                }}
+                className="text-xs text-[#6A7282] text-left cursor-text"
+              >
+                Problem with order?{" "}
+                <span className="text-xs text-[#6A7282] cursor-pointer hover:text-[#009966] underline text-left">
+                  Request Return/Refund
+                </span>
+              </button>
             </div>
           ) : null}
         </div>
       </div>
 
-{showRefundModal && (
-  <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">
-    <div className="bg-white rounded-xl p-6 w-full max-w-md">
+      {showRefundModal && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-[#0F172A]">
+                Request Return / Refund
+              </h2>
 
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-semibold text-[#0F172A]">
-          Request Return / Refund
-        </h2>
-
-        <button
-          onClick={() => setShowRefundModal(false)}
-          className="text-[#94A3B8] text-xl"
-        >
-          ×
-        </button>
-      </div>
-
-      {refundSuccess ? (
-        <div className="flex flex-col items-center gap-2 py-8 text-center">
-          <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-            <svg
-              className="h-7 w-7 text-green-600"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-          <p className="text-[#0F172A] font-medium">Request submitted!</p>
-          <p className="text-sm text-[#6A7282]">
-            We'll review your request and get back to you shortly.
-          </p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          <p className="text-sm text-[#6A7282]">
-            Order: <span className="font-medium text-[#0F172A]">{selectedOrder?.orderId}</span>
-          </p>
-
-          <div>
-            <label className="text-sm text-[#475569] block mb-2">
-              Select a reason
-            </label>
-
-            <div className="flex flex-wrap gap-2">
-              {REFUND_REASONS.map((reason) => (
-                <button
-                  key={reason}
-                  type="button"
-                  onClick={() => setRefundReason(reason)}
-                  className={`px-3 py-1.5 rounded-full text-sm border transition ${
-                    refundReason === reason
-                      ? "bg-[#ECFDF5] text-[#009966] border-[#009966]"
-                      : "bg-white border-[#E5E7EB] text-[#475569]"
-                  }`}
-                >
-                  {reason}
-                </button>
-              ))}
+              <button
+                onClick={() => setShowRefundModal(false)}
+                className="text-[#94A3B8] text-xl"
+              >
+                ×
+              </button>
             </div>
-          </div>
 
-          <div>
-            <label className="text-sm text-[#475569] block mb-2">
-              Additional details (optional)
-            </label>
-
-            <textarea
-              value={refundReason === "Other" ? "" : ""}
-              onChange={() => {}}
-              placeholder="Add more details..."
-              rows={3}
-              className="hidden"
-            />
-
-            <textarea
-              placeholder="Describe the issue in your own words..."
-              rows={3}
-              onChange={(e) => {
-                // if user types custom text, use it as the reason directly
-                if (e.target.value.trim()) {
-                  setRefundReason(e.target.value);
-                }
-              }}
-              className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none resize-none text-sm"
-            />
-          </div>
-
-          {refundError && (
-            <p className="text-red-500 text-sm">{refundError}</p>
-          )}
-
-          <div className="flex justify-end gap-3 pt-2">
-            <button
-              onClick={() => setShowRefundModal(false)}
-              disabled={refundSubmitting}
-              className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
-            >
-              Cancel
-            </button>
-
-            <button
-              onClick={submitRefundRequest}
-              disabled={refundSubmitting}
-              className="bg-[#009966] text-white px-5 py-2 rounded-lg disabled:opacity-60"
-            >
-              {refundSubmitting ? "Submitting..." : "Submit Request"}
-            </button>
-          </div>
-        </div>
-      )}
-
-    </div>
-  </div>
-)}
-
-   {showInvoiceModal && (
-  <div className="fixed inset-0 z-50 !mt-0 flex items-center justify-center bg-black/50 px-4">
-    <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6">
-
-      {invoiceLoading ? (
-        <div className="py-16 text-center text-[#6A7282]">
-          Loading invoice...
-        </div>
-      ) : invoiceError ? (
-        <div className="py-16 text-center text-red-500">
-          {invoiceError}
-        </div>
-      ) : (
-        invoice && (
-          <>
-            {/* Header */}
-            <div className="flex items-start justify-between border-b border-[#E5E7EB] pb-5">
-              <div>
-                <h2 className="text-3xl font-bold text-[#0F172A]">
-                  Invoice
-                </h2>
-
-                <p className="mt-1 text-sm text-[#6A7282]">
-                  {invoice.invoiceNumber}
+            {refundSuccess ? (
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+                  <svg
+                    className="h-7 w-7 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <p className="text-[#0F172A] font-medium">Request submitted!</p>
+                <p className="text-sm text-[#6A7282]">
+                  We'll review your request and get back to you shortly.
                 </p>
               </div>
-
-              <div className="flex items-start gap-4">
-                <div className="text-right">
-                  <span
-                    className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                      invoice.paymentStatus === "paid"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {invoice.paymentStatus.toUpperCase()}
+            ) : (
+              <div className="space-y-4">
+                <p className="text-sm text-[#6A7282]">
+                  Order:{" "}
+                  <span className="font-medium text-[#0F172A]">
+                    {selectedOrder?.orderId}
                   </span>
+                </p>
 
-                  <p className="mt-2 text-sm text-[#6A7282]">
-                    {new Date(invoice.invoiceDate).toLocaleDateString()}
-                  </p>
+                <div>
+                  <label className="text-sm text-[#475569] block mb-2">
+                    Select a reason
+                  </label>
+
+                  <div className="flex flex-wrap gap-2">
+                    {REFUND_REASONS.map((reason) => (
+                      <button
+                        key={reason}
+                        type="button"
+                        onClick={() => setRefundReason(reason)}
+                        className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                          refundReason === reason
+                            ? "bg-[#ECFDF5] text-[#009966] border-[#009966]"
+                            : "bg-white border-[#E5E7EB] text-[#475569]"
+                        }`}
+                      >
+                        {reason}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <button
-                  onClick={() => setShowInvoiceModal(false)}
-                  className="text-2xl text-[#64748B] hover:text-black"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
+                <div>
+                  <label className="text-sm text-[#475569] block mb-2">
+                    Additional details (optional)
+                  </label>
 
-            {/* Invoice Details */}
-            <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-5 text-sm">
+                  <textarea
+                    value={refundReason === "Other" ? "" : ""}
+                    onChange={() => {}}
+                    placeholder="Add more details..."
+                    rows={3}
+                    className="hidden"
+                  />
 
-              <div>
-                <p className="text-[#6A7282]">Invoice Number</p>
-                <p className="font-semibold">{invoice.invoiceNumber}</p>
-              </div>
+                  <textarea
+                    placeholder="Describe the issue in your own words..."
+                    rows={3}
+                    onChange={(e) => {
+                      // if user types custom text, use it as the reason directly
+                      if (e.target.value.trim()) {
+                        setRefundReason(e.target.value);
+                      }
+                    }}
+                    className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none resize-none text-sm"
+                  />
+                </div>
 
-              <div>
-                <p className="text-[#6A7282]">Order ID</p>
-                <p className="font-semibold">{invoice.orderId}</p>
-              </div>
+                {refundError && (
+                  <p className="text-red-500 text-sm">{refundError}</p>
+                )}
 
-              <div>
-                <p className="text-[#6A7282]">Invoice Date</p>
-                <p className="font-semibold">
-                  {new Date(invoice.invoiceDate).toLocaleDateString()}
-                </p>
-              </div>
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => setShowRefundModal(false)}
+                    disabled={refundSubmitting}
+                    className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
+                  >
+                    Cancel
+                  </button>
 
-              <div>
-                <p className="text-[#6A7282]">Status</p>
-                <p className="font-semibold">{invoice.status}</p>
-              </div>
-
-              <div>
-                <p className="text-[#6A7282]">Payment Method</p>
-                <p className="font-semibold capitalize">
-                  {invoice.paymentMethod}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-[#6A7282]">Payment Status</p>
-                <p className="font-semibold capitalize">
-                  {invoice.paymentStatus}
-                </p>
-              </div>
-
-            </div>
-
-            {/* Vendor + Customer */}
-
-            <div className="mt-6 grid gap-5 md:grid-cols-2">
-
-              <div className="rounded-xl border border-[#E5E7EB] p-5">
-                <h3 className="mb-4 text-lg font-semibold text-[#009966]">
-                  Vendor
-                </h3>
-
-                <p className="font-semibold text-[#0F172A]">
-                  {invoice.vendor.name}
-                </p>
-
-                <p className="mt-1 text-[#6A7282]">
-                  {invoice.vendor.phone}
-                </p>
-
-                <p className="text-[#6A7282]">
-                  {invoice.vendor.address}
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-[#E5E7EB] p-5">
-                <h3 className="mb-4 text-lg font-semibold text-[#009966]">
-                  Bill To
-                </h3>
-
-                <p className="font-semibold text-[#0F172A]">
-                  {invoice.customer.name}
-                </p>
-
-                <p className="mt-1 text-[#6A7282]">
-                  {invoice.customer.email}
-                </p>
-
-                <p className="text-[#6A7282]">
-                  {invoice.customer.phone}
-                </p>
-              </div>
-
-            </div>
-
-            {/* Items */}
-
-            <div className="mt-8 overflow-hidden rounded-xl border border-[#E5E7EB]">
-
-              <table className="w-full">
-
-                <thead className="bg-[#F8FAFC]">
-
-                  <tr className="text-sm">
-
-                    <th className="p-4 text-left">Item</th>
-
-                    <th className="p-4 text-center">Qty</th>
-
-                    <th className="p-4 text-center">Unit Price</th>
-
-                    <th className="p-4 text-right">Subtotal</th>
-
-                  </tr>
-
-                </thead>
-
-                <tbody>
-
-                  {invoice.items.map((item, index) => (
-                    <tr
-                      key={index}
-                      className="border-t border-[#E5E7EB]"
-                    >
-                      <td className="p-4">
-                        {item.name}
-                      </td>
-
-                      <td className="p-4 text-center">
-                        {item.quantity}
-                      </td>
-
-                      <td className="p-4 text-center">
-                        ${item.unitPrice.toFixed(2)}
-                      </td>
-
-                      <td className="p-4 text-right font-medium">
-                        ${item.subtotal.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-
-                </tbody>
-
-              </table>
-
-            </div>
-
-            {/* Totals */}
-
-            <div className="mt-8 ml-auto w-full max-w-sm space-y-3">
-
-              <div className="flex justify-between">
-                <span>Subtotal</span>
-                <span>${invoice.subtotal.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Delivery Fee</span>
-                <span>${invoice.deliveryFee.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Tax</span>
-                <span>${invoice.tax.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span>Discount</span>
-                <span>${invoice.discount.toFixed(2)}</span>
-              </div>
-
-              <div className="flex justify-between border-t border-[#E5E7EB] pt-3 text-xl font-bold text-[#009966]">
-                <span>Grand Total</span>
-                <span>${invoice.total.toFixed(2)}</span>
-              </div>
-
-            </div>
-
-            {/* Notes */}
-
-            {invoice.notes && (
-              <div className="mt-8 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
-
-                <h3 className="font-semibold">
-                  Notes
-                </h3>
-
-                <p className="mt-2 text-sm text-[#6A7282]">
-                  {invoice.notes}
-                </p>
-
+                  <button
+                    onClick={submitRefundRequest}
+                    disabled={refundSubmitting}
+                    className="bg-[#009966] text-white px-5 py-2 rounded-lg disabled:opacity-60"
+                  >
+                    {refundSubmitting ? "Submitting..." : "Submit Request"}
+                  </button>
+                </div>
               </div>
             )}
-
-            {/* Footer */}
-
-            <div className="mt-8 border-t border-[#E5E7EB] pt-5 text-center text-sm text-[#6A7282]">
-              {invoice.footer}
-            </div>
-
-            {/* Actions */}
-
-            <div className="mt-8 flex justify-end gap-3">
-
-              <button
-                onClick={() => setShowInvoiceModal(false)}
-                className="rounded-lg border border-[#D1D5DB] px-5 py-2"
-              >
-                Close
-              </button>
-
-              <button
-                onClick={() => downloadInvoice(selectedOrder!._id)}
-                className="rounded-lg bg-[#009966] px-5 py-2 font-medium text-white hover:bg-[#007d56]"
-              >
-                Download Invoice
-              </button>
-
-            </div>
-          </>
-        )
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
+
+      {showInvoiceModal && (
+        <div className="fixed inset-0 z-50 !mt-0 flex items-center justify-center bg-black/50 px-4">
+          <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white p-6">
+            {invoiceLoading ? (
+              <div className="py-16 text-center text-[#6A7282]">
+                Loading invoice...
+              </div>
+            ) : invoiceError ? (
+              <div className="py-16 text-center text-red-500">
+                {invoiceError}
+              </div>
+            ) : (
+              invoice && (
+                <>
+                  {/* Header */}
+                  <div className="flex items-start justify-between border-b border-[#E5E7EB] pb-5">
+                    <div>
+                      <h2 className="text-3xl font-bold text-[#0F172A]">
+                        Invoice
+                      </h2>
+
+                      <p className="mt-1 text-sm text-[#6A7282]">
+                        {invoice.invoiceNumber}
+                      </p>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="text-right">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                            invoice.paymentStatus === "paid"
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {invoice.paymentStatus.toUpperCase()}
+                        </span>
+
+                        <p className="mt-2 text-sm text-[#6A7282]">
+                          {new Date(invoice.invoiceDate).toLocaleDateString()}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => setShowInvoiceModal(false)}
+                        className="text-2xl text-[#64748B] hover:text-black"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Invoice Details */}
+                  <div className="mt-6 grid grid-cols-2 gap-4 rounded-xl border border-[#E5E7EB] bg-[#FAFAFA] p-5 text-sm">
+                    <div>
+                      <p className="text-[#6A7282]">Invoice Number</p>
+                      <p className="font-semibold">{invoice.invoiceNumber}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-[#6A7282]">Order ID</p>
+                      <p className="font-semibold">{invoice.orderId}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-[#6A7282]">Invoice Date</p>
+                      <p className="font-semibold">
+                        {new Date(invoice.invoiceDate).toLocaleDateString()}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[#6A7282]">Status</p>
+                      <p className="font-semibold">{invoice.status}</p>
+                    </div>
+
+                    <div>
+                      <p className="text-[#6A7282]">Payment Method</p>
+                      <p className="font-semibold capitalize">
+                        {invoice.paymentMethod}
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-[#6A7282]">Payment Status</p>
+                      <p className="font-semibold capitalize">
+                        {invoice.paymentStatus}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Vendor + Customer */}
+
+                  <div className="mt-6 grid gap-5 md:grid-cols-2">
+                    <div className="rounded-xl border border-[#E5E7EB] p-5">
+                      <h3 className="mb-4 text-lg font-semibold text-[#009966]">
+                        Vendor
+                      </h3>
+
+                      <p className="font-semibold text-[#0F172A]">
+                        {invoice.vendor.name}
+                      </p>
+
+                      <p className="mt-1 text-[#6A7282]">
+                        {invoice.vendor.phone}
+                      </p>
+
+                      <p className="text-[#6A7282]">{invoice.vendor.address}</p>
+                    </div>
+
+                    <div className="rounded-xl border border-[#E5E7EB] p-5">
+                      <h3 className="mb-4 text-lg font-semibold text-[#009966]">
+                        Bill To
+                      </h3>
+
+                      <p className="font-semibold text-[#0F172A]">
+                        {invoice.customer.name}
+                      </p>
+
+                      <p className="mt-1 text-[#6A7282]">
+                        {invoice.customer.email}
+                      </p>
+
+                      <p className="text-[#6A7282]">{invoice.customer.phone}</p>
+                    </div>
+                  </div>
+
+                  {/* Items */}
+
+                  <div className="mt-8 overflow-hidden rounded-xl border border-[#E5E7EB]">
+                    <table className="w-full">
+                      <thead className="bg-[#F8FAFC]">
+                        <tr className="text-sm">
+                          <th className="p-4 text-left">Item</th>
+
+                          <th className="p-4 text-center">Qty</th>
+
+                          <th className="p-4 text-center">Unit Price</th>
+
+                          <th className="p-4 text-right">Subtotal</th>
+                        </tr>
+                      </thead>
+
+                      <tbody>
+                        {invoice.items.map((item, index) => (
+                          <tr key={index} className="border-t border-[#E5E7EB]">
+                            <td className="p-4">{item.name}</td>
+
+                            <td className="p-4 text-center">{item.quantity}</td>
+
+                            <td className="p-4 text-center">
+                              ${item.unitPrice.toFixed(2)}
+                            </td>
+
+                            <td className="p-4 text-right font-medium">
+                              ${item.subtotal.toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Totals */}
+
+                  <div className="mt-8 ml-auto w-full max-w-sm space-y-3">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span>${invoice.subtotal.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Delivery Fee</span>
+                      <span>${invoice.deliveryFee.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Tax</span>
+                      <span>${invoice.tax.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span>Discount</span>
+                      <span>${invoice.discount.toFixed(2)}</span>
+                    </div>
+
+                    <div className="flex justify-between border-t border-[#E5E7EB] pt-3 text-xl font-bold text-[#009966]">
+                      <span>Grand Total</span>
+                      <span>${invoice.total.toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Notes */}
+
+                  {invoice.notes && (
+                    <div className="mt-8 rounded-xl border border-[#E5E7EB] bg-[#F8FAFC] p-4">
+                      <h3 className="font-semibold">Notes</h3>
+
+                      <p className="mt-2 text-sm text-[#6A7282]">
+                        {invoice.notes}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+
+                  <div className="mt-8 border-t border-[#E5E7EB] pt-5 text-center text-sm text-[#6A7282]">
+                    {invoice.footer}
+                  </div>
+
+                  {/* Actions */}
+
+                  <div className="mt-8 flex justify-end gap-3">
+                    <button
+                      onClick={() => setShowInvoiceModal(false)}
+                      className="rounded-lg border border-[#D1D5DB] px-5 py-2"
+                    >
+                      Close
+                    </button>
+
+                    <button
+                      onClick={() => downloadInvoice(selectedOrder!._id)}
+                      className="rounded-lg bg-[#009966] px-5 py-2 font-medium text-white hover:bg-[#007d56]"
+                    >
+                      Download Invoice
+                    </button>
+                  </div>
+                </>
+              )
+            )}
+          </div>
+        </div>
+      )}
 
       {showTrackModal && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">

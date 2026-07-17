@@ -21,9 +21,10 @@ interface CartData {
   subtotal: number;
 }
 
+// Matches the shape PaymentStep now persists: { method, display, ... }
 interface PaymentData {
-  brand: string;
-  last4: string;
+  method: "wallet" | "card" | "cash";
+  display: string;
 }
 
 interface ScheduleData {
@@ -122,9 +123,7 @@ export function ConfirmStep() {
       <div className="flex justify-between mb-6">
         <p className="text-[#94A3B8]">Payment</p>
         <p className="text-white">
-          {payment
-            ? `${payment.brand} •••• ${payment.last4}`
-            : "Not selected"}
+          {payment ? payment.display : "Not selected"}
         </p>
       </div>
 

@@ -232,50 +232,49 @@ export default function RoleSignInSection() {
     }
   };
 
-    const handleForgotPassword = async () => {
-      if (!forgotEmail.trim()) {
-        setForgotError("Please enter your email.");
-        return;
-      }
+  const handleForgotPassword = async () => {
+    if (!forgotEmail.trim()) {
+      setForgotError("Please enter your email.");
+      return;
+    }
 
-      setForgotLoading(true);
-      setForgotError("");
-      setForgotMessage("");
+    setForgotLoading(true);
+    setForgotError("");
+    setForgotMessage("");
 
-      try {
-        const response = await fetch(
-          "https://mr-santosh-grocery-backend.onrender.com/api/v1/auth/forgot-password",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              email: forgotEmail,
-            }),
+    try {
+      const response = await fetch(
+        "https://mr-santosh-grocery-backend.onrender.com/api/v1/auth/forgot-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        );
+          body: JSON.stringify({
+            email: forgotEmail,
+          }),
+        },
+      );
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (!response.ok) {
-          throw new Error(data.message || "Unable to process request.");
-        }
-
-        setForgotMessage(
-          data.message || "Password reset instructions have been sent.",
-        );
-
-        setShowResetForm(true);
-      } catch (err) {
-        setForgotError(
-          err instanceof Error ? err.message : "Something went wrong.",
-        );
-      } finally {
-        setForgotLoading(false);
+      if (!response.ok) {
+        throw new Error(data.message || "Unable to process request.");
       }
-    };
 
+      setForgotMessage(
+        data.message || "Password reset instructions have been sent.",
+      );
+      setResetToken(data?.data?.resetToken || "");
+      setShowResetForm(true);
+    } catch (err) {
+      setForgotError(
+        err instanceof Error ? err.message : "Something went wrong.",
+      );
+    } finally {
+      setForgotLoading(false);
+    }
+  };
 
   const handleResetPassword = async () => {
     setForgotError("");
@@ -560,7 +559,7 @@ export default function RoleSignInSection() {
 
             <p className="mt-2 text-sm text-gray-500">
               {showResetForm
-                ? "Paste the reset token received in your email and create a new password."
+                ? "Enter your new password to complete the reset process."
                 : "Enter your registered email address. We'll send you password reset instructions."}
             </p>
 

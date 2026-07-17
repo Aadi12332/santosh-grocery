@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Loader2, X } from "lucide-react";
+import { Plus, Loader2, Wallet, Banknote, CreditCard as CardIcon } from "lucide-react";
 import AddCardModal from "../AddCardModal";
 
 const API_BASE = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
@@ -7,14 +7,19 @@ const PAYMENT_STORAGE_KEY = "checkout_payment";
 
 interface CardApi {
   cardId: string;
-  _id: string;
   last4: string;
   brand: string;
+  display: string;
   expiryMonth: string;
   expiryYear: string;
-  cardHolder: string;
   isDefault: boolean;
-  addedAt: string;
+}
+
+interface AvailableMethod {
+  id: "wallet" | "card" | "cash";
+  label: string;
+  description: string;
+  available: boolean;
 }
 
 interface CardFormData {
@@ -35,24 +40,34 @@ const EMPTY_CARD_FORM: CardFormData = {
   isDefault: false,
 };
 
+// What gets persisted to localStorage for Checkout.tsx / ConfirmStep to read
+type SelectedPayment = {
+  method: "wallet" | "card" | "cash";
+  cardId?: string;
+  brand?: string;
+  last4?: string;
+  display: string;
+};
+
 export function PaymentStep() {
+  const [walletBalance, setWalletBalance] = useState(0);
   const [cards, setCards] = useState<CardApi[]>([]);
-  const [selected, setSelected] = useState<string>("");
+  const [availableMethods, setAvailableMethods] = useState<AvailableMethod[]>(
+    [],
+  );
+
+  const [methodType, setMethodType] = useState<"wallet" | "card" | "cash">(
+    "wallet",
+  );
+  const [selectedCardId, setSelectedCardId] = useState<string>("");
+
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState("");
+
   const [openAddCardModal, setOpenAddCardModal] = useState(false);
-  const [showCardModal, setShowCardModal] = useState(false);
   const [cardForm, setCardForm] = useState<CardFormData>(EMPTY_CARD_FORM);
   const [cardError, setCardError] = useState("");
   const [cardSaving, setCardSaving] = useState(false);
-
-    const saveSelectedCard = (card: CardApi | undefined) => {
-    if (!card) {
-      localStorage.removeItem(PAYMENT_STORAGE_KEY);
-      return;
-    }
-    localStorage.setItem(PAYMENT_STORAGE_KEY, JSON.stringify(card));
-  };
 
   const getToken = () => localStorage.getItem("authToken") || "";
 
@@ -61,28 +76,72 @@ export function PaymentStep() {
     Authorization: `Bearer ${getToken()}`,
   });
 
-  // ---------- GET saved cards ----------
-  const fetchCards = async () => {
+  const persistSelection = (
+    method: "wallet" | "card" | "cash",
+    card?: CardApi,
+  ) => {
+    let selection: SelectedPayment;
+
+    if (method === "wallet") {
+      selection = { method: "wallet", display: "Wallet Balance" };
+    } else if (method === "cash") {
+      selection = { method: "cash", display: "Cash on Delivery" };
+    } else {
+      selection = {
+        method: "card",
+        cardId: card?.cardId,
+        brand: card?.brand,
+        last4: card?.last4,
+        display: card ? `${card.brand} •••• ${card.last4}` : "Card",
+      };
+    }
+
+    localStorage.setItem(PAYMENT_STORAGE_KEY, JSON.stringify(selection));
+  };
+
+  // ---------- GET payment methods (wallet + cards + cash) ----------
+  const fetchPaymentMethods = async () => {
     setLoading(true);
     setFetchError("");
+
     try {
-      const res = await fetch(`${API_BASE}/wallet/cards`, { headers: authHeaders() });
+      const res = await fetch(`${API_BASE}/payment/methods`, {
+        headers: authHeaders(),
+      });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        throw new Error(data?.message || "Failed to load saved cards.");
+        throw new Error(data?.message || "Failed to load payment methods.");
       }
 
-      const list: CardApi[] = data?.data?.cards || [];
-      setCards(list);
+      const { walletBalance: balance, savedCards, availableMethods: methods } =
+        data.data;
 
-      const defaultCard = list.find((c) => c.isDefault);
-      const initialCard = defaultCard || list[0];
-      setSelected(initialCard?.cardId || "");
-      saveSelectedCard(initialCard);       
+      setWalletBalance(balance ?? 0);
+      setCards(savedCards ?? []);
+      setAvailableMethods(methods ?? []);
+
+      // Default selection: default card if any, else wallet, else first
+      // available method.
+      const defaultCard = (savedCards ?? []).find((c: CardApi) => c.isDefault);
+
+      if (defaultCard) {
+        setMethodType("card");
+        setSelectedCardId(defaultCard.cardId);
+        persistSelection("card", defaultCard);
+      } else {
+        const walletMethod = (methods ?? []).find(
+          (m: AvailableMethod) => m.id === "wallet" && m.available,
+        );
+        const fallback = walletMethod?.id || methods?.[0]?.id || "wallet";
+        setMethodType(fallback);
+        persistSelection(fallback);
+      }
     } catch (err: unknown) {
       setFetchError(
-        err instanceof Error ? err.message : "Unable to load saved cards.",
+        err instanceof Error
+          ? err.message
+          : "Unable to load payment methods.",
       );
     } finally {
       setLoading(false);
@@ -90,8 +149,29 @@ export function PaymentStep() {
   };
 
   useEffect(() => {
-    fetchCards();
+    fetchPaymentMethods();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const handleSelectMethodType = (method: "wallet" | "card" | "cash") => {
+    setMethodType(method);
+
+    if (method === "card") {
+      const card = cards.find((c) => c.cardId === selectedCardId) || cards[0];
+      if (card) {
+        setSelectedCardId(card.cardId);
+        persistSelection("card", card);
+      }
+    } else {
+      persistSelection(method);
+    }
+  };
+
+  const handleSelectCard = (card: CardApi) => {
+    setMethodType("card");
+    setSelectedCardId(card.cardId);
+    persistSelection("card", card);
+  };
 
   // ---------- POST add card ----------
   const handleSaveCard = async () => {
@@ -99,7 +179,11 @@ export function PaymentStep() {
     setCardError("");
 
     try {
-      const res = await fetch(`${API_BASE}/wallet/cards`, { method: "POST", headers: authHeaders(), body: JSON.stringify(cardForm) });
+      const res = await fetch(`${API_BASE}/wallet/cards`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify(cardForm),
+      });
       const data = await res.json();
 
       if (!res.ok || !data.success) {
@@ -114,8 +198,8 @@ export function PaymentStep() {
           : prev;
         return [...updated, newCard];
       });
-      setSelected(newCard.cardId);
-      saveSelectedCard(newCard);                // 👈 add
+
+      handleSelectCard(newCard);
 
       setOpenAddCardModal(false);
       setCardForm(EMPTY_CARD_FORM);
@@ -134,6 +218,31 @@ export function PaymentStep() {
     setCardForm((prev) => ({ ...prev, [field]: value }));
   };
 
+const methodMeta: Record<
+  string,
+  {
+    icon: React.ElementType;
+    iconBg: string;
+    iconColor: string;
+  }
+> = {
+  wallet: {
+    icon: Wallet,
+    iconBg: "bg-[#1E293B]",
+    iconColor: "text-[#00BC7D]",
+  },
+  card: {
+    icon: CardIcon,
+    iconBg: "bg-[#1E293B]",
+    iconColor: "text-[#60A5FA]",
+  },
+  cash: {
+    icon: Banknote,
+    iconBg: "bg-[#1E293B]",
+    iconColor: "text-[#F59E0B]",
+  },
+};
+
   return (
     <div className="border border-[#1D293D] rounded-lg lg:rounded-2xl lg:p-6 p-3 bg-[#0F172B80]">
       <h2 className="font-playfair text-2xl mb-6 text-white">Payment Method</h2>
@@ -143,73 +252,139 @@ export function PaymentStep() {
       {loading ? (
         <div className="flex items-center justify-center gap-2 text-[#94A3B8] py-10">
           <Loader2 size={20} className="animate-spin" />
-          Loading saved cards...
+          Loading payment methods...
         </div>
       ) : (
         <div className="space-y-4">
-          {cards.map((card) => {
-            const active = selected === card.cardId;
+          {availableMethods.map((method) => {
+            if (!method.available) return null;
+
+            const active = methodType === method.id;
+            const meta = methodMeta[method.id] || methodMeta.cash;
+            const Icon = meta.icon;
+
+            const description =
+              method.id === "wallet"
+                ? `Available: $${walletBalance.toFixed(2)}`
+                : method.description;
 
             return (
-              <div
-                key={card.cardId}
-                onClick={() => {
-              setSelected(card.cardId);
-              saveSelectedCard(card);            // 👈 add — manual selection pe bhi persist
-            }}
-                className={`flex items-center relative justify-between lg:p-5 p-3 rounded-lg lg:rounded-xl border cursor-pointer transition
-                ${
-                  active ? "border-[#00BC7D] bg-[#031F2E]" : "border-[#1E293B]"
-                }`}
-              >
-                <div className="flex items-center lg:gap-4 gap-2 ">
-                  <div className="w-14 h-10 bg-[#1E293B] rounded-md flex items-center justify-center text-sm font-semibold">
-                    {card.brand === "Visa" ? (
-                      <span className="text-blue-400">VISA</span>
-                    ) : (
-                      <div className="flex gap-1">
-                        <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                        <div className="w-4 h-4 bg-yellow-400 rounded-full -ml-2"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <div className="flex items-center gap-3 ">
-                      <p className="text-white lg:text-lg text-sm">
-                        {card.brand} •••• {card.last4}
-                      </p>
-
-                      {card.isDefault && (
-                        <span className="absolute sm:relative -top-3 sm:top-[unset] right-2 sm:right-[unset] text-xs px-2 py-1 rounded-full bg-[#1E293B] text-[#94A3B8]">
-                          Primary
-                        </span>
-                      )}
+              <div key={method.id}>
+                <div
+                  onClick={() => handleSelectMethodType(method.id)}
+                  className={`flex items-center justify-between lg:p-5 p-3 rounded-lg lg:rounded-xl border cursor-pointer transition
+                  ${
+                    active
+                      ? "border-[#00BC7D] bg-[#031F2E]"
+                      : "border-[#1E293B]"
+                  }`}
+                >
+                  <div className="flex items-center lg:gap-4 gap-2">
+                    <div
+                      className={`lg:w-12 w-8 lg:h-12 h-8 rounded-full flex items-center justify-center ${
+                        active ? "bg-[#043D34]" : meta.iconBg
+                      }`}
+                    >
+                      <Icon
+                        size={18}
+                        className={active ? "text-[#00BC7D]" : meta.iconColor}
+                      />
                     </div>
 
-                    <p className="text-[#94A3B8]">
-                      Expires {card.expiryMonth}/{card.expiryYear}
-                    </p>
+                    <div>
+                      <p className="text-white lg:text-lg text-sm">
+                        {method.label}
+                      </p>
+                      <p className="text-[#94A3B8] sm:text-base text-sm">
+                        {description}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div
+                    className={`w-6 h-6 rounded-full border flex items-center justify-center
+                    ${active ? "border-[#00BC7D]" : "border-[#475569]"}`}
+                  >
+                    {active && (
+                      <div className="w-3 h-3 rounded-full bg-[#00BC7D]" />
+                    )}
                   </div>
                 </div>
 
-                <div
-                  className={`w-6 h-6 rounded-full border flex items-center justify-center
-                  ${active ? "border-[#00BC7D]" : "border-[#475569]"}`}
-                >
-                  {active && (
-                    <div className="w-3 h-3 rounded-full bg-[#00BC7D]" />
-                  )}
-                </div>
+                {/* Saved cards list — shown only when "card" method is selected */}
+                {method.id === "card" && active && (
+                  <div className="ml-4 mt-3 space-y-3 border-l border-[#1E293B] pl-4">
+                    {cards.length === 0 ? (
+                      <p className="text-[#94A3B8] text-sm py-2">
+                        No saved cards yet. Add one below.
+                      </p>
+                    ) : (
+                      cards.map((card) => {
+                        const cardActive = selectedCardId === card.cardId;
+
+                        return (
+                          <div
+                            key={card.cardId}
+                            onClick={() => handleSelectCard(card)}
+                            className={`flex items-center relative justify-between lg:p-4 p-3 rounded-lg border cursor-pointer transition
+                            ${
+                              cardActive
+                                ? "border-[#00BC7D] bg-[#031F2E]"
+                                : "border-[#1E293B]"
+                            }`}
+                          >
+                            <div className="flex items-center lg:gap-4 gap-2">
+                              <div className="w-14 h-10 bg-[#1E293B] rounded-md flex items-center justify-center text-sm font-semibold">
+                                {card.brand === "Visa" ? (
+                                  <span className="text-blue-400">VISA</span>
+                                ) : (
+                                  <div className="flex gap-1">
+                                    <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
+                                    <div className="w-4 h-4 bg-yellow-400 rounded-full -ml-2"></div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div>
+                                <div className="flex items-center gap-3">
+                                  <p className="text-white text-sm">
+                                    {card.brand} •••• {card.last4}
+                                  </p>
+
+                                  {card.isDefault && (
+                                    <span className="text-xs px-2 py-1 rounded-full bg-[#1E293B] text-[#94A3B8]">
+                                      Primary
+                                    </span>
+                                  )}
+                                </div>
+
+                                <p className="text-[#94A3B8] text-xs">
+                                  Expires {card.expiryMonth}/{card.expiryYear}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div
+                              className={`w-5 h-5 rounded-full border flex items-center justify-center
+                              ${
+                                cardActive
+                                  ? "border-[#00BC7D]"
+                                  : "border-[#475569]"
+                              }`}
+                            >
+                              {cardActive && (
+                                <div className="w-2.5 h-2.5 rounded-full bg-[#00BC7D]" />
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                )}
               </div>
             );
           })}
-
-          {!loading && cards.length === 0 && (
-            <p className="text-[#94A3B8] text-sm text-center py-6">
-              No saved cards yet. Add one to continue.
-            </p>
-          )}
         </div>
       )}
 

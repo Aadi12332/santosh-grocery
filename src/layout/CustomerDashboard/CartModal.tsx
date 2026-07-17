@@ -416,7 +416,7 @@ export default function CartModal({
             </p>
 
             <button
-              onClick={onClose}
+              onClick={()=>navigate("/marketplace")}
               className="bg-[#009966] px-6 py-3 rounded-lg font-medium"
             >
               Start Shopping

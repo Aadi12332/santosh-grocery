@@ -86,7 +86,7 @@ export default function VoucherSection({
 }, [error]);
 
   return (
-    <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-8 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+    <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-6 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
       <div className="flex items-center gap-2 mb-5">
         <Gift size={18} />
         <h3 className="font-playfair text-xl text-[#0F172A]">Vouchers</h3>

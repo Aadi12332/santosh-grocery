@@ -108,6 +108,58 @@ export default function WalletPayments() {
   const [addCardLoading, setAddCardLoading] = useState(false);
   const [addCardError, setAddCardError] = useState("");
 
+  const [activeTab, setActiveTab] = useState<"wallet" | "payment">("wallet");
+
+  const [payments, setPayments] = useState([]);
+  const [paymentPagination, setPaymentPagination] = useState(null);
+  const [paymentsLoading, setPaymentsLoading] = useState(false);
+  const [paymentsError, setPaymentsError] = useState("");
+
+  const fetchPaymentHistory = async (page = 1) => {
+    const token = localStorage.getItem("authToken");
+
+    if (!token) return;
+
+    setPaymentsLoading(true);
+    setPaymentsError("");
+
+    try {
+      const response = await fetch(`${API_BASE}/payment/history?page=${page}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to load payment history.");
+      }
+
+      setPayments(data.data.payments ?? []);
+      setPaymentPagination(data.data.pagination ?? null);
+    } catch (err) {
+      setPaymentsError(
+        err instanceof Error ? err.message : "Unable to load payment history.",
+      );
+    } finally {
+      setPaymentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "payment") {
+      fetchPaymentHistory();
+    }
+  }, [activeTab]);
+
+  const activeClass =
+    "px-4 py-2 text-xs flex-1 rounded-lg bg-[#009966] text-white font-medium transition-colors";
+
+  const normalClass =
+    "px-4 py-2 text-xs flex-1 rounded-lg border border-[#E5E7EB] bg-white text-[#6A7282] hover:bg-[#F9FAFB] font-medium transition-colors";
+
   const fetchWallet = async () => {
     setWalletLoading(true);
     setWalletError("");
@@ -584,9 +636,9 @@ export default function WalletPayments() {
         </p>
       )}
 
-      <div className="grid xl:grid-cols-[1fr_360px] gap-6">
-        <div className="space-y-6">
-          <div className="border border-[#D1FAE5] bg-gradient-to-br from-white to-[#ECFDF580] lg:rounded-2xl rounded-lg lg:p-8 p-3 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex justify-between items-start">
+      <div className="grid xl:grid-cols-[1fr_360px] gap-4">
+        <div className="space-y-4">
+          <div className="border border-[#D1FAE5] bg-gradient-to-br from-white to-[#ECFDF580] lg:rounded-2xl rounded-lg lg:p-6 p-3 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] flex justify-between items-start">
             <div>
               <p className="text-[#009966] tracking-widest text-sm mb-3">
                 HUBNEPA BALANCE
@@ -636,8 +688,8 @@ export default function WalletPayments() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-8 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-6 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
               <div className="flex items-center gap-2 mb-5">
                 <CreditCard size={18} />
                 <h3 className="font-playfair text-xl text-[#0F172A]">
@@ -668,12 +720,12 @@ export default function WalletPayments() {
                 cards.map((card) => (
                   <div
                     key={card._id}
-                    className={`border rounded-xl p-4 flex items-center justify-between mb-3 ${
+                    className={`border rounded-lg p-3 flex items-center justify-between mb-3 ${
                       card.isDefault ? "border-[#D1FAE5]" : "border-[#E5E7EB]"
                     }`}
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className="text-[10px] bg-gray-100 px-2 py-1 rounded">
                         {card.brand?.toUpperCase()}
                       </span>
 
@@ -736,7 +788,7 @@ export default function WalletPayments() {
           </div>
         </div>
 
-        <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-8 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
+        <div className="border border-[#E5E7EB] lg:rounded-2xl rounded-lg lg:p-6 p-3 bg-white shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A]">
           <div className="flex items-center gap-2 mb-6">
             <Clock size={18} />
             <h3 className="font-playfair text-xl text-[#0F172A]">
@@ -744,262 +796,317 @@ export default function WalletPayments() {
             </h3>
           </div>
 
-          {transactionsLoading ? (
-            <div className="flex items-center justify-center gap-2 text-[#6A7282] py-10">
-              <Loader2 size={16} className="animate-spin" />
-              Loading transactions...
-            </div>
-          ) : transactionsError ? (
-            <div className="text-center py-10">
-              <p className="text-sm text-red-500">{transactionsError}</p>
-              <button
-                onClick={() => fetchTransactions(1, false)}
-                className="mt-3 text-sm border border-[#E5E7EB] rounded-lg px-4 py-2"
-              >
-                Retry
-              </button>
-            </div>
-          ) : transactions.length === 0 ? (
-            <p className="text-sm text-[#94A3B8] text-center py-10">
-              No transactions yet.
-            </p>
-          ) : (
-            <>
-              <div className="space-y-6">
-                {transactions.map((t) => {
-                  const credit = isCredit(t);
+          <div className="flex gap-2 mb-6">
+            <button
+              onClick={() => setActiveTab("wallet")}
+              className={activeTab === "wallet" ? activeClass : normalClass}
+            >
+              Wallet Transactions
+            </button>
 
-                  return (
-                    <div
-                      key={t._id}
-                      className="flex justify-between items-center gap-3"
-                    >
-                      <div className="flex gap-3 items-center min-w-0">
-                        <div
-                          className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${
-                            credit
-                              ? "bg-green-50 text-[#009966]"
-                              : "bg-red-50 text-red-500"
-                          }`}
-                        >
-                          {credit ? (
-                            <ArrowDownLeft size={18} />
-                          ) : (
-                            <Out size={18} />
-                          )}
-                        </div>
+            <button
+              onClick={() => setActiveTab("payment")}
+              className={activeTab === "payment" ? activeClass : normalClass}
+            >
+              Payment History
+            </button>
+          </div>
 
-                        <div className="min-w-0">
-                          <p className="text-[#0F172A] truncate">
-                            {t.description || formatType(t.type)}
-                          </p>
+         {activeTab === "wallet" ? (
+  transactionsLoading ? (
+    <div className="flex items-center justify-center gap-2 text-[#6A7282] py-10">
+      <Loader2 size={16} className="animate-spin" />
+      Loading transactions...
+    </div>
+  ) : transactionsError ? (
+    <div className="text-center py-10">
+      <p className="text-sm text-red-500">{transactionsError}</p>
 
-                          <p className="text-sm text-[#6A7282]">
-                            {formatDate(t.createdAt)}
-                          </p>
-                        </div>
-                      </div>
+      <button
+        onClick={() => fetchTransactions(1, false)}
+        className="mt-3 text-sm border border-[#E5E7EB] rounded-lg px-4 py-2"
+      >
+        Retry
+      </button>
+    </div>
+  ) : transactions.length === 0 ? (
+    <p className="text-sm text-[#94A3B8] text-center py-10">
+      No transactions yet.
+    </p>
+  ) : (
+    <>
+      <div className="space-y-6">
+        {transactions.map((t) => {
+          const credit = isCredit(t);
 
-                      <span
-                        className={`font-semibold shrink-0 ${
-                          credit ? "text-[#009966]" : "text-[#0F172A]"
-                        }`}
-                      >
-                        {formatAmount(t)}
-                      </span>
-                    </div>
-                  );
-                })}
+          return (
+            <div
+              key={t._id}
+              className="flex justify-between items-center gap-3"
+            >
+              <div className="flex gap-3 items-center min-w-0">
+                <div
+                  className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${
+                    credit
+                      ? "bg-green-50 text-[#009966]"
+                      : "bg-red-50 text-red-500"
+                  }`}
+                >
+                  {credit ? (
+                    <ArrowDownLeft size={18} />
+                  ) : (
+                    <Out size={18} />
+                  )}
+                </div>
+
+                <div className="min-w-0">
+                  <p className="text-[#0F172A] truncate">
+                    {t.description || formatType(t.type)}
+                  </p>
+
+                  <p className="text-sm text-[#6A7282]">
+                    {formatDate(t.createdAt)}
+                  </p>
+                </div>
               </div>
 
-              {canLoadMore && (
-                <button
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
-                  className="text-[#6A7282] mt-6 disabled:opacity-60"
-                >
-                  {loadingMore ? "Loading..." : "View Full History"}
-                </button>
-              )}
-            </>
-          )}
+              <span
+                className={`font-semibold ${
+                  credit ? "text-[#009966]" : "text-[#0F172A]"
+                }`}
+              >
+                {formatAmount(t)}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {canLoadMore && (
+        <button
+          onClick={handleLoadMore}
+          disabled={loadingMore}
+          className="text-[#6A7282] mt-6 disabled:opacity-60"
+        >
+          {loadingMore ? "Loading..." : "View Full History"}
+        </button>
+      )}
+    </>
+  )
+) : paymentsLoading ? (
+  <div className="flex items-center justify-center gap-2 text-[#6A7282] py-10">
+    <Loader2 size={16} className="animate-spin" />
+    Loading payment history...
+  </div>
+) : paymentsError ? (
+  <div className="text-center py-10">
+    <p className="text-sm text-red-500">{paymentsError}</p>
+  </div>
+) : payments.length === 0 ? (
+  <p className="text-sm text-[#94A3B8] text-center py-10">
+    No payment history found.
+  </p>
+) : (
+  <div className="space-y-6">
+    {payments.map((payment: any) => (
+      <div
+        key={payment._id}
+        className="flex justify-between items-center gap-3"
+      >
+        <div className="flex gap-3 items-center">
+          <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+            <CreditCard size={18} />
+          </div>
+
+          <div>
+            <p className="text-[#0F172A]">
+              {payment.items?.[0]?.name || "Order Payment"}
+            </p>
+
+            <p className="text-sm text-[#6A7282]">
+              {payment.orderId}
+            </p>
+
+            <p className="text-xs text-[#94A3B8] capitalize">
+              {payment.paymentMethod} • {payment.paymentStatus}
+            </p>
+
+            <p className="text-xs text-[#94A3B8]">
+              {formatDate(payment.createdAt)}
+            </p>
+          </div>
+        </div>
+
+        <span className="font-semibold text-[#0F172A]">
+          ${payment.total.toFixed(2)}
+        </span>
+      </div>
+    ))}
+  </div>
+)}
         </div>
       </div>
 
-{showTopUpModal && (
-  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 !mt-0 px-4">
-    <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 w-full max-w-md">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="font-playfair text-xl text-white">
-          Top Up Wallet
-        </h2>
+      {showTopUpModal && (
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 !mt-0 px-4">
+          <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-playfair text-xl text-white">
+                Top Up Wallet
+              </h2>
 
-        <button
-          onClick={() => setShowTopUpModal(false)}
-          disabled={topUpLoading}
-          className="text-[#94A3B8] hover:text-white"
-        >
-          <X size={20} />
-        </button>
-      </div>
+              <button
+                onClick={() => setShowTopUpModal(false)}
+                disabled={topUpLoading}
+                className="text-[#94A3B8] hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-      <label className="text-sm text-[#94A3B8]">Amount</label>
+            <label className="text-sm text-[#94A3B8]">Amount</label>
 
-      <div className="mt-1 mb-4 relative">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">
-          $
-        </span>
+            <div className="mt-1 mb-4 relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">
+                $
+              </span>
 
-        <input
-          type="number"
-          min="1"
-          step="0.01"
-          placeholder="0.00"
-          value={topUpAmount}
-          onChange={(e) => setTopUpAmount(e.target.value)}
-          className="w-full bg-[#020618] border border-[#1E293B] rounded-lg pl-8 pr-4 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
-        />
-      </div>
+              <input
+                type="number"
+                min="1"
+                step="0.01"
+                placeholder="0.00"
+                value={topUpAmount}
+                onChange={(e) => setTopUpAmount(e.target.value)}
+                className="w-full bg-[#020618] border border-[#1E293B] rounded-lg pl-8 pr-4 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
+              />
+            </div>
 
-      <label className="text-sm text-[#94A3B8]">
-        Payment Method
-      </label>
+            <label className="text-sm text-[#94A3B8]">Payment Method</label>
 
-      <select
-        value={topUpMethod}
-        onChange={(e) => setTopUpMethod(e.target.value)}
-        className="mt-1 w-full bg-[#020618] border border-[#1E293B] rounded-lg px-4 py-3 text-white outline-none focus:border-[#009966]"
-      >
-        {PAYMENT_METHODS.map((m) => (
-          <option
-            key={m.value}
-            value={m.value}
-            className="bg-[#020618]"
-          >
-            {m.label}
-          </option>
-        ))}
-      </select>
+            <select
+              value={topUpMethod}
+              onChange={(e) => setTopUpMethod(e.target.value)}
+              className="mt-1 w-full bg-[#020618] border border-[#1E293B] rounded-lg px-4 py-3 text-white outline-none focus:border-[#009966]"
+            >
+              {PAYMENT_METHODS.map((m) => (
+                <option key={m.value} value={m.value} className="bg-[#020618]">
+                  {m.label}
+                </option>
+              ))}
+            </select>
 
-      {topUpError && (
-        <p className="mt-3 text-sm text-red-400">
-          {topUpError}
-        </p>
+            {topUpError && (
+              <p className="mt-3 text-sm text-red-400">{topUpError}</p>
+            )}
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowTopUpModal(false)}
+                disabled={topUpLoading}
+                className="border border-[#1E293B] text-[#94A3B8] hover:bg-[#1E293B] px-4 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleTopUp}
+                disabled={topUpLoading}
+                className="bg-[#009966] hover:bg-[#00b377] text-white px-5 py-2 rounded-lg disabled:opacity-60"
+              >
+                {topUpLoading ? "Processing..." : "Top Up"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
-      <div className="flex justify-end gap-3 mt-6">
-        <button
-          onClick={() => setShowTopUpModal(false)}
-          disabled={topUpLoading}
-          className="border border-[#1E293B] text-[#94A3B8] hover:bg-[#1E293B] px-4 py-2 rounded-lg"
-        >
-          Cancel
-        </button>
+      {showWithdrawModal && (
+        <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 !mt-0 px-4">
+          <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="font-playfair text-xl text-white">
+                Withdraw Funds
+              </h2>
 
-        <button
-          onClick={handleTopUp}
-          disabled={topUpLoading}
-          className="bg-[#009966] hover:bg-[#00b377] text-white px-5 py-2 rounded-lg disabled:opacity-60"
-        >
-          {topUpLoading ? "Processing..." : "Top Up"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+              <button
+                onClick={() => setShowWithdrawModal(false)}
+                disabled={withdrawLoading}
+                className="text-[#94A3B8] hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-{showWithdrawModal && (
-  <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 !mt-0 px-4">
-    <div className="bg-[#0F172A] border border-[#1E293B] rounded-2xl p-6 w-full max-w-md">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="font-playfair text-xl text-white">
-          Withdraw Funds
-        </h2>
+            <p className="text-sm text-[#94A3B8] mb-4">
+              Available balance:{" "}
+              <span className="font-medium text-white">{formattedBalance}</span>
+            </p>
 
-        <button
-          onClick={() => setShowWithdrawModal(false)}
-          disabled={withdrawLoading}
-          className="text-[#94A3B8] hover:text-white"
-        >
-          <X size={20} />
-        </button>
-      </div>
+            <label className="text-sm text-[#94A3B8]">Amount</label>
 
-      <p className="text-sm text-[#94A3B8] mb-4">
-        Available balance:{" "}
-        <span className="font-medium text-white">
-          {formattedBalance}
-        </span>
-      </p>
+            <div className="mt-1 mb-2 relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">
+                $
+              </span>
 
-      <label className="text-sm text-[#94A3B8]">
-        Amount
-      </label>
+              <input
+                type="number"
+                min="1"
+                step="0.01"
+                placeholder="0.00"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                className="w-full bg-[#020618] border border-[#1E293B] rounded-lg pl-8 pr-4 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
+              />
+            </div>
 
-      <div className="mt-1 mb-2 relative">
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#94A3B8]">
-          $
-        </span>
+            {withdrawError && (
+              <p className="mt-3 text-sm text-red-400">{withdrawError}</p>
+            )}
 
-        <input
-          type="number"
-          min="1"
-          step="0.01"
-          placeholder="0.00"
-          value={withdrawAmount}
-          onChange={(e) => setWithdrawAmount(e.target.value)}
-          className="w-full bg-[#020618] border border-[#1E293B] rounded-lg pl-8 pr-4 py-3 text-white placeholder:text-[#64748B] outline-none focus:border-[#009966]"
-        />
-      </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowWithdrawModal(false)}
+                disabled={withdrawLoading}
+                className="border border-[#1E293B] text-[#94A3B8] hover:bg-[#1E293B] px-4 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
 
-      {withdrawError && (
-        <p className="mt-3 text-sm text-red-400">
-          {withdrawError}
-        </p>
+              <button
+                onClick={handleWithdraw}
+                disabled={withdrawLoading}
+                className="bg-[#009966] hover:bg-[#00b377] text-white px-5 py-2 rounded-lg disabled:opacity-60"
+              >
+                {withdrawLoading ? "Processing..." : "Withdraw"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
-      <div className="flex justify-end gap-3 mt-6">
-        <button
-          onClick={() => setShowWithdrawModal(false)}
-          disabled={withdrawLoading}
-          className="border border-[#1E293B] text-[#94A3B8] hover:bg-[#1E293B] px-4 py-2 rounded-lg"
-        >
-          Cancel
-        </button>
-
-        <button
-          onClick={handleWithdraw}
-          disabled={withdrawLoading}
-          className="bg-[#009966] hover:bg-[#00b377] text-white px-5 py-2 rounded-lg disabled:opacity-60"
-        >
-          {withdrawLoading ? "Processing..." : "Withdraw"}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-
-     <AddCardModal
-  open={showAddCardModal}
-  onClose={() => setShowAddCardModal(false)}
-  cardNumber={cardNumber}
-  setCardNumber={setCardNumber}
-  expiryMonth={expiryMonth}
-  setExpiryMonth={setExpiryMonth}
-  expiryYear={expiryYear}
-  setExpiryYear={setExpiryYear}
-  cardHolder={cardHolder}
-  setCardHolder={setCardHolder}
-  cardBrand={cardBrand}
-  setCardBrand={setCardBrand}
-  cardIsDefault={cardIsDefault}
-  setCardIsDefault={setCardIsDefault}
-  brands={BRANDS}
-  loading={addCardLoading}
-  error={addCardError}
-  formatCardNumber={formatCardNumber}
-  onSubmit={handleAddCard}
-/>
+      <AddCardModal
+        open={showAddCardModal}
+        onClose={() => setShowAddCardModal(false)}
+        cardNumber={cardNumber}
+        setCardNumber={setCardNumber}
+        expiryMonth={expiryMonth}
+        setExpiryMonth={setExpiryMonth}
+        expiryYear={expiryYear}
+        setExpiryYear={setExpiryYear}
+        cardHolder={cardHolder}
+        setCardHolder={setCardHolder}
+        cardBrand={cardBrand}
+        setCardBrand={setCardBrand}
+        cardIsDefault={cardIsDefault}
+        setCardIsDefault={setCardIsDefault}
+        brands={BRANDS}
+        loading={addCardLoading}
+        error={addCardError}
+        formatCardNumber={formatCardNumber}
+        onSubmit={handleAddCard}
+      />
     </div>
   );
 }

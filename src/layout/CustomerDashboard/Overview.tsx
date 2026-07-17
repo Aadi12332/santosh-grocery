@@ -23,7 +23,11 @@ interface SavedCard {
   brand?: string;
   isDefault?: boolean;
 }
-
+interface Restaurant {
+  _id: string;
+  name: string;
+  logo: string | null;
+}
 interface DashboardData {
   profile: {
     firstName: string;
@@ -39,10 +43,10 @@ interface DashboardData {
     cancelled: number;
   };
   recentOrders: {
-    _id: string;
-    orderId: string;
-    restaurant: string | null;
-    orderType: string;
+  _id: string;
+  orderId: string;
+  restaurant: Restaurant | null;
+  orderType: string;
     items: { image: string | null; name: string; quantity: number }[];
     total: number;
     status: string;
@@ -354,7 +358,11 @@ export default function Overview({ setActiveTab }: { setActiveTab: (tab: string)
 
             const itemsSummary = order.items?.map((i) => i.name).join(", ") || "No items";
             const img = order.items?.[0]?.image || null;
-            const restaurantOrStoreName = order.restaurant || (order.orderType === "grocery" ? "Grocery Order" : "Restaurant Order");
+         const restaurantOrStoreName =
+  order.restaurant?.name ||
+  (order.orderType === "grocery"
+    ? "Grocery Order"
+    : "Restaurant Order");
 
             const dateLabel = (() => {
               try {
