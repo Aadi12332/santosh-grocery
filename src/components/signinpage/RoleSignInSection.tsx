@@ -132,6 +132,10 @@ export default function RoleSignInSection() {
   const [isLoggedIn, setIsLoggedIn] = useState(
     localStorage.getItem("isLoggedIn") === "true",
   );
+  const [show2FAModal, setShow2FAModal] = useState(false);
+const [otpCode, setOtpCode] = useState("");
+const [otpLoading, setOtpLoading] = useState(false);
+const [pendingUser, setPendingUser] = useState<any>(null);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
@@ -181,23 +185,30 @@ export default function RoleSignInSection() {
           throw new Error(data?.message || "Login failed. Please try again.");
         }
 
-        localStorage.setItem("isLoggedIn", "true");
-        localStorage.setItem("role", role);
+const user = data.data.user;
 
-        if (data.data?.accessToken) {
-          localStorage.setItem("authToken", data.data.accessToken);
-        }
+if (user.twoFactorEnabled) {
+  setPendingUser({
+    user,
+    accessToken: data.data.accessToken,
+    refreshToken: data.data.refreshToken,
+  });
 
-        if (data.data?.refreshToken) {
-          localStorage.setItem("refreshToken", data.data.refreshToken);
-        }
+  setOtpCode("");
+  setShow2FAModal(true);
+} else {
+  localStorage.setItem("isLoggedIn", "true");
+  localStorage.setItem("role", role);
 
-        if (data.data?.user) {
-          localStorage.setItem("user", JSON.stringify(data.data.user));
-        }
+  localStorage.setItem("authToken", data.data.accessToken);
+  localStorage.setItem("refreshToken", data.data.refreshToken);
 
-        setIsLoggedIn(true);
-        navigate("/customer/dashboard");
+  localStorage.setItem("user", JSON.stringify(user));
+
+  setIsLoggedIn(true);
+
+  navigate("/customer/dashboard");
+}
       } catch (loginError) {
         setError(
           loginError instanceof Error
@@ -231,6 +242,64 @@ export default function RoleSignInSection() {
       navigate("/restaurantbackend/dashboard");
     }
   };
+
+  const handleValidate2FA = async () => {
+  if (!otpCode.trim()) {
+    setError("Please enter OTP.");
+    return;
+  }
+
+  setOtpLoading(true);
+
+  try {
+    const response = await fetch(
+      "https://mr-santosh-grocery-backend.onrender.com/api/v1/auth/2fa/validate",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: pendingUser.user._id,
+          code: otpCode,
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.message || "Invalid OTP");
+    }
+
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("role", role);
+
+    localStorage.setItem("authToken", pendingUser.accessToken);
+
+    localStorage.setItem(
+      "refreshToken",
+      pendingUser.refreshToken,
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(pendingUser.user),
+    );
+
+    setIsLoggedIn(true);
+
+    setShow2FAModal(false);
+
+    navigate("/customer/dashboard");
+  } catch (err) {
+    setError(
+      err instanceof Error ? err.message : "Something went wrong.",
+    );
+  } finally {
+    setOtpLoading(false);
+  }
+};
 
   const handleForgotPassword = async () => {
     if (!forgotEmail.trim()) {
@@ -676,6 +745,56 @@ export default function RoleSignInSection() {
           </div>
         </div>
       )}
+
+      {show2FAModal && (
+  <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
+
+    <div className="bg-white rounded-xl p-6 w-full max-w-sm">
+
+      <h2 className="text-xl font-semibold text-black">
+        Two-Factor Authentication
+      </h2>
+
+      <p className="text-sm text-gray-500 mt-2">
+        Enter the 6-digit code from Google Authenticator.
+      </p>
+
+      <input
+        className="w-full border rounded-lg p-3 mt-5 text-black"
+        value={otpCode}
+        onChange={(e) => setOtpCode(e.target.value)}
+        placeholder="123456"
+      />
+
+      {error && (
+        <p className="text-red-500 text-sm mt-3">
+          {error}
+        </p>
+      )}
+
+      <div className="flex justify-end gap-3 mt-6">
+
+        <button
+          onClick={() => setShow2FAModal(false)}
+          className="border px-4 py-2 rounded-lg text-black"
+        >
+          Cancel
+        </button>
+
+        <button
+          onClick={handleValidate2FA}
+          disabled={otpLoading}
+          className="bg-[#009966] text-white px-5 py-2 rounded-lg"
+        >
+          {otpLoading ? "Verifying..." : "Verify"}
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+)}
     </section>
   );
 }

@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AddressModal from "./AddressModal";
+import { QRCodeSVG } from "qrcode.react";
 
 type UserProfile = {
   firstName: string;
@@ -56,6 +57,12 @@ const EMPTY_ADDRESS_FORM: AddressForm = {
   zipCode: "",
   country: "",
   isDefault: false,
+};
+
+type TwoFASetupData = {
+  secret: string;
+  qrCodeUrl: string;
+  otpauthUrl: string;
 };
 
 const API_BASE = "https://mr-santosh-grocery-backend.onrender.com/api/v1";
@@ -99,6 +106,11 @@ export default function AccountSettings() {
   const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [qrData, setQrData] = useState<TwoFASetupData | null>(null);
+  const [otpCode, setOtpCode] = useState("");
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
   const [addressForm, setAddressForm] =
     useState<AddressForm>(EMPTY_ADDRESS_FORM);
 
@@ -132,6 +144,17 @@ export default function AccountSettings() {
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+  const publishUserUpdate = (updates: Record<string, unknown>) => {
+    const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const nextUser = {
+      ...storedUser,
+      ...updates,
+    };
+
+    localStorage.setItem("user", JSON.stringify(nextUser));
+    window.dispatchEvent(new CustomEvent("user-updated", { detail: nextUser }));
+  };
 
   const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
 
@@ -278,18 +301,11 @@ export default function AccountSettings() {
         phone: updatedUser.phone,
       }));
 
-      // Update localStorage user
-      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          ...storedUser,
-          firstName: updatedUser.firstName,
-          lastName: updatedUser.lastName,
-          phone: updatedUser.phone,
-        }),
-      );
+      publishUserUpdate({
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        phone: updatedUser.phone,
+      });
 
       setIsEditing(false);
 
@@ -342,15 +358,9 @@ export default function AccountSettings() {
 
       setProfileImage(avatar);
 
-      const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-
-      localStorage.setItem(
-        "user",
-        JSON.stringify({
-          ...storedUser,
-          avatar,
-        }),
-      );
+      publishUserUpdate({
+        avatar,
+      });
 
       setMessage({
         type: "success",
@@ -727,17 +737,17 @@ export default function AccountSettings() {
   });
 
   useEffect(() => {
-  if (!message.text) return;
+    if (!message.text) return;
 
-  const timer = setTimeout(() => {
-    setMessage({
-      type: "",
-      text: "",
-    });
-  }, 3000);
+    const timer = setTimeout(() => {
+      setMessage({
+        type: "",
+        text: "",
+      });
+    }, 3000);
 
-  return () => clearTimeout(timer);
-}, [message]);
+    return () => clearTimeout(timer);
+  }, [message]);
 
   useEffect(() => {
     void fetchProfile();
@@ -925,9 +935,79 @@ export default function AccountSettings() {
     }
   };
 
-  const handleEnable2FAClick = () => {
-    // Enable flow API not provided yet — hook this up when available
-    //   navigate("/customer/dashboard/enable-2fa");
+  const handleEnable2FAClick = async () => {
+    const token = localStorage.getItem("authToken");
+
+    if (!token) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/2fa/setup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Unable to setup 2FA.");
+      }
+
+      setQrData(data.data);
+      setOtpCode("");
+      setVerifyError("");
+      setShow2FAModal(true);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Something went wrong.");
+    }
+  };
+
+  const handleVerify2FA = async () => {
+    if (!otpCode.trim()) {
+      setVerifyError("Please enter OTP.");
+      return;
+    }
+
+    const token = localStorage.getItem("authToken");
+
+    if (!token) return;
+
+    setVerifyLoading(true);
+    setVerifyError("");
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/2fa/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          code: otpCode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Invalid OTP.");
+      }
+
+      setTwoFactorEnabled(true);
+      setShow2FAModal(false);
+
+      fetch2FAStatus();
+    } catch (err) {
+      setVerifyError(
+        err instanceof Error ? err.message : "Something went wrong.",
+      );
+    } finally {
+      setVerifyLoading(false);
+    }
   };
 
   return (
@@ -1544,12 +1624,12 @@ export default function AccountSettings() {
             </h2>
 
             <p className="mt-2 text-sm text-[#6A7282]">
-              Enter your 2FA code or account password to confirm.
+              Enter the 6-digit code from your authenticator app.
             </p>
 
             <input
               type="text"
-              placeholder="2FA code or account password"
+              placeholder="Enter 6-digit code"
               value={disable2FACode}
               onChange={(e) => setDisable2FACode(e.target.value)}
               className="w-full border border-[#E5E7EB] rounded-lg p-3 mt-4 outline-none"
@@ -1584,22 +1664,81 @@ export default function AccountSettings() {
         </div>
       )}
 
-     <AddressModal
-  open={showAddressModal}
-  isEditing={isEditingAddress}
-  form={addressForm}
-  setForm={setAddressForm}
-  error={addressError}
-  loading={addressSaving}
-  onClose={() => {
-    setShowAddressModal(false);
-    setAddressError("");
-    setEditingIndex(null);
-    setIsEditingAddress(false);
-    setAddressForm(EMPTY_ADDRESS_FORM);
-  }}
-  onSave={handleSaveAddress}
-/>
+      {show2FAModal && (
+        <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold">
+              Enable Two-Factor Authentication
+            </h2>
+
+            <p className="text-sm text-gray-700 mt-2">
+              Scan this QR code using Google Authenticator or Authy.{" "}
+              <span className="text-xs text-[#6A7282] mt-2">
+                {`(After scanning, open your authenticator app and enter the 6-digit code displayed for this account)`}
+              </span>
+            </p>
+
+            {qrData && (
+              <div className="flex justify-center mt-6">
+                <QRCodeSVG value={qrData.otpauthUrl} size={220} includeMargin />
+              </div>
+            )}
+
+            <div className="mt-5">
+              <p className="text-xs text-gray-500 mb-2">Secret Key</p>
+
+              <div className="border rounded-lg p-3 break-all">
+                {qrData?.secret}
+              </div>
+            </div>
+
+            <input
+              className="w-full border rounded-lg mt-5 p-3"
+              placeholder="Enter 6 digit OTP"
+              value={otpCode}
+              onChange={(e) => setOtpCode(e.target.value)}
+            />
+
+            {verifyError && (
+              <p className="text-red-500 text-sm mt-3">{verifyError}</p>
+            )}
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShow2FAModal(false)}
+                className="border px-4 py-2 rounded-lg"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleVerify2FA}
+                disabled={verifyLoading}
+                className="bg-[#009966] text-white px-5 py-2 rounded-lg"
+              >
+                {verifyLoading ? "Verifying..." : "Verify"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <AddressModal
+        open={showAddressModal}
+        isEditing={isEditingAddress}
+        form={addressForm}
+        setForm={setAddressForm}
+        error={addressError}
+        loading={addressSaving}
+        onClose={() => {
+          setShowAddressModal(false);
+          setAddressError("");
+          setEditingIndex(null);
+          setIsEditingAddress(false);
+          setAddressForm(EMPTY_ADDRESS_FORM);
+        }}
+        onSave={handleSaveAddress}
+      />
 
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0">

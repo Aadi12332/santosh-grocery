@@ -46,9 +46,18 @@ export default function Header() {
       setUser(getStoredUser());
     };
 
-    window.addEventListener("storage", handleStorage);
+    const handleUserUpdate = (event: Event) => {
+      const detail = (event as CustomEvent<StoredUser>).detail;
+      setUser(detail ?? getStoredUser());
+    };
 
-    return () => window.removeEventListener("storage", handleStorage);
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("user-updated", handleUserUpdate);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("user-updated", handleUserUpdate);
+    };
   }, []);
 
   const handleLogout = async () => {

@@ -22,7 +22,15 @@ const menu = [
   { id: "support", label: "Help & Support", icon: HelpCircle },
 ];
 
+type StoredUser = {
+  firstName?: string;
+  lastName?: string;
+  avatar?: string | null;
+  membershipTier?: string;
+};
+
 export default function CustomerSidebar({
+  user,
   activeTab,
   setActiveTab,
   setSidebarOpen,
@@ -31,6 +39,7 @@ export default function CustomerSidebar({
   logoutError,
   setIsLoggedIn
 }: {
+  user: StoredUser;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   setSidebarOpen: (open: boolean) => void;
@@ -40,7 +49,6 @@ export default function CustomerSidebar({
   setIsLoggedIn: (isLoggedIn: boolean) => void;
 }) {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
 

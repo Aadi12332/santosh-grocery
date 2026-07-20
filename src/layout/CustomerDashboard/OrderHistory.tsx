@@ -202,6 +202,23 @@ export default function OrderHistory() {
   const [trackingLoading, setTrackingLoading] = useState(false);
   const [trackingError, setTrackingError] = useState("");
 
+  const [reordering, setReordering] = useState(false);
+const [reorderMessage, setReorderMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+const [showCancelModal, setShowCancelModal] = useState(false);
+const [cancelReason, setCancelReason] = useState("");
+const [cancelSubmitting, setCancelSubmitting] = useState(false);
+const [cancelError, setCancelError] = useState("");
+const [cancelSuccess, setCancelSuccess] = useState(false);
+
+const CANCEL_REASONS = [
+  "Changed my mind",
+  "Ordered by mistake",
+  "Found a better price",
+  "Delivery too slow",
+  "Other",
+];
+
   const REFUND_REASONS = [
     "Wrong item",
     "Item damaged",
@@ -210,6 +227,118 @@ export default function OrderHistory() {
     "Changed my mind",
     "Other",
   ];
+
+  const handleReorder = async (orderId: string) => {
+  setReordering(true);
+  setReorderMessage(null);
+
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    setReorderMessage({
+      type: "error",
+      text: "Authentication token not found.",
+    });
+    setReordering(false);
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/orders/my/${orderId}/reorder`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data?.message || "Failed to reorder.");
+    }
+
+    setReorderMessage({
+      type: "success",
+      text: data?.message || "Items added to cart.",
+    });
+  } catch (err) {
+    setReorderMessage({
+      type: "error",
+      text: err instanceof Error ? err.message : "Unable to reorder.",
+    });
+  } finally {
+    setReordering(false);
+  }
+};
+
+const submitCancelOrder = async () => {
+  if (!selectedOrder) return;
+  setCancelError("");
+
+  if (!cancelReason.trim()) {
+    setCancelError("Please select or enter a reason.");
+    return;
+  }
+
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    setCancelError("Authentication token not found.");
+    return;
+  }
+
+  setCancelSubmitting(true);
+
+  try {
+    const response = await fetch(
+      `${API_BASE}/orders/my/${selectedOrder._id}/cancel`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reason: cancelReason }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data?.message || "Failed to cancel order.");
+    }
+
+    const updatedOrder = data?.data?.order;
+
+    // Update the selected order + list so UI reflects the cancellation immediately
+    if (updatedOrder) {
+      setSelectedOrder((prev) =>
+        prev ? { ...prev, status: "cancelled" } : prev,
+      );
+      setOrders((prev) =>
+        prev.map((o) =>
+          o._id === selectedOrder._id ? { ...o, status: "cancelled" } : o,
+        ),
+      );
+    }
+
+    setCancelSuccess(true);
+
+    setTimeout(() => {
+      setShowCancelModal(false);
+      setCancelSuccess(false);
+      setCancelReason("");
+    }, 1800);
+  } catch (err) {
+    setCancelError(
+      err instanceof Error ? err.message : "Something went wrong.",
+    );
+  } finally {
+    setCancelSubmitting(false);
+  }
+};
 
   const submitRefundRequest = async () => {
     if (!selectedOrder) return;
@@ -1050,24 +1179,180 @@ export default function OrderHistory() {
                 Invoice
               </button> */}
 
-              <button
-                onClick={() => {
-                  setRefundReason("");
-                  setRefundError("");
-                  setRefundSuccess(false);
-                  setShowRefundModal(true);
-                }}
-                className="text-xs text-[#6A7282] text-left cursor-text"
-              >
-                Problem with order?{" "}
-                <span className="text-xs text-[#6A7282] cursor-pointer hover:text-[#009966] underline text-left">
-                  Request Return/Refund
-                </span>
-              </button>
+              {/* Reorder — status delivered ya cancelled hone par */}
+{(selectedOrder.status === "delivered" ||
+  selectedOrder.status === "cancelled") && (
+  <div className="space-y-2">
+    <button
+      onClick={() => handleReorder(selectedOrder._id)}
+      disabled={reordering}
+      className="w-full border border-[#009966] text-[#009966] rounded-lg px-4 py-2.5 flex items-center justify-center gap-2 bg-white shadow-sm disabled:opacity-60"
+    >
+      <ShoppingBag size={16} />
+      {reordering ? "Adding to cart..." : "Reorder"}
+    </button>
+
+    {reorderMessage && (
+      <p
+        className={`text-sm text-center ${
+          reorderMessage.type === "success"
+            ? "text-[#009966]"
+            : "text-red-500"
+        }`}
+      >
+        {reorderMessage.text}
+      </p>
+    )}
+  </div>
+)}
+
+{/* Cancel Order — sirf pending hone par */}
+{selectedOrder.status === "pending" && (
+  <button
+    onClick={() => {
+      setCancelReason("");
+      setCancelError("");
+      setCancelSuccess(false);
+      setShowCancelModal(true);
+    }}
+    className="w-full border border-red-200 text-red-600 rounded-lg px-4 py-2.5 flex items-center justify-center gap-2 bg-white shadow-sm hover:bg-red-50"
+  >
+    Cancel Order
+  </button>
+)}
+
+<button
+  onClick={() => {
+    setRefundReason("");
+    setRefundError("");
+    setRefundSuccess(false);
+    setShowRefundModal(true);
+  }}
+  className="text-xs text-[#6A7282] text-left cursor-text"
+>
+  Problem with order?{" "}
+  <span className="text-xs text-[#6A7282] cursor-pointer hover:text-[#009966] underline text-left">
+    Request Return/Refund
+  </span>
+</button>
             </div>
           ) : null}
         </div>
       </div>
+
+      {showCancelModal && (
+  <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">
+    <div className="bg-white rounded-xl p-6 w-full max-w-md">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-xl font-semibold text-[#0F172A]">
+          Cancel Order
+        </h2>
+
+        <button
+          onClick={() => setShowCancelModal(false)}
+          className="text-[#94A3B8] text-xl"
+        >
+          ×
+        </button>
+      </div>
+
+      {cancelSuccess ? (
+        <div className="flex flex-col items-center gap-2 py-8 text-center">
+          <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+            <svg
+              className="h-7 w-7 text-green-600"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.5}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+          <p className="text-[#0F172A] font-medium">Order cancelled!</p>
+          <p className="text-sm text-[#6A7282]">
+            Your order has been cancelled successfully.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <p className="text-sm text-[#6A7282]">
+            Order:{" "}
+            <span className="font-medium text-[#0F172A]">
+              {selectedOrder?.orderId}
+            </span>
+          </p>
+
+          <div>
+            <label className="text-sm text-[#475569] block mb-2">
+              Select a reason
+            </label>
+
+            <div className="flex flex-wrap gap-2">
+              {CANCEL_REASONS.map((reason) => (
+                <button
+                  key={reason}
+                  type="button"
+                  onClick={() => setCancelReason(reason)}
+                  className={`px-3 py-1.5 rounded-full text-sm border transition ${
+                    cancelReason === reason
+                      ? "bg-red-50 text-red-600 border-red-300"
+                      : "bg-white border-[#E5E7EB] text-[#475569]"
+                  }`}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm text-[#475569] block mb-2">
+              Additional details (optional)
+            </label>
+
+            <textarea
+              placeholder="Describe why you're cancelling..."
+              rows={3}
+              onChange={(e) => {
+                if (e.target.value.trim()) {
+                  setCancelReason(e.target.value);
+                }
+              }}
+              className="w-full border border-[#E5E7EB] rounded-lg px-3 py-2 outline-none resize-none text-sm"
+            />
+          </div>
+
+          {cancelError && (
+            <p className="text-red-500 text-sm">{cancelError}</p>
+          )}
+
+          <div className="flex justify-end gap-3 pt-2">
+            <button
+              onClick={() => setShowCancelModal(false)}
+              disabled={cancelSubmitting}
+              className="border border-[#E5E7EB] px-4 py-2 rounded-lg"
+            >
+              Keep Order
+            </button>
+
+            <button
+              onClick={submitCancelOrder}
+              disabled={cancelSubmitting}
+              className="bg-red-500 text-white px-5 py-2 rounded-lg disabled:opacity-60"
+            >
+              {cancelSubmitting ? "Cancelling..." : "Cancel Order"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
 
       {showRefundModal && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 !mt-0 px-4">

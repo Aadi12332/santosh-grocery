@@ -27,8 +27,12 @@ interface Product {
   name: string;
   description: string;
   images: string[];
-  basePrice: number;
-  discountPrice: number;
+originalPrice: number;
+salePrice: number;
+discount: number;
+inStock: boolean;
+reviews: any[];
+relatedProducts: Product[];
   unit: string;
   shippingClass: string;
   isFreeShipping: boolean;
@@ -262,9 +266,9 @@ export default function ProductDetails({
     );
   }
 
-  const hasDiscount = product.discountPrice < product.basePrice;
-  const total = (product.discountPrice * qty).toFixed(2);
-  const isOutOfStock = product.stockQuantity <= 0;
+const hasDiscount = product.salePrice < product.originalPrice;
+const total = (product.salePrice * qty).toFixed(2);
+const isOutOfStock = !product.inStock;
 
   return (
     <div className="">
@@ -348,12 +352,19 @@ export default function ProductDetails({
           </h1>
 
           <p className="lg:text-[32px] text-xl text-[#101828] mb-4">
-            ${product.discountPrice.toFixed(2)}
-            {hasDiscount && (
-              <span className="text-[#99A1AF] line-through text-lg ml-3">
-                ${product.basePrice.toFixed(2)}
-              </span>
-            )}
+           ${product.salePrice.toFixed(2)}
+
+{hasDiscount && (
+  <span className="text-[#99A1AF] line-through text-lg ml-3">
+    ${product.originalPrice.toFixed(2)}
+  </span>
+)}
+
+{product.discount > 0 && (
+  <span className="ml-3 text-[#009966] text-base font-medium">
+    {product.discount}% OFF
+  </span>
+)}
           </p>
 
           <p className="text-[#6A7282] lg:text-[20px] text-base leading-relaxed mb-10">
@@ -363,63 +374,75 @@ export default function ProductDetails({
           <div className="grid grid-cols-2 gap-4 mb-16">
             <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg lg:rounded-xl xl:p-5 p-2 flex gap-3 sm:flex-row flex-col">
               <ShoppingBag className="text-[#009966] min-w-4" />
-
-              <div>
-                <p className="font-medium">Pro Tools</p>
-                <p className="text-sm text-[#6A7282]">
-                  Includes bamboo mat, sashimi knife, and more
-                </p>
-              </div>
+<div>
+  <p className="font-medium">Availability</p>
+  <p className="text-sm text-[#6A7282]">
+    {product.stockQuantity} items available in stock.
+  </p>
+</div>
             </div>
 
             <div className="border border-[#E5E7EB] bg-[#F9FAFB] rounded-lg lg:rounded-xl xl:p-5 p-2 flex gap-3 sm:flex-row flex-col">
               <Truck className="text-[#2563EB] min-w-4" />
 
               <div>
-                <p className="font-medium">Free Delivery</p>
-                <p className="text-sm text-[#6A7282]">
-                  Arrives in premium insulated packaging
-                </p>
+                <p className="font-medium">
+  {product.isFreeShipping ? "Free Delivery" : product.shippingClass}
+</p>
+
+<p className="text-sm text-[#6A7282]">
+ {product.isFreeShipping ? "Eligible for free shipping" : "Shipping charges apply at checkout"}
+</p>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-4 mb-6 sm:flex-row flex-col">
-            <div className="flex items-center justify-center border border-[#E5E7EB] rounded-lg">
-              <button
-                onClick={() => setQty(Math.max(1, qty - 1))}
-                className="px-4 py-5"
-              >
-                <Minus size={16} />
-              </button>
+         <div className="flex gap-4 mb-6 sm:flex-row flex-col">
+  <div
+    className={`flex items-center justify-center border rounded-lg ${
+      isOutOfStock
+        ? "border-[#E5E7EB] opacity-50 pointer-events-none"
+        : "border-[#E5E7EB]"
+    }`}
+  >
+    <button
+      onClick={() => setQty(Math.max(1, qty - 1))}
+      disabled={isOutOfStock}
+      className="px-4 py-5 disabled:cursor-not-allowed"
+    >
+      <Minus size={16} />
+    </button>
 
-              <span className="text-center w-[50px]">{qty}</span>
+    <span className="text-center w-[50px]">{qty}</span>
 
-              <button onClick={() => setQty(qty + 1)} className="px-4 py-5">
-                <Plus size={16} />
-              </button>
-            </div>
+    <button
+      onClick={() => setQty(qty + 1)}
+      disabled={isOutOfStock}
+      className="px-4 py-5 disabled:cursor-not-allowed"
+    >
+      <Plus size={16} />
+    </button>
+  </div>
 
-            <button
-              onClick={handleAddToCart}
-              disabled={cartLoading || isOutOfStock}
-              className="flex-1 bg-[#009966] text-white rounded-lg px-3 flex items-center justify-center gap-2 py-4 shadow-lg disabled:opacity-60"
-            >
-              <ShoppingBag size={18} />
-              {cartLoading
-                ? "Adding..."
-                : isOutOfStock
-                  ? "Out of Stock"
-                  : `Add to Cart — $${total}`}
-            </button>
-
+  <button
+    onClick={handleAddToCart}
+    disabled={cartLoading || isOutOfStock}
+    className="flex-1 bg-[#009966] text-white rounded-lg px-3 flex items-center justify-center gap-2 py-4 shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+  >
+    <ShoppingBag size={18} />
+    {cartLoading
+      ? "Adding..."
+      : isOutOfStock
+      ? "Out of Stock"
+      : `Add to Cart — $${total}`}
+  </button>
+</div>
             <CartModal
               setActiveTab={setActiveTab}
               selectedProduct={product._id}
               open={openCart}
               onClose={() => setOpenCart(false)}
             />
-          </div>
 
           <div className="flex gap-6 text-[#6A7282]">
             <button

@@ -24,6 +24,7 @@ type StoredUser = {
   firstName?: string;
   lastName?: string;
   avatar?: string | null;
+  membershipTier?: string;
 };
 
 const getStoredUser = (): StoredUser => {
@@ -111,6 +112,23 @@ const { setRole } = useRole();
   }, [location.pathname, activeTab]);
 
   useEffect(() => {
+    const handleUserUpdate = (event: Event) => {
+      const detail = (event as CustomEvent<StoredUser>).detail;
+      if (detail) {
+        setUser(detail);
+      } else {
+        setUser(getStoredUser());
+      }
+    };
+
+    window.addEventListener("user-updated", handleUserUpdate);
+
+    return () => {
+      window.removeEventListener("user-updated", handleUserUpdate);
+    };
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
         sidebarRef.current &&
@@ -138,6 +156,7 @@ const { setRole } = useRole();
         ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}
       >
         <CustomerSidebar
+          user={user}
           setIsLoggedIn={setIsLoggedIn}
           setShowLogoutModal={setShowLogoutModal}
           loggingOut={loggingOut}
